@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/08/08 17:52:07 by nathan            #+#    #+#             */
-/*   Updated: 2021/10/15 17:24:15 by nathan           ###   ########.fr       */
+/*   Updated: 2021/10/18 12:20:36 by nathan           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,10 +29,7 @@ public:
 	void initialize();
     void setMat(Matrix newMat, int type);
 	virtual void draw(Matrix* viewMat) override;
-	virtual void draw(Matrix* viewMat, Shader* specialEffect, std::vector<std::tuple<std::function<void(GLint, GLsizei, const GLfloat*)>, std::string, const GLfloat*>> shaderData) override;
 	Matrix getModelMat();
-	Matrix getParentMatrix();
-	virtual void onNewParent() override; //parent should already be set when this method is called
 
 	void setShader(Shader* newShader);
 

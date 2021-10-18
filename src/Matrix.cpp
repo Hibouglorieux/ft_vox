@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/05/25 11:07:40 by nathan            #+#    #+#             */
-/*   Updated: 2021/10/15 13:06:09 by nathan           ###   ########.fr       */
+/*   Updated: 2021/10/18 12:52:35 by nathan           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -66,7 +66,7 @@ Matrix Matrix::createProjMatrix( float fov, float aspect, float near, float far 
 		{0, 1 / tanHalfFov, 0, 0},
 		{0, 0 , -( far + near ) / ( far - near ), ( -2 * far * near ) / ( far - near )},
 		{0, 0 , -1, 0}});
-	return std::move( projMatrix );
+	return projMatrix;
 }
 
 Matrix Matrix::createTranslationMatrix( float x, float y, float z )
@@ -76,7 +76,7 @@ Matrix Matrix::createTranslationMatrix( float x, float y, float z )
 			{0, 1, 0, y},
 			{0, 0, 1, z},
 			{0, 0, 0, 1}});
-	return std::move( translationMatrix );
+	return translationMatrix;
 }
 
 Matrix Matrix::createScaleMatrix( float x, float y, float z )
@@ -86,7 +86,7 @@ Matrix Matrix::createScaleMatrix( float x, float y, float z )
 			{0, y, 0, 0},
 			{0, 0, z, 0},
 			{0, 0, 0, 1}});
-	return std::move( scaleMatrix );
+	return scaleMatrix;
 }
 
 Matrix Matrix::createRotationMatrix( RotationDirection dir, float angle )
@@ -120,7 +120,7 @@ Matrix Matrix::createRotationMatrix( RotationDirection dir, float angle )
 			{    0,            0,       0, 1}
 		});
 	}
-	return std::move( rotationMatrix );
+	return rotationMatrix;
 }
 
 
@@ -210,7 +210,13 @@ Matrix Matrix::operator*( const Matrix& rhs ) const
 		}
 		firstRow++;
 	}
-	return std::move( newMatrix );
+	return newMatrix;
+}
+
+Matrix& Matrix::operator=( const Matrix& rhs )
+{
+	this->data = rhs.data;
+	return *this;
 }
 
 Vec3 Matrix::operator*( const Vec3& rhs ) const

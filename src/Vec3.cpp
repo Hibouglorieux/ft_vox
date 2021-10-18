@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/05/26 16:12:31 by nathan            #+#    #+#             */
-/*   Updated: 2020/12/23 21:46:00 by nathan           ###   ########.fr       */
+/*   Updated: 2021/10/18 12:26:56 by nathan           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -155,6 +155,15 @@ float& Vec3::operator[]( const int i )
 Vec3 Vec3::operator-() const
 {
 	return Vec3(-x, -y, -z);
+}
+
+Vec3& Vec3::operator=(const Vec3& rhs)
+{
+	this->x = rhs.x;
+	this->y = rhs.y;
+	this->z = rhs.z;
+	return *this;
+
 }
 
 const Vec3 Vec3::ZERO(0, 0 ,0);

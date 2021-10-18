@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/05/26 16:12:34 by nathan            #+#    #+#             */
-/*   Updated: 2020/12/23 21:45:59 by nathan           ###   ########.fr       */
+/*   Updated: 2021/10/18 12:25:46 by nathan           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,6 +43,7 @@ public:
 	Vec3 operator*( const Vec3& rhs ) const;
 	bool operator==( const Vec3& rhs ) const;
 	bool operator!=( const Vec3& rhs ) const;
+	Vec3& operator=( const Vec3& rhs );
 	Vec3 operator-() const;
 	float at(const int i) const;
 	float& operator[]( const int i );

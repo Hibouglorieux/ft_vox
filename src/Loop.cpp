@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/05/24 15:40:25 by nathan            #+#    #+#             */
-/*   Updated: 2021/10/15 13:03:28 by nathan           ###   ########.fr       */
+/*   Updated: 2021/10/18 12:37:12 by nathan           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,19 +45,11 @@ void Loop::loop()
 
 		//update(frameTime);
 
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-//		glEnable(GL_STENCIL_TEST);
-//		glStencilFunc(GL_EQUAL, 0, 0xFF);
-//		glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
-//
-//		glEnable(GL_DEPTH_TEST);
 
 		world->render();
 		glFinish();
-
-//		glDisable(GL_DEPTH_TEST);
-//		glDisable(GL_STENCIL_TEST);
 
 		glfwSwapBuffers(appWindow::getWindow());
 
@@ -71,7 +63,7 @@ void Loop::loop()
 			std::stringstream ss;
 			double fps = (float)frameCount / (currentTimer - fpsRefreshTime);
 			ss << std::fixed << std::setprecision(1) << fps;
-			glfwSetWindowTitle(appWindow::getWindow(), std::string(std::string("Humangl ") + std::to_string(fps)).c_str());
+			glfwSetWindowTitle(appWindow::getWindow(), std::string(std::string("Humangl ") + std::to_string((int)round(fps)) + std::string(" fps")).c_str());
 			frameCount = 0;
 			fpsRefreshTime = currentTimer;
 		}

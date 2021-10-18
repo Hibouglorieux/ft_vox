@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/05/25 11:07:43 by nathan            #+#    #+#             */
-/*   Updated: 2021/10/15 16:15:36 by nathan           ###   ########.fr       */
+/*   Updated: 2021/10/18 12:51:35 by nathan           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,6 +44,7 @@ public:
 	GLfloat* exportForGL(  );
 	Matrix transpose(  ) const;
 	Matrix operator*( const Matrix& rhs ) const;
+	Matrix& operator=( const Matrix& rhs );
 	Vec3 operator*( const Vec3& rhs) const;
 	Matrix operator*=( const Matrix& rhs );
 	std::vector<float>& operator[]( const int i );

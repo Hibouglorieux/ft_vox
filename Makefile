@@ -3,7 +3,6 @@ NAME = ft_vox
 
 FILES = main.cpp \
 		VoxelGenerator.cpp \
-		Utilities.cpp \
 		Shader.cpp \
 		Object.cpp \
 		RectangularCuboid.cpp \
@@ -27,6 +26,8 @@ ifneq (, $(findstring MINGW, $(UNAME)))
 endif
 
 CXXFLAGS = -std=gnu++11 -Wall -Wextra -g
+
+CXX = g++
 
 all: $(NAME)
 

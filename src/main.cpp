@@ -6,7 +6,7 @@
 /*   By: nathan <nallani@student.s19.be>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/05/24 01:52:59 by nathan            #+#    #+#             */
-/*   Updated: 2021/10/15 21:53:06 by nathan           ###   ########.fr       */
+/*   Updated: 2021/10/18 12:33:32 by nathan           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,7 +33,6 @@ int		main( int argc, char *argv[] )
 		std::cerr <<  "Failed to initialize GLEW\n" << std::endl;
 		return 0;
 	}
-	glStencilMask(0xFF);
 	glEnable(GL_CULL_FACE);
 	glCullFace(GL_BACK);// renders only visible squares of cubes
 	glClearColor(0.2, 0.2, 0.2, 1.0f);
