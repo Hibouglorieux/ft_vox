@@ -5,11 +5,10 @@ layout (location = 1) in vec2 textureCoord;
 uniform mat4 projection;
 uniform mat4 view;
 uniform mat4 model;
-uniform mat4 precalcMat;
 out vec2 texCoord;
 
 void main()
 {
 	texCoord = textureCoord;
-    gl_Position = precalcMat * vec4(pos, 1.0);
+	gl_Position = projection * view * model * vec4(pos, 1.0);
 }

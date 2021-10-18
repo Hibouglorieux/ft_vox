@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/08/08 19:05:09 by nathan            #+#    #+#             */
-/*   Updated: 2021/10/18 15:52:02 by nathan           ###   ########.fr       */
+/*   Updated: 2021/10/18 17:54:04 by nathan           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,6 +26,7 @@ public:
 	virtual ~Object(void);
 	virtual Vec3 getPos() const = 0;
 	static void setProjMat(Matrix projMat);
+	static Matrix getProjMat(){return projMat;} // TODO might need to remove
 protected:
 	static Matrix projMat;
 };

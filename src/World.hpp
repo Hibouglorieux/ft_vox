@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/07/21 18:11:54 by nathan            #+#    #+#             */
-/*   Updated: 2021/10/18 12:15:20 by nathan           ###   ########.fr       */
+/*   Updated: 2021/10/18 17:58:50 by nathan           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,9 @@
 
 #include "Object.hpp"
 #include "Camera.hpp"
+
+#include "Texture.hpp"// TODO remove
+#include "Shader.hpp"// TODO REMOVE
 
 class World {
 public:
@@ -31,6 +34,8 @@ private:
 	void onLeaveAnim();
 	Camera camera;
 	std::vector<Object*> objects;
+	Shader* shader;
+	Texture* texture;
 };
 
 #endif

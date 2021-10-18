@@ -6,7 +6,7 @@
 /*   By: nathan <nallani@student.s19.be>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/05/24 01:52:59 by nathan            #+#    #+#             */
-/*   Updated: 2021/10/18 17:29:48 by nathan           ###   ########.fr       */
+/*   Updated: 2021/10/18 17:45:38 by nathan           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,12 +51,9 @@ int		main( int argc, char *argv[] )
 	//floor->setID("floor");
 	//floor->setColor({0.6, 0.7, 0.6});
 	//floor->setShader(new Shader("floor.vert", "floor.frag"));
-	RectangularCuboid* cube = new RectangularCuboid(1, 1, 1);
-	cube->setTexture(new Texture(heightmap));
 
 	world->setCamera(camera);
 	//world->addObject(floor);
-	world->addObject(cube);
 	Loop::setWorld(world);
 
 	Loop::loop();

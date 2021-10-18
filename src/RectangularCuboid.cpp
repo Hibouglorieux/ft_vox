@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/08/08 17:52:01 by nathan            #+#    #+#             */
-/*   Updated: 2021/10/18 17:32:23 by nathan           ###   ########.fr       */
+/*   Updated: 2021/10/18 17:46:31 by nathan           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,30 +14,13 @@
 #include "stb_image.h"
 
 bool RectangularCuboid::initialized = false;
-int RectangularCuboid::instanceCount = 0;
 GLuint RectangularCuboid::VAO = 0;
 GLuint RectangularCuboid::VBO = 0;
 
-RectangularCuboid::RectangularCuboid(float width, float height, float depth)
-	: shader(new Shader("voxCube.vert", "voxCube.frag")), texture(new Texture("cat.png"))
-{
-	instanceCount++;
-	scale = Vec3(width, height, depth);
-	rot = Vec3(0, 0, 0);
-	pos = Vec3(0, 0, 0);
-	initialRot = Vec3(0, 0, 0);
-	debug = false;
-	if (!initialized)
-	{
-		initialize();
-	}
-	shouldUpdateMats = true;
-}
-
-RectangularCuboid::RectangularCuboid( void ) : RectangularCuboid(1, 1, 1){}
-
 void RectangularCuboid::initialize()
 {
+	if (initialized)
+		return;
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
   
@@ -99,121 +82,22 @@ void RectangularCuboid::initialize()
 	initialized = true;
 }
 
-RectangularCuboid::~RectangularCuboid( void ) 
+void RectangularCuboid::clear() 
 {
-	instanceCount--;
-	if (instanceCount == 0)
-	{
-		glBindVertexArray(VAO);
-		glBindBuffer(GL_ARRAY_BUFFER, VBO);
-		glInvalidateBufferData(VBO);
-		initialized = false;
-	}
-	delete shader;
-	delete texture;
+	glBindVertexArray(VAO);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glInvalidateBufferData(VBO);
+	initialized = false;
 }
 
-void RectangularCuboid::setMat(Matrix newMat, int type)
+void RectangularCuboid::draw(Vec3& pos, Shader* shader, Texture* texture)
 {
-	if (type == TRANS_MAT)
-		transMat = newMat;
-	if (type == ROT_MAT)
-		rotMat = newMat;
-	if (type == SCALE_MAT)
-		scaleMat = newMat;
-	shouldUpdateMats = true;
-}
-
-void RectangularCuboid::draw(Matrix* viewMat)
-{
-	if (shouldUpdateMats)
-		updateMatrixes();
-	//Matrix precalcMat = projMat * viewMat * modelMat;
-	Matrix precalcMat = projMat * *viewMat;
-	precalcMat *= modelMat;
+	initialize();
 	shader->use();
-    glUniformMatrix4fv(glGetUniformLocation(shader->getID(), "proj"), 1, GL_TRUE, projMat.exportForGL());
-    glUniformMatrix4fv(glGetUniformLocation(shader->getID(), "view"), 1, GL_TRUE, viewMat->exportForGL());
+	Matrix modelMat = Matrix::createTranslationMatrix(pos);
     glUniformMatrix4fv(glGetUniformLocation(shader->getID(), "model"), 1, GL_TRUE, modelMat.exportForGL());
-    glUniformMatrix4fv(glGetUniformLocation(shader->getID(), "precalcMat"), 1, GL_TRUE, precalcMat.exportForGL());
 	glBindTexture(GL_TEXTURE_2D, texture->getID());
 	glUniform1i(glGetUniformLocation(shader->getID(), "texture0"), 0);
     glBindVertexArray(VAO);
     glDrawArrays(GL_TRIANGLES, 0, 36);
-}
-
-Matrix RectangularCuboid::getMatrixForOutline()
-{
-	return myMat * Matrix::createScaleMatrix(scale);
-}
-
-Matrix RectangularCuboid::getModelMat()
-{
-	return modelMat;
-}
-
-void RectangularCuboid::setShader(Shader* newShader)
-{
-	delete shader;
-	shader = newShader;
-}
-
-void RectangularCuboid::setTexture(Texture* newTexture)
-{
-	delete texture;
-	texture = newTexture;
-}
-
-void RectangularCuboid::setPos(Vec3 newPos)
-{
-	pos = newPos;
-	shouldUpdateMats = true;
-}
-
-void RectangularCuboid::setRot(Vec3 newRot)
-{
-	rot = newRot;
-	shouldUpdateMats = true;
-}
-
-void RectangularCuboid::setScale(Vec3 newScale)
-{
-	scale = newScale;
-	shouldUpdateMats = true;
-}
-
-//Debug code
-void RectangularCuboid::updateMatrixes()
-{
-	rotMat = Matrix();
-	if (rot.x + initialRot.x != 0)
-		rotMat = Matrix::createRotationMatrix(Matrix::RotationDirection::X, rot.x + initialRot.x );
-	if (rot.y + initialRot.y != 0)
-		rotMat *= Matrix::createRotationMatrix(Matrix::RotationDirection::Y, rot.y + initialRot.y );
-	if (rot.z + initialRot.z != 0)
-		rotMat *= Matrix::createRotationMatrix(Matrix::RotationDirection::Z, rot.z + initialRot.z );
-	myMat = Matrix::createTranslationMatrix(pos) * rotMat;// need this
-	if (debug)
-	{
-		std::cout << "myMat after rot" << std::endl;
-		myMat.print();
-	}
-	Matrix mySelfAnchor = Matrix::createTranslationMatrix(selfAnchor * scale * -0.5);
-	myMat *= mySelfAnchor;
-	if (debug)
-	{
-		std::cout << "myselfanchor" << std::endl;
-		Matrix::createTranslationMatrix(selfAnchor * scale * 0.5).print();
-		std::cout << "myMat final after self anchor" << std::endl;
-		myMat.print();
-	}
-	scaleMat = Matrix::createScaleMatrix(scale);
-	modelMat = myMat * scaleMat;
-	if (debug)
-	{
-		std::cout << "modelMal" << std::endl;
-		modelMat.print();
-	}
-
-	shouldUpdateMats = false;
 }

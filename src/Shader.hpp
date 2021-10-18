@@ -13,7 +13,7 @@
 class Shader
 {
 public:
-    Shader(const char* vertexPath, const char* fragmentPath);
+    Shader(const char* vertexPath = "voxCube.vert", const char* fragmentPath = "voxCube.frag");
 	virtual ~Shader( void );
 	unsigned int getID() const;
 	void use() const;

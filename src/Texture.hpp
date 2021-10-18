@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/10/15 16:41:42 by nathan            #+#    #+#             */
-/*   Updated: 2021/10/18 16:46:10 by nathan           ###   ########.fr       */
+/*   Updated: 2021/10/18 17:49:56 by nathan           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,7 +20,7 @@
 
 class Texture {
 public:
-	Texture(std::string pathToFile);
+	Texture(std::string pathToFile = "cat.png");
 	Texture(HeightMap& heightMap);
 	~Texture(void);
 	unsigned int getID() const;
