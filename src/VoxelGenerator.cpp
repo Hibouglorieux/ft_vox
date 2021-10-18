@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   VoxelGenerator.cpp                                :+:      :+:    :+:   */
+/*   VoxelGenerator.cpp                                 :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/10/15 13:08:40 by nathan            #+#    #+#             */
-/*   Updated: 2021/10/15 13:11:36 by nathan           ###   ########.fr       */
+/*   Updated: 2021/10/18 18:53:04 by nathan           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,7 +16,7 @@
 #include <cmath>
 #include <random>
 
-#define TEST (GRADIENT_SIZE)
+#define TEST (5)
 HeightMap	VoxelGenerator::createMap(unsigned long seed)
 {
 	PerlinNoise perlin(seed);
@@ -32,20 +32,6 @@ HeightMap	VoxelGenerator::createMap(unsigned long seed)
 	}
 	return *myHeightMap;
 }
-
-void	VoxelGenerator::print(HeightMap& heightMap)
-{
-	std::cout << std::fixed << std::setprecision(2);
-	for (int z = 0; z < LENGTH; z++)
-	{
-		for (int x = 0; x < WIDTH; x++)
-		{
-			std::cout << heightMap[z][x] << " ";
-		}
-		std::cout << std::endl;
-	}
-}
-
 
 // Function to linearly interpolate between a0 and a1
 // Weight w should be in the range [0.0, 1.0]

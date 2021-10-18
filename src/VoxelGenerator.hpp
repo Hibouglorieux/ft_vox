@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   VoxelGenerator.hpp                                :+:      :+:    :+:   */
+/*   VoxelGenerator.hpp                                 :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/10/15 13:08:43 by nathan            #+#    #+#             */
-/*   Updated: 2021/10/15 13:11:58 by nathan           ###   ########.fr       */
+/*   Updated: 2021/10/18 18:51:38 by nathan           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,7 +24,6 @@ typedef std::array<std::array<float, WIDTH>, LENGTH> HeightMap;
 class VoxelGenerator {
 public:
 	static HeightMap	createMap(unsigned long seed);
-	static void			print(HeightMap& heightMap);
 private:
 };
 

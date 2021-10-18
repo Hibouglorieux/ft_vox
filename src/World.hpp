@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/07/21 18:11:54 by nathan            #+#    #+#             */
-/*   Updated: 2021/10/18 17:58:50 by nathan           ###   ########.fr       */
+/*   Updated: 2021/10/18 18:05:32 by nathan           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,6 +28,7 @@ public:
 	void addObject(Object* newobj);
 	std::vector<Object*>& getObjects();
 	void setCamera(Camera newCamera);
+	void setTexture(Texture* newTexture);
 	Camera& getCamera();
 private:
 	void onEnterAnim();

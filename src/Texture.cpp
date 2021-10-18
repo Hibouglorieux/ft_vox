@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/10/15 16:41:40 by nathan            #+#    #+#             */
-/*   Updated: 2021/10/18 17:02:33 by nathan           ###   ########.fr       */
+/*   Updated: 2021/10/18 18:57:47 by nathan           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -63,12 +63,13 @@ Texture::Texture(HeightMap& heightMap)
 
 	textureLoaded.insert(std::pair<std::string, TextureCommonData>("test", {0, 1}));
 	path = "test";
-	glGenTextures(1, &textureLoaded["test"].ID);
+	glGenTextures(1, &textureLoaded[path].ID);
+	glBindTexture(GL_TEXTURE_2D, textureLoaded[path].ID);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, width, height, 0, GL_RED, GL_UNSIGNED_BYTE, array);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, width, height, 0, GL_RED, GL_FLOAT, array);
 }
 
 Texture::~Texture()

@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/07/21 18:11:30 by nathan            #+#    #+#             */
-/*   Updated: 2021/10/18 18:00:06 by nathan           ###   ########.fr       */
+/*   Updated: 2021/10/18 18:06:50 by nathan           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -67,6 +67,12 @@ std::vector<Object*>& World::getObjects()
 void World::setCamera(Camera newCamera)
 {
 	camera= newCamera;
+}
+
+void World::setTexture(Texture* newTexture)
+{
+	delete texture;
+	texture = newTexture;
 }
 
 Camera& World::getCamera()

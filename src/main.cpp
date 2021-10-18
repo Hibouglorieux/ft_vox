@@ -6,7 +6,7 @@
 /*   By: nathan <nallani@student.s19.be>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/05/24 01:52:59 by nathan            #+#    #+#             */
-/*   Updated: 2021/10/18 17:45:38 by nathan           ###   ########.fr       */
+/*   Updated: 2021/10/18 18:51:58 by nathan           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,8 +41,6 @@ int		main( int argc, char *argv[] )
 	{
 		seed = stoi(argv[1]);
 	}
-	HeightMap heightmap = VoxelGenerator::createMap(seed);
-	VoxelGenerator::print(heightmap);
 
 
 	Camera camera;
@@ -53,6 +51,8 @@ int		main( int argc, char *argv[] )
 	//floor->setShader(new Shader("floor.vert", "floor.frag"));
 
 	world->setCamera(camera);
+	HeightMap heightMap = VoxelGenerator::createMap(seed);
+	world->setTexture(new Texture(heightMap));
 	//world->addObject(floor);
 	Loop::setWorld(world);
 
