@@ -6,12 +6,13 @@
 /*   By: nathan <nallani@student.s19.be>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/05/24 01:55:16 by nathan            #+#    #+#             */
-/*   Updated: 2021/10/15 14:47:22 by nathan           ###   ########.fr       */
+/*   Updated: 2021/10/18 15:52:22 by nathan           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 
 #include "appWindow.hpp"
+#include <iostream>
 
 bool appWindow::initialized = false;
 GLFWwindow* appWindow::window = nullptr;

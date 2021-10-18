@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/10/15 16:41:42 by nathan            #+#    #+#             */
-/*   Updated: 2021/10/15 17:22:08 by nathan           ###   ########.fr       */
+/*   Updated: 2021/10/18 16:46:10 by nathan           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,9 +16,12 @@
 #include <string>
 #include <map>
 
+#include "VoxelGenerator.hpp" //TODO tmp to remove
+
 class Texture {
 public:
 	Texture(std::string pathToFile);
+	Texture(HeightMap& heightMap);
 	~Texture(void);
 	unsigned int getID() const;
 private:

@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/08/08 17:52:01 by nathan            #+#    #+#             */
-/*   Updated: 2021/10/18 12:20:28 by nathan           ###   ########.fr       */
+/*   Updated: 2021/10/18 17:32:23 by nathan           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,7 +31,6 @@ RectangularCuboid::RectangularCuboid(float width, float height, float depth)
 	{
 		initialize();
 	}
-   	texture = new Texture("cat.png");
 	shouldUpdateMats = true;
 }
 
@@ -157,6 +156,12 @@ void RectangularCuboid::setShader(Shader* newShader)
 {
 	delete shader;
 	shader = newShader;
+}
+
+void RectangularCuboid::setTexture(Texture* newTexture)
+{
+	delete texture;
+	texture = newTexture;
 }
 
 void RectangularCuboid::setPos(Vec3 newPos)

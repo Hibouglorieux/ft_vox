@@ -6,7 +6,7 @@
 /*   By: nathan <nallani@student.s19.be>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/05/24 01:55:24 by nathan            #+#    #+#             */
-/*   Updated: 2021/10/15 14:44:57 by nathan           ###   ########.fr       */
+/*   Updated: 2021/10/18 15:36:08 by nathan           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,6 @@
 #ifndef APP_WINDOW_CLASS_H
 # define APP_WINDOW_CLASS_H
 
-#include "Utilities.h"
 #include <GL/glew.h>
 #include <glfw3.h>
 

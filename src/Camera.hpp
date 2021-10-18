@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/09/02 01:10:32 by nathan            #+#    #+#             */
-/*   Updated: 2021/01/09 03:46:32 by nathan           ###   ########.fr       */
+/*   Updated: 2021/10/18 16:38:01 by nathan           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,7 +16,6 @@
 #include "Matrix.hpp"
 #include "appWindow.hpp"
 #include "Vec3.hpp"
-#include <utility>
 
 #define Y_MOVE_SPEED 0.2f
 

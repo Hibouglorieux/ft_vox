@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/10/15 16:41:40 by nathan            #+#    #+#             */
-/*   Updated: 2021/10/15 21:58:45 by nathan           ###   ########.fr       */
+/*   Updated: 2021/10/18 17:02:33 by nathan           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,6 +48,27 @@ Texture::Texture(std::string pathToFile)
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
 	glGenerateMipmap(GL_TEXTURE_2D);
 	stbi_image_free(data);
+}
+
+Texture::Texture(HeightMap& heightMap)
+{
+	int height = heightMap.size();
+	int width = heightMap[0].size();
+	float* array = new float[height * width];
+	for (int y = 0; y < height; y++)
+	{
+		for (int x = 0; x < width; x++)
+			array[y * width + x] = heightMap[y][x];
+	}
+
+	textureLoaded.insert(std::pair<std::string, TextureCommonData>("test", {0, 1}));
+	path = "test";
+	glGenTextures(1, &textureLoaded["test"].ID);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, width, height, 0, GL_RED, GL_UNSIGNED_BYTE, array);
 }
 
 Texture::~Texture()

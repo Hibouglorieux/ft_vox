@@ -1,5 +1,4 @@
 #include "Shader.hpp"
-#include <Utilities.h>
 
 //temporary matrix functions
 #include <string.h>

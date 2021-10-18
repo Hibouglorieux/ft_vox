@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/08/08 17:52:07 by nathan            #+#    #+#             */
-/*   Updated: 2021/10/18 12:20:36 by nathan           ###   ########.fr       */
+/*   Updated: 2021/10/18 16:47:20 by nathan           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,6 +32,7 @@ public:
 	Matrix getModelMat();
 
 	void setShader(Shader* newShader);
+	void setTexture(Texture* newTexture);
 
 	void setPos(Vec3 newPos);
 	void setRot(Vec3 newRot);

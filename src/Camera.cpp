@@ -6,12 +6,13 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/09/02 01:10:29 by nathan            #+#    #+#             */
-/*   Updated: 2021/10/15 21:29:27 by nathan           ###   ########.fr       */
+/*   Updated: 2021/10/18 16:40:39 by nathan           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Camera.hpp"
 #include "Utilities.h"
+#include <utility>
 
 #define X_ROTATION_SPEED 1
 #define Y_ROTATION_SPEED 1

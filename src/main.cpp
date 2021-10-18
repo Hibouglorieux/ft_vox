@@ -6,12 +6,11 @@
 /*   By: nathan <nallani@student.s19.be>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/05/24 01:52:59 by nathan            #+#    #+#             */
-/*   Updated: 2021/10/18 12:33:32 by nathan           ###   ########.fr       */
+/*   Updated: 2021/10/18 17:29:48 by nathan           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <GL/glew.h>
-#include "Utilities.h"
 #include "RectangularCuboid.hpp"
 #include "appWindow.hpp"
 #include "Loop.hpp"
@@ -42,7 +41,8 @@ int		main( int argc, char *argv[] )
 	{
 		seed = stoi(argv[1]);
 	}
-	VoxelGenerator::createMap(seed);
+	HeightMap heightmap = VoxelGenerator::createMap(seed);
+	VoxelGenerator::print(heightmap);
 
 
 	Camera camera;
@@ -52,6 +52,7 @@ int		main( int argc, char *argv[] )
 	//floor->setColor({0.6, 0.7, 0.6});
 	//floor->setShader(new Shader("floor.vert", "floor.frag"));
 	RectangularCuboid* cube = new RectangularCuboid(1, 1, 1);
+	cube->setTexture(new Texture(heightmap));
 
 	world->setCamera(camera);
 	//world->addObject(floor);
