@@ -20,6 +20,6 @@
 #define WIDTH  64//16384
 #define LENGTH WIDTH
 #define NEAR 0.1f
-#define FAR 150.0f
+#define FAR 1500.0f
 
 #endif
