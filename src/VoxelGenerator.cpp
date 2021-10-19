@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/10/15 13:08:40 by nathan            #+#    #+#             */
-/*   Updated: 2021/10/19 11:37:46 by nathan           ###   ########.fr       */
+/*   Updated: 2021/10/19 18:12:00 by nathan           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,7 +16,7 @@
 #include <cmath>
 #include <random>
 
-#define TEST ((float)HEIGHTMAP_SIZE / (float)(GRADIENT_SIZE - 1))
+#define TEST (32.f)
 HeightMap	VoxelGenerator::createMap(unsigned long seed)
 {
 	PerlinNoise perlin(seed);
@@ -26,6 +26,7 @@ HeightMap	VoxelGenerator::createMap(unsigned long seed)
 		for (int x = 0; x < HEIGHTMAP_SIZE; x++)
 		{
 			(*myHeightMap)[z][x] = perlin.getValue((float)x / TEST, (float)z / TEST);
+			//std::cout << (float)x / TEST << std::endl;
 			float* tmp = &(*myHeightMap)[z][x];
 			*tmp = (*tmp + 1) / 2;
 		}
@@ -36,12 +37,15 @@ HeightMap	VoxelGenerator::createMap(unsigned long seed)
 HeightMap	VoxelGenerator::createMap(unsigned long seed, int ox, int oz)
 {
 	PerlinNoise perlin(seed);
+	ox *= HEIGHTMAP_SIZE / TEST;
+	oz *= HEIGHTMAP_SIZE / TEST;
 	HeightMap* myHeightMap = new HeightMap;
 	for (int z = oz; z < HEIGHTMAP_SIZE + oz; z++)
 	{
 		for (int x = ox; x < HEIGHTMAP_SIZE + ox; x++)
-		{
-			(*myHeightMap)[z - oz][x - ox] = perlin.getValue((float)x / TEST, (float)z / TEST);
+		{	
+			(*myHeightMap)[z - oz][x - ox] = perlin.getValue(ox + (float)(x - ox) / TEST, oz + (float)(z - oz) / TEST);
+			//std::cout << ox + (float)(x - ox) / TEST << std::endl;
 			float* tmp = &(*myHeightMap)[z - oz][x - ox];
 			*tmp = (*tmp + 1) / 2;
 		}
@@ -75,8 +79,11 @@ PerlinNoise::PerlinNoise(unsigned long seed)
 				float& x = gradients[j][i][0];
 				gradients[j][i][1] = 2 * dice() - 1;
 				float& y = gradients[j][i][1];
-				gradientLength = sqrtf(x * x + y * y);
+				gradientLength = x * x + y * y;
 			}
+			gradientLength= sqrtf(gradientLength);
+			gradients[j][i][0] /= gradientLength;
+			gradients[j][i][1] /= gradientLength;
 		}
 	}
 }

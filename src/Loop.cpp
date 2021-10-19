@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/05/24 15:40:25 by nathan            #+#    #+#             */
-/*   Updated: 2021/10/19 15:24:43 by nathan           ###   ########.fr       */
+/*   Updated: 2021/10/19 18:00:36 by nathan           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -61,7 +61,7 @@ void Loop::loop()
 			std::stringstream ss;
 			double fps = (float)frameCount / (currentTimer - fpsRefreshTime);
 			ss << std::fixed << std::setprecision(1) << fps;
-			glfwSetWindowTitle(appWindow::getWindow(), std::string(std::string("Humangl ") + std::to_string((int)round(fps)) + std::string(" fps")).c_str());
+			glfwSetWindowTitle(appWindow::getWindow(), std::string(PROJECT_NAME + std::string(" ") + std::to_string((int)round(fps)) + std::string(" fps")).c_str());
 			frameCount = 0;
 			fpsRefreshTime = currentTimer;
 		}

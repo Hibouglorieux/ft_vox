@@ -6,7 +6,7 @@
 /*   By: nathan <nallani@student.s19.be>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/05/24 01:52:59 by nathan            #+#    #+#             */
-/*   Updated: 2021/10/19 16:03:18 by nathan           ###   ########.fr       */
+/*   Updated: 2021/10/19 18:15:10 by nathan           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,7 +51,7 @@ int		main( int argc, char *argv[] )
 	{
 		for (int j = 0; j < 2; j++)
 		{
-			Chunk* chnk = new Chunk(i * CHUNK_WIDTH, j * CHUNK_DEPTH);
+			Chunk* chnk = new Chunk(j, i);
 			world->addObject(chnk);
 		}
 	}

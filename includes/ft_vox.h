@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/10/15 13:12:12 by nathan            #+#    #+#             */
-/*   Updated: 2021/10/18 18:51:10 by nathan           ###   ########.fr       */
+/*   Updated: 2021/10/19 18:13:46 by nathan           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,6 +20,7 @@
 #define WIDTH  64//16384
 #define LENGTH WIDTH
 #define NEAR 0.1f
-#define FAR 150.0f
+#define FAR 15000.0f
+#define PROJECT_NAME "ft_vox"
 
 #endif

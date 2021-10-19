@@ -2,7 +2,7 @@
 
 Chunk::Chunk(int x, int z)
 {
-	position = Vec3(x, 0, z);
+	position = Vec3(x * CHUNK_WIDTH, 0, z * CHUNK_DEPTH);
 	// Not necessary ?
 	memset(blocs, 0, CHUNK_HEIGHT * CHUNK_WIDTH * CHUNK_DEPTH * sizeof(char));
 
@@ -17,7 +17,7 @@ Chunk::Chunk(int x, int z)
 		{
 			for(unsigned int z = 0; z < CHUNK_DEPTH; z++)
 			{
-				if (heightMap[x][z] * CHUNK_HEIGHT < y)
+				if (heightMap[z][x] * CHUNK_HEIGHT < y)
 					blocs[y][x][z] = 0;
 				else
 				{
