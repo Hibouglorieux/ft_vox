@@ -47,9 +47,9 @@ int		main( int argc, char *argv[] )
 
 	Camera camera;
 	World* world = new World();
-	for (int i = 0; i < 2; i++)
+	for (int i = 0; i < 4; i++)
 	{
-		for (int j = 0; j < 2; j++)
+		for (int j = 0; j < 4; j++)
 		{
 			Chunk* chnk = new Chunk(j, i);
 			world->addObject(chnk);
@@ -61,7 +61,6 @@ int		main( int argc, char *argv[] )
 	//floor->setShader(new Shader("floor.vert", "floor.frag"));
 
 	world->setCamera(camera);
-	HeightMap heightMap = VoxelGenerator::createMap(seed);
 	//world->addObject(floor);
 	Loop::setWorld(world);
 
