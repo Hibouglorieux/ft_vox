@@ -33,6 +33,22 @@ HeightMap	VoxelGenerator::createMap(unsigned long seed)
 	return *myHeightMap;
 }
 
+HeightMap	VoxelGenerator::createMap(unsigned long seed, int ox, int oz)
+{
+	PerlinNoise perlin(seed);
+	HeightMap* myHeightMap = new HeightMap;
+	for (int z = oz; z < HEIGHTMAP_SIZE + oz; z++)
+	{
+		for (int x = ox; x < HEIGHTMAP_SIZE + ox; x++)
+		{
+			(*myHeightMap)[z - oz][x - ox] = perlin.getValue((float)x / TEST, (float)z / TEST);
+			float* tmp = &(*myHeightMap)[z - oz][x - ox];
+			*tmp = (*tmp + 1) / 2;
+		}
+	}
+	return *myHeightMap;
+}
+
 // Function to linearly interpolate between a0 and a1
 // Weight w should be in the range [0.0, 1.0]
 

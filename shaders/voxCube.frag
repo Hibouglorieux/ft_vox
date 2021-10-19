@@ -1,4 +1,5 @@
 #version 450 core
+
 out vec4 FragColor;
 
 in vec3	vertexPos;
@@ -12,7 +13,7 @@ void main()
 	FragColor = vec4(colo, colo, colo, 1.0);
 
 	float w = vertexPos.y / 16.0;
-	float height = (1.0 - w) * 255 + w * 0;
+	float height = w;
 
 	FragColor = vec4(0, height, 0, 1.0);
 }

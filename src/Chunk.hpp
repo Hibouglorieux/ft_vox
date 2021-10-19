@@ -2,8 +2,8 @@
 # define CHUNK_CLASS_H
 
 # define CHUNK_HEIGHT	16	// 256
-# define CHUNK_WIDTH	16	// 16
-# define CHUNK_DEPTH	16	// 16
+# define CHUNK_WIDTH	64	// 16
+# define CHUNK_DEPTH	64	// 16
 # define CHUNK_SIZE CHUNK_HEIGHT * CHUNK_WIDTH * CHUNK_DEPTH
 
 # include "Object.hpp"

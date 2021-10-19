@@ -9,7 +9,7 @@ Chunk::Chunk(int x, int z)
 	hardBloc = 0;
 	// Generate perlin noise and set blocs
 	// SET_BLOCS()
-	heightMap = VoxelGenerator::createMap(0);
+	heightMap = VoxelGenerator::createMap(0, x, z);
 	texture = new Texture(heightMap);
 	for(unsigned int y = 0; y < CHUNK_HEIGHT; y++)	// Too big of a loop
 	{

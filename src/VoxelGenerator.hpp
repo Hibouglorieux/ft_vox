@@ -25,6 +25,7 @@ typedef std::array<std::array<float, HEIGHTMAP_SIZE>, HEIGHTMAP_SIZE> HeightMap;
 class VoxelGenerator {
 public:
 	static HeightMap	createMap(unsigned long seed);
+	static HeightMap	createMap(unsigned long seed, int ox, int oz);
 private:
 };
 
