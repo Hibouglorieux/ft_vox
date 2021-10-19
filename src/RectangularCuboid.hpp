@@ -20,11 +20,13 @@ class RectangularCuboid : public Object {
 public:
 	static void initialize();
 	static void draw(Vec3& pos, Shader* shader, Texture* texture);
+	static void drawInstance(Vec3& pos, Shader* shader, Texture* texture,
+			GLfloat *instanceTransforms, unsigned int count);
 	static void	clear();
 
 private:
 	static bool initialized;
-    static GLuint VAO, VBO;
+    static GLuint VAO, VBO, transformBuffer;
 };
 
 #endif

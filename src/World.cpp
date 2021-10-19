@@ -20,6 +20,15 @@ World::World()
 	shader = new Shader();
 	texture = new Texture();
 	std::vector<Object*> objects = {};
+	std::vector<Chunk*> chunks = {};
+	for (int i = 0; i < 4; i++)
+	{
+		for (int j = 0; j < 4; j++)
+		{
+			Chunk* chnk = new Chunk(i * CHUNK_WIDTH, j * CHUNK_DEPTH);
+			chunks.push_back(chnk);
+		}
+	}
 }
 
 World::~World()
@@ -46,9 +55,20 @@ void World::render()
 	// TODO remove that block when chunk are added and rework shader/texture owner
 	Vec3 renderPos;
 	shader->use();
+	Matrix precalMat = Object::getProjMat() * camera.getMatrix();
+    glUniformMatrix4fv(glGetUniformLocation(shader->getID(), "precalcMat"), 1, GL_TRUE, precalMat.exportForGL());
     glUniformMatrix4fv(glGetUniformLocation(shader->getID(), "projection"), 1, GL_TRUE, Object::getProjMat().exportForGL());
     glUniformMatrix4fv(glGetUniformLocation(shader->getID(), "view"), 1, GL_TRUE, camera.getMatrix().exportForGL());
-	RectangularCuboid::draw(renderPos, shader, texture);
+	//RectangularCuboid::draw(renderPos, shader, texture);
+	Matrix	*del = new Matrix();
+	for (Chunk* chnk : chunks)
+	{
+		std::cout << "Chunks\n";
+		chnk->draw(del, renderPos, shader, texture);
+	}
+	Chunk* chnk = new Chunk(-1 * CHUNK_WIDTH, -1 * CHUNK_DEPTH);
+	chnk->draw(del, renderPos, shader, texture);
+	delete del;
 	// TODO end of block to remove when chunk are added
 	glDisable(GL_DEPTH_TEST);
 }

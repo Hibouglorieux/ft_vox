@@ -15,6 +15,7 @@
 # define WORLD_CLASS_H
 
 #include "Object.hpp"
+#include "Chunk.hpp"
 #include "Camera.hpp"
 
 #include "Texture.hpp"// TODO remove
@@ -35,6 +36,7 @@ private:
 	void onLeaveAnim();
 	Camera camera;
 	std::vector<Object*> objects;
+	std::vector<Chunk*> chunks;
 	Shader* shader;
 	Texture* texture;
 };

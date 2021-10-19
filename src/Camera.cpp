@@ -19,7 +19,7 @@
 
 Camera::Camera() : Camera(Vec3(0, 20, 0))
 {
-	dir.x = 89.0f;// TODO tmp to view map generation from ahead to view map generation from ahead
+	dir.x = 0.0f;//89.0f;// TODO tmp to view map generation from ahead to view map generation from ahead
 	actualizeView();
 }
 

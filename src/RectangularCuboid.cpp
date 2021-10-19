@@ -16,6 +16,7 @@
 bool RectangularCuboid::initialized = false;
 GLuint RectangularCuboid::VAO = 0;
 GLuint RectangularCuboid::VBO = 0;
+GLuint RectangularCuboid::transformBuffer = 0;
 
 void RectangularCuboid::initialize()
 {
@@ -23,6 +24,7 @@ void RectangularCuboid::initialize()
 		return;
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
+    glGenBuffers(1, &transformBuffer);
   
     glBindVertexArray(VAO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
@@ -94,10 +96,36 @@ void RectangularCuboid::draw(Vec3& pos, Shader* shader, Texture* texture)
 {
 	initialize();
 	shader->use();
+	glUniform1i(glGetUniformLocation(shader->getID(), "instanced"), 0);
 	Matrix modelMat = Matrix::createTranslationMatrix(pos);
     glUniformMatrix4fv(glGetUniformLocation(shader->getID(), "model"), 1, GL_TRUE, modelMat.exportForGL());
 	glBindTexture(GL_TEXTURE_2D, texture->getID());
 	glUniform1i(glGetUniformLocation(shader->getID(), "texture0"), 0);
     glBindVertexArray(VAO);
     glDrawArrays(GL_TRIANGLES, 0, 36);
+}
+
+void RectangularCuboid::drawInstance(Vec3& pos, Shader* shader, Texture* texture,
+		GLfloat *instanceTransforms, unsigned int count)
+{
+	initialize();
+
+    glBindVertexArray(VAO);
+	glBindBuffer(GL_ARRAY_BUFFER, transformBuffer);
+	glBufferData(GL_ARRAY_BUFFER, count * 3 * sizeof(float),
+			instanceTransforms, GL_STATIC_DRAW);
+
+    glEnableVertexAttribArray(2);	
+    glVertexAttribPointer(2, 3, GL_FLOAT, GL_TRUE, 3 * sizeof(float), (void*)(0));
+
+	glVertexAttribDivisor(2, 1);
+
+	shader->use();
+	Matrix modelMat = Matrix::createTranslationMatrix(pos);
+    glUniformMatrix4fv(glGetUniformLocation(shader->getID(), "model"), 1, GL_TRUE, modelMat.exportForGL());
+	glUniform1i(glGetUniformLocation(shader->getID(), "instanced"), 1);
+	glBindTexture(GL_TEXTURE_2D, texture->getID());
+	glUniform1i(glGetUniformLocation(shader->getID(), "texture0"), 0);
+    glBindVertexArray(VAO);
+    glDrawArraysInstanced(GL_TRIANGLES, 0, 36, count);
 }
