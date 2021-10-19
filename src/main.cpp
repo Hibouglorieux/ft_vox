@@ -47,9 +47,9 @@ int		main( int argc, char *argv[] )
 
 	Camera camera;
 	World* world = new World();
-	for (int i = 0; i < 4; i++)
+	for (int i = 0; i < 2; i++)
 	{
-		for (int j = 0; j < 4; j++)
+		for (int j = 0; j < 2; j++)
 		{
 			Chunk* chnk = new Chunk(i * CHUNK_WIDTH, j * CHUNK_DEPTH);
 			world->addObject(chnk);
