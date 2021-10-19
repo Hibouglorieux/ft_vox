@@ -10,6 +10,7 @@ Chunk::Chunk(int x, int z)
 	// Generate perlin noise and set blocs
 	// SET_BLOCS()
 	heightMap = VoxelGenerator::createMap(0);
+	texture = new Texture(heightMap);
 	for(unsigned int y = 0; y < CHUNK_HEIGHT; y++)	// Too big of a loop
 	{
 		for(unsigned int x = 0; x < CHUNK_WIDTH; x++)
@@ -28,14 +29,18 @@ Chunk::Chunk(int x, int z)
 	}
 }
 
-GLfloat *Chunk::generateMatrices(void)
+Chunk::~Chunk(void)
+{
+	delete texture;
+}
+
+GLfloat *Chunk::generatePosOffsets(void)
 {
 	// TODO : Implement way of knowing which bloc should be shown to avoid loading
 	//		too much data.
 	GLfloat	*WIP_transform = new GLfloat[hardBloc * 3];//CHUNK_HEIGHT * CHUNK_WIDTH * CHUNK_DEPTH * 3];
 	// Should generate position of each bloc based on the chunk position
 	Matrix	mat;
-	GLfloat	*data;
 	unsigned int i = 0;
 	for(unsigned int y = 0; y < CHUNK_HEIGHT; y++)	// Too big of a loop
 	{
@@ -70,14 +75,14 @@ GLfloat *Chunk::generateMatrices(void)
 	return WIP_transform;
 }
 
-void Chunk::draw(Matrix *viewMat, Vec3& pos, Shader* shader, Texture* texture)
+void Chunk::draw(Shader* shader)
 {
 	// Should draw instantiated bloc of same type once for each type.
-	GLfloat	*modelMatrices = Chunk::generateMatrices();
+	GLfloat	*positionOffset = Chunk::generatePosOffsets();
 
 	//RectangularCuboid::drawInstance(pos, shader, texture,
 	//		modelMatrices, CHUNK_SIZE);
-	RectangularCuboid::drawInstance(pos, shader, texture,
-			modelMatrices, hardBloc);
-	delete [] modelMatrices;
+	RectangularCuboid::drawInstance(shader, texture,
+			positionOffset, hardBloc);
+	delete [] positionOffset;
 }

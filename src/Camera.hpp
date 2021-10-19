@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/09/02 01:10:32 by nathan            #+#    #+#             */
-/*   Updated: 2021/10/18 16:38:01 by nathan           ###   ########.fr       */
+/*   Updated: 2021/10/19 14:56:01 by nathan           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,11 +25,9 @@ public:
 	Camera(float x, float y, float z);
 	Camera(Vec3 translation);
 	void reset();
-	void lookAt(Vec3 target = {0, 0.0f, 0});
 	void freeMovement();
 	~Camera(void) {};
 	void move(bool forward, bool backward, bool right, bool left, float speedFactor);
-	void scroll(double factor);
 	void moveUp(float distance = Y_MOVE_SPEED);
 	void moveDown(float distance = Y_MOVE_SPEED);
 	void rotate(double x, double y);
@@ -39,8 +37,6 @@ public:
 	std::pair<Vec3, Vec3> unProject(float mouseX, float mouseY, Matrix projMat);
 	Vec3 unProjectToOrigin(float mouseX, float mouseY, Matrix projMat);
 private:
-	bool hasTarget;
-	Vec3 target;
 	void actualizeView();
 	Matrix view;
 	Matrix rotMat;

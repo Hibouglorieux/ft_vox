@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/10/15 13:08:40 by nathan            #+#    #+#             */
-/*   Updated: 2021/10/18 18:53:04 by nathan           ###   ########.fr       */
+/*   Updated: 2021/10/19 11:37:46 by nathan           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,14 +16,14 @@
 #include <cmath>
 #include <random>
 
-#define TEST (5)
+#define TEST ((float)HEIGHTMAP_SIZE / (float)(GRADIENT_SIZE - 1))
 HeightMap	VoxelGenerator::createMap(unsigned long seed)
 {
 	PerlinNoise perlin(seed);
 	HeightMap* myHeightMap = new HeightMap;
-	for (int z = 0; z < LENGTH; z++)
+	for (int z = 0; z < HEIGHTMAP_SIZE; z++)
 	{
-		for (int x = 0; x < WIDTH; x++)
+		for (int x = 0; x < HEIGHTMAP_SIZE; x++)
 		{
 			(*myHeightMap)[z][x] = perlin.getValue((float)x / TEST, (float)z / TEST);
 			float* tmp = &(*myHeightMap)[z][x];
@@ -44,7 +44,7 @@ float	PerlinNoise::lerp(float a0, float a1, float w) const
 PerlinNoise::PerlinNoise(unsigned long seed)
 {
 	std::mt19937 generator(seed);
-	std::uniform_real_distribution<> distribution(0.0, 1.0);
+	std::uniform_real_distribution<> distribution(0.f, 1.f);
 	auto dice = [&generator, &distribution](){return distribution(generator);};
 	float gradientLength;
 	for (int i = 0; i < GRADIENT_SIZE; i++)
@@ -84,9 +84,9 @@ float	PerlinNoise::getValue(float x, float y)
 {
 
 	// Determine grid cell coordinates
-	int x0 = floor(x);
+	int x0 = (int)floor(x);
 	int x1 = x0 + 1;
-	int y0 = floor(y);
+	int y0 = (int)floor(y);
 	int y1 = y0 + 1;
 
 	// Determine interpolation weights

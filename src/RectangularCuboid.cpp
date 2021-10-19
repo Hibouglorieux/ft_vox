@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/08/08 17:52:01 by nathan            #+#    #+#             */
-/*   Updated: 2021/10/18 18:42:08 by nathan           ###   ########.fr       */
+/*   Updated: 2021/10/19 16:00:31 by nathan           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -105,7 +105,7 @@ void RectangularCuboid::draw(Vec3& pos, Shader* shader, Texture* texture)
     glDrawArrays(GL_TRIANGLES, 0, 36);
 }
 
-void RectangularCuboid::drawInstance(Vec3& pos, Shader* shader, Texture* texture,
+void RectangularCuboid::drawInstance(Shader* shader, Texture* texture,
 		GLfloat *instanceTransforms, unsigned int count)
 {
 	initialize();
@@ -120,9 +120,6 @@ void RectangularCuboid::drawInstance(Vec3& pos, Shader* shader, Texture* texture
 
 	glVertexAttribDivisor(2, 1);
 
-	shader->use();
-	Matrix modelMat = Matrix::createTranslationMatrix(pos);
-    glUniformMatrix4fv(glGetUniformLocation(shader->getID(), "model"), 1, GL_TRUE, modelMat.exportForGL());
 	glUniform1i(glGetUniformLocation(shader->getID(), "instanced"), 1);
 	glBindTexture(GL_TEXTURE_2D, texture->getID());
 	glUniform1i(glGetUniformLocation(shader->getID(), "texture0"), 0);

@@ -6,7 +6,7 @@
 /*   By: nathan <nallani@student.s19.be>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/05/24 01:52:59 by nathan            #+#    #+#             */
-/*   Updated: 2021/10/18 18:51:58 by nathan           ###   ########.fr       */
+/*   Updated: 2021/10/19 16:03:18 by nathan           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,7 @@
 #include "Loop.hpp"
 #include "World.hpp"
 #include "Matrix.hpp"
+#include "Chunk.hpp"
 #include "VoxelGenerator.hpp"
 
 #define DEFAULT_SEED 42
@@ -33,6 +34,7 @@ int		main( int argc, char *argv[] )
 		return 0;
 	}
 	glEnable(GL_CULL_FACE);
+	glEnable(GL_DEPTH_TEST);
 	glCullFace(GL_BACK);// renders only visible squares of cubes
 	glClearColor(0.2, 0.2, 0.2, 1.0f);
 
@@ -45,6 +47,14 @@ int		main( int argc, char *argv[] )
 
 	Camera camera;
 	World* world = new World();
+	for (int i = 0; i < 4; i++)
+	{
+		for (int j = 0; j < 4; j++)
+		{
+			Chunk* chnk = new Chunk(i * CHUNK_WIDTH, j * CHUNK_DEPTH);
+			world->addObject(chnk);
+		}
+	}
 	//RectangularCuboid* floor = new RectangularCuboid(1000, 0.1, 1000);
 	//floor->setID("floor");
 	//floor->setColor({0.6, 0.7, 0.6});
@@ -52,7 +62,6 @@ int		main( int argc, char *argv[] )
 
 	world->setCamera(camera);
 	HeightMap heightMap = VoxelGenerator::createMap(seed);
-	world->setTexture(new Texture(heightMap));
 	//world->addObject(floor);
 	Loop::setWorld(world);
 

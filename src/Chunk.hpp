@@ -7,26 +7,31 @@
 # define CHUNK_SIZE CHUNK_HEIGHT * CHUNK_WIDTH * CHUNK_DEPTH
 
 # include "Object.hpp"
+# include "Shader.hpp"
 # include "Texture.hpp"
 # include "Matrix.hpp"
 # include "RectangularCuboid.hpp"
 # include <cstring>
 
-class Chunk {
+class Chunk : public Object{
 public:
 	Chunk(int x, int z);
 
-	void	draw(Matrix *viewMat, Vec3& pos, Shader* shader, Texture* texture);
+	virtual ~Chunk(void);
+
+	virtual void	draw(Shader* shader) override;
 
 	Vec3	getPos() const { return position; }
 	//char	*getBlocs() const { return blocs; }
 private:
 
-	GLfloat	*generateMatrices(void);
+	GLfloat	*generatePosOffsets(void);
 	Vec3	position;
 	char	blocs[CHUNK_HEIGHT][CHUNK_WIDTH][CHUNK_DEPTH];
 	HeightMap	heightMap;
 	unsigned int hardBloc;
+	Texture* texture;
+
 };
 
 #endif

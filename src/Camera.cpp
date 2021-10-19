@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/09/02 01:10:29 by nathan            #+#    #+#             */
-/*   Updated: 2021/10/18 16:40:39 by nathan           ###   ########.fr       */
+/*   Updated: 2021/10/19 14:58:20 by nathan           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,7 +30,6 @@ Camera::Camera(float x, float y, float z) : Camera(Vec3(x, y, z))
 Camera::Camera(Vec3 position)
 {
 	this->pos = position;
-	hasTarget = false;
 	dir = {0, 0, 0};
 	actualizeView();
 }
@@ -42,10 +41,8 @@ Vec3 Camera::getPos() const
 
 void Camera::reset()
 {
-	hasTarget = true;
 	dir = {0, 0, 0};
 	pos = {0, 4, 10};
-	lookAt();
 	actualizeView();
 }
 
@@ -54,17 +51,8 @@ Matrix Camera::getMatrix() const
 	return view;
 }
 
-void Camera::lookAt(Vec3 target)
-{
-	hasTarget = true;
-	dir = {0, 0, 0};
-	pos = target - Vec3(0, 0, -50);
-	this->target = target;
-}
-
 void Camera::freeMovement()
 {
-	hasTarget = false;
 	dir = {0, 0, 0};
 	pos = {0, 0, 50};
 	actualizeView();
@@ -72,8 +60,6 @@ void Camera::freeMovement()
 
 void Camera::move(bool forward, bool backward, bool right, bool left, float speedFactor)
 {
-	if (hasTarget)
-		return;
 	if (!forward && !backward && !right && !left)
 		return;
 	Vec3 moveDir = getDirection();
@@ -93,18 +79,7 @@ void Camera::move(bool forward, bool backward, bool right, bool left, float spee
 	}
 	pos += realMovement.getNormalized() * speedFactor;
 	if (realMovement != Vec3::ZERO)
-	actualizeView();
-}
-
-void Camera::scroll(double factor)
-{
-	if (!hasTarget)
-		return;
-	if ((target - pos).getLength() < 5.0f && factor < 0.0f) // dont zoom too close
-		return;
-	Vec3 moveDir = Vec3(0, 0.1f, 1) * (float)(std::min(1.0, std::max(factor, 2.5)) * factor > 0 ? 1.0 : -1.0); // rot is applied after, need to move close to object
-	pos += moveDir;
-	actualizeView();
+		actualizeView();
 }
 
 Vec3 Camera::getDirection() const
@@ -120,20 +95,14 @@ Vec3 Camera::getDirection() const
 
 void Camera::moveUp(float distance)
 {
-	if (!hasTarget)
-	{
-		pos.y += distance;
-		actualizeView();
-	}
+	pos.y += distance;
+	actualizeView();
 }
 
 void Camera::moveDown(float distance)
 {
-	if (!hasTarget)
-	{
-		pos.y -= distance;
-		actualizeView();
-	}
+	pos.y -= distance;
+	actualizeView();
 }
 
 void Camera::rotate(double x, double y)
@@ -142,37 +111,18 @@ void Camera::rotate(double x, double y)
 		return;
 	dir.y += x;
 	dir.x += y;
-	if (!hasTarget)
-	{
-		if (dir.x > 89.0f)
-			dir.x = 89;
-		if (dir.x < -89.0f)
-			dir.x = -89.0f;
-	}
-	else
-	{
-		if (dir.x > 50.0f)
-			dir.x = 50;
-		if (dir.x < -20)
-			dir.x = -20;
-	}
+	if (dir.x > 89.0f)
+		dir.x = 89;
+	if (dir.x < -89.0f)
+		dir.x = -89.0f;
 	actualizeView();
 }
 
 void Camera::actualizeView()
 {
-	if (hasTarget)
-	{
-		rotMat = Matrix::createRotationMatrix(Matrix::RotationDirection::X, dir.x);
-		rotMat *= Matrix::createRotationMatrix(Matrix::RotationDirection::Y, dir.y);
-		this->view = Matrix::createTranslationMatrix(-pos) * rotMat;
-	}
-	else
-	{
-		rotMat = Matrix::createRotationMatrix(Matrix::RotationDirection::X, dir.x);
-		rotMat *= Matrix::createRotationMatrix(Matrix::RotationDirection::Y, dir.y);
-		this->view = rotMat * Matrix::createTranslationMatrix(-pos);
-	}
+	rotMat = Matrix::createRotationMatrix(Matrix::RotationDirection::X, dir.x);
+	rotMat *= Matrix::createRotationMatrix(Matrix::RotationDirection::Y, dir.y);
+	this->view = rotMat * Matrix::createTranslationMatrix(-pos);
 }
 
 Vec3 Camera::unProjectToOrigin(float mouseX, float mouseY, Matrix projMat)

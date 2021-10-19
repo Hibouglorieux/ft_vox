@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/05/24 15:40:30 by nathan            #+#    #+#             */
-/*   Updated: 2021/10/15 13:02:17 by nathan           ###   ########.fr       */
+/*   Updated: 2021/10/19 14:55:39 by nathan           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,7 +24,6 @@ public:
 	static void setWorld(World* newWorld) {world = newWorld;};
 private:
 	static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
-	static void scrollCallBack(GLFWwindow* window, double xoffset, double yoffset);
 	static void processInput();
 	static bool shouldStop;
 	static double frameTime;

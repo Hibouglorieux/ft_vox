@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/10/15 13:08:43 by nathan            #+#    #+#             */
-/*   Updated: 2021/10/18 18:51:38 by nathan           ###   ########.fr       */
+/*   Updated: 2021/10/19 11:15:34 by nathan           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,9 +17,10 @@
 #include "ft_vox.h"
 
 #define GRADIENT_SIZE 16
+#define HEIGHTMAP_SIZE 256
 
 typedef std::array<std::array<std::array<unsigned char, WIDTH>, LENGTH>, HEIGHT> VoxelMap;
-typedef std::array<std::array<float, WIDTH>, LENGTH> HeightMap;
+typedef std::array<std::array<float, HEIGHTMAP_SIZE>, HEIGHTMAP_SIZE> HeightMap;
 
 class VoxelGenerator {
 public:
