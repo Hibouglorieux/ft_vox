@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/09/02 01:10:29 by nathan            #+#    #+#             */
-/*   Updated: 2021/10/19 14:58:20 by nathan           ###   ########.fr       */
+/*   Updated: 2021/10/19 22:08:13 by nathan           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,11 +16,11 @@
 
 #define X_ROTATION_SPEED 1
 #define Y_ROTATION_SPEED 1
+#define DEFAULT_CAMERA_POS Vec3(0.f, 100.f, 0.f)
+#define DEFAULT_CAMERA_ROT Vec3(35.f, 135.f, 0.f)
 
-Camera::Camera() : Camera(Vec3(0, 20, 0))
+Camera::Camera() : Camera(DEFAULT_CAMERA_POS)
 {
-	dir.x = 0.0f;//89.0f;// TODO tmp to view map generation from ahead to view map generation from ahead
-	actualizeView();
 }
 
 Camera::Camera(float x, float y, float z) : Camera(Vec3(x, y, z))
@@ -29,9 +29,8 @@ Camera::Camera(float x, float y, float z) : Camera(Vec3(x, y, z))
 
 Camera::Camera(Vec3 position)
 {
-	this->pos = position;
-	dir = {0, 0, 0};
-	actualizeView();
+	pos = position;
+	dir = DEFAULT_CAMERA_ROT;// TODO tmp to view map generation from ahead
 }
 
 Vec3 Camera::getPos() const
@@ -41,21 +40,14 @@ Vec3 Camera::getPos() const
 
 void Camera::reset()
 {
-	dir = {0, 0, 0};
-	pos = {0, 4, 10};
-	actualizeView();
+	pos = DEFAULT_CAMERA_POS;
+	dir = DEFAULT_CAMERA_ROT;
 }
 
-Matrix Camera::getMatrix() const
+Matrix Camera::getMatrix()
 {
+	actualizeView();
 	return view;
-}
-
-void Camera::freeMovement()
-{
-	dir = {0, 0, 0};
-	pos = {0, 0, 50};
-	actualizeView();
 }
 
 void Camera::move(bool forward, bool backward, bool right, bool left, float speedFactor)
@@ -78,8 +70,6 @@ void Camera::move(bool forward, bool backward, bool right, bool left, float spee
 		realMovement += Matrix::createRotationMatrix(Matrix::RotationDirection::Y, -90) * moveDir;
 	}
 	pos += realMovement.getNormalized() * speedFactor;
-	if (realMovement != Vec3::ZERO)
-		actualizeView();
 }
 
 Vec3 Camera::getDirection() const
@@ -96,13 +86,11 @@ Vec3 Camera::getDirection() const
 void Camera::moveUp(float distance)
 {
 	pos.y += distance;
-	actualizeView();
 }
 
 void Camera::moveDown(float distance)
 {
 	pos.y -= distance;
-	actualizeView();
 }
 
 void Camera::rotate(double x, double y)
@@ -115,12 +103,11 @@ void Camera::rotate(double x, double y)
 		dir.x = 89;
 	if (dir.x < -89.0f)
 		dir.x = -89.0f;
-	actualizeView();
 }
 
 void Camera::actualizeView()
 {
-	rotMat = Matrix::createRotationMatrix(Matrix::RotationDirection::X, dir.x);
+	Matrix rotMat = Matrix::createRotationMatrix(Matrix::RotationDirection::X, dir.x);
 	rotMat *= Matrix::createRotationMatrix(Matrix::RotationDirection::Y, dir.y);
 	this->view = rotMat * Matrix::createTranslationMatrix(-pos);
 }

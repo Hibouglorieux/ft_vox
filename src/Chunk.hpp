@@ -1,17 +1,20 @@
 #ifndef CHUNK_CLASS_H
 # define CHUNK_CLASS_H
 
-# define CHUNK_HEIGHT	16	// 256
-# define CHUNK_WIDTH	64	// 16
-# define CHUNK_DEPTH	64	// 16
-# define CHUNK_SIZE CHUNK_HEIGHT * CHUNK_WIDTH * CHUNK_DEPTH
-
 # include "Object.hpp"
 # include "Shader.hpp"
 # include "Texture.hpp"
 # include "Matrix.hpp"
 # include "RectangularCuboid.hpp"
 # include <cstring>
+
+# define CHUNK_HEIGHT	16	// 256
+
+// defined in VoxelGenerator
+# define CHUNK_WIDTH HEIGHTMAP_SIZE	//64	// 16
+# define CHUNK_DEPTH HEIGHTMAP_SIZE	//64	// 16
+
+# define CHUNK_SIZE CHUNK_HEIGHT * CHUNK_WIDTH * CHUNK_DEPTH
 
 
 class Chunk : public Object{

@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/09/02 01:10:32 by nathan            #+#    #+#             */
-/*   Updated: 2021/10/19 14:56:01 by nathan           ###   ########.fr       */
+/*   Updated: 2021/10/19 21:49:37 by nathan           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,21 +25,19 @@ public:
 	Camera(float x, float y, float z);
 	Camera(Vec3 translation);
 	void reset();
-	void freeMovement();
 	~Camera(void) {};
 	void move(bool forward, bool backward, bool right, bool left, float speedFactor);
 	void moveUp(float distance = Y_MOVE_SPEED);
 	void moveDown(float distance = Y_MOVE_SPEED);
 	void rotate(double x, double y);
-	Vec3 getDirection() const;
 	Vec3 getPos() const;// TODO maybe test with a matrix.getTranslationVector instead for lookAt
-	Matrix getMatrix() const;
+	Matrix getMatrix();
 	std::pair<Vec3, Vec3> unProject(float mouseX, float mouseY, Matrix projMat);
 	Vec3 unProjectToOrigin(float mouseX, float mouseY, Matrix projMat);
 private:
+	Vec3 getDirection() const;// meant to convert degree to rad
 	void actualizeView();
 	Matrix view;
-	Matrix rotMat;
 	Vec3 dir;
 	Vec3 pos;
 };

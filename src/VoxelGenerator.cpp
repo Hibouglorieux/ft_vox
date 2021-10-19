@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/10/15 13:08:40 by nathan            #+#    #+#             */
-/*   Updated: 2021/10/19 18:12:00 by nathan           ###   ########.fr       */
+/*   Updated: 2021/10/19 22:34:38 by nathan           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,7 +16,10 @@
 #include <cmath>
 #include <random>
 
-#define TEST (32.f)
+
+#define TMP_FIXED_GRADIENT_SIZE (GRADIENT_SIZE - 1)
+#define SCALE_HEIGHTMAP_TO_FRACTION_OF_NOISE (1.f / HEIGHTMAP_SIZE * TMP_FIXED_GRADIENT_SIZE / (float)ROW_OF_CHUNK)
+
 HeightMap	VoxelGenerator::createMap(unsigned long seed)
 {
 	PerlinNoise perlin(seed);
@@ -25,8 +28,7 @@ HeightMap	VoxelGenerator::createMap(unsigned long seed)
 	{
 		for (int x = 0; x < HEIGHTMAP_SIZE; x++)
 		{
-			(*myHeightMap)[z][x] = perlin.getValue((float)x / TEST, (float)z / TEST);
-			//std::cout << (float)x / TEST << std::endl;
+			(*myHeightMap)[z][x] = perlin.getValue((float)x * SCALE_HEIGHTMAP_TO_FRACTION_OF_NOISE, (float)z * SCALE_HEIGHTMAP_TO_FRACTION_OF_NOISE);
 			float* tmp = &(*myHeightMap)[z][x];
 			*tmp = (*tmp + 1) / 2;
 		}
@@ -37,15 +39,14 @@ HeightMap	VoxelGenerator::createMap(unsigned long seed)
 HeightMap	VoxelGenerator::createMap(unsigned long seed, int ox, int oz)
 {
 	PerlinNoise perlin(seed);
-	ox *= HEIGHTMAP_SIZE / TEST;
-	oz *= HEIGHTMAP_SIZE / TEST;
+	ox *= TMP_FIXED_GRADIENT_SIZE / ROW_OF_CHUNK;
+	oz *= TMP_FIXED_GRADIENT_SIZE / ROW_OF_CHUNK;
 	HeightMap* myHeightMap = new HeightMap;
 	for (int z = oz; z < HEIGHTMAP_SIZE + oz; z++)
 	{
 		for (int x = ox; x < HEIGHTMAP_SIZE + ox; x++)
 		{	
-			(*myHeightMap)[z - oz][x - ox] = perlin.getValue(ox + (float)(x - ox) / TEST, oz + (float)(z - oz) / TEST);
-			//std::cout << ox + (float)(x - ox) / TEST << std::endl;
+			(*myHeightMap)[z - oz][x - ox] = perlin.getValue(ox + (float)(x - ox) * SCALE_HEIGHTMAP_TO_FRACTION_OF_NOISE, oz + (float)(z - oz) * SCALE_HEIGHTMAP_TO_FRACTION_OF_NOISE);
 			float* tmp = &(*myHeightMap)[z - oz][x - ox];
 			*tmp = (*tmp + 1) / 2;
 		}

@@ -6,15 +6,16 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/05/24 15:40:25 by nathan            #+#    #+#             */
-/*   Updated: 2021/10/19 18:00:36 by nathan           ###   ########.fr       */
+/*   Updated: 2021/10/19 22:35:02 by nathan           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
+#include <iomanip>
+#include <unistd.h>
 #include "Loop.hpp"
 #include <glfw3.h>
-#include <unistd.h>
 #include "Camera.hpp"
-#include <iomanip>
+#include "ft_vox.h"
 
 bool Loop::shouldStop = false;
 double Loop::frameTime = 0.0f;
@@ -35,6 +36,7 @@ void Loop::loop()
 {
 	glfwSetTime(0);
 	glfwSetKeyCallback(appWindow::getWindow(), Loop::keyCallback);
+	glfwGetCursorPos(appWindow::getWindow(), &mouseX, &mouseY);
 	while (!glfwWindowShouldClose(appWindow::getWindow()))
 	{
 		double currentTimer = glfwGetTime();
@@ -105,8 +107,6 @@ void Loop::keyCallback(GLFWwindow* window, int key, int scancode, int action, in
 
 	if (window != appWindow::getWindow())
 		return;
-	if (key == GLFW_KEY_F && action == GLFW_PRESS)
-		world->getCamera().freeMovement();
 	if (key == GLFW_KEY_R && action == GLFW_PRESS)
 		world->getCamera().reset();
 }

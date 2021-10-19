@@ -6,7 +6,7 @@
 /*   By: nathan <nallani@student.s19.be>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/05/24 01:52:59 by nathan            #+#    #+#             */
-/*   Updated: 2021/10/19 18:15:10 by nathan           ###   ########.fr       */
+/*   Updated: 2021/10/19 22:36:55 by nathan           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,11 +45,10 @@ int		main( int argc, char *argv[] )
 	}
 
 
-	Camera camera;
 	World* world = new World();
-	for (int i = 0; i < 4; i++)
+	for (int i = 0; i < ROW_OF_CHUNK; i++) // defined in VoxelGenerator, needed to scale the heightmap calculation
 	{
-		for (int j = 0; j < 4; j++)
+		for (int j = 0; j < ROW_OF_CHUNK; j++)
 		{
 			Chunk* chnk = new Chunk(j, i);
 			world->addObject(chnk);
@@ -60,7 +59,6 @@ int		main( int argc, char *argv[] )
 	//floor->setColor({0.6, 0.7, 0.6});
 	//floor->setShader(new Shader("floor.vert", "floor.frag"));
 
-	world->setCamera(camera);
 	//world->addObject(floor);
 	Loop::setWorld(world);
 

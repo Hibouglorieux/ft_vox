@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/08/08 19:05:09 by nathan            #+#    #+#             */
-/*   Updated: 2021/10/19 15:59:01 by nathan           ###   ########.fr       */
+/*   Updated: 2021/10/19 22:33:04 by nathan           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,7 +16,6 @@
 
 #include "Matrix.hpp"
 #include "Shader.hpp"
-#include "Texture.hpp"
 #define SCREEN_WIDTH 800.0f
 #define SCREEN_HEIGHT 600.0f //TODO change that to have the real window size
 

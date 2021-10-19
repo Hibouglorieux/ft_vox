@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/07/21 18:11:30 by nathan            #+#    #+#             */
-/*   Updated: 2021/10/19 16:03:06 by nathan           ###   ########.fr       */
+/*   Updated: 2021/10/19 22:36:12 by nathan           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -57,7 +57,7 @@ std::vector<Object*>& World::getObjects()
 
 void World::setCamera(Camera newCamera)
 {
-	camera= newCamera;
+	camera = newCamera;
 }
 
 Camera& World::getCamera()

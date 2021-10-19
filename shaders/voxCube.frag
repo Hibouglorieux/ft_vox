@@ -12,7 +12,7 @@ void main()
 	float colo = texture(texture0, texCoord).r;
 	FragColor = vec4(colo, colo, colo, 1.0);
 
-	float w = vertexPos.y / 16.0;
+	float w = ceil(vertexPos.y) / 16.0;
 
 	FragColor = vec4(0, w, 0, 1.0);
 }

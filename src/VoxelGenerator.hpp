@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/10/15 13:08:43 by nathan            #+#    #+#             */
-/*   Updated: 2021/10/19 17:44:21 by nathan           ###   ########.fr       */
+/*   Updated: 2021/10/19 22:42:46 by nathan           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,8 +16,12 @@
 #include <array>
 #include "ft_vox.h"
 
-#define GRADIENT_SIZE 32
-#define HEIGHTMAP_SIZE 128
+#define GRADIENT_SIZE 9 // will change in the future, it is 2pow(n) + 1 because
+						// it's not yet looping on itself
+						// bigger == bigger noise
+						// is currently stretched to all chunk displayed as testing
+#define HEIGHTMAP_SIZE 64 // Should be equel to chunk size for now
+#define ROW_OF_CHUNK 4
 
 typedef std::array<std::array<std::array<unsigned char, WIDTH>, LENGTH>, HEIGHT> VoxelMap;
 typedef std::array<std::array<float, HEIGHTMAP_SIZE>, HEIGHTMAP_SIZE> HeightMap;
