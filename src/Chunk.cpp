@@ -18,8 +18,8 @@ Chunk::Chunk(int x, int z)
 		{
 			for(unsigned int z = 0; z < CHUNK_DEPTH; z++)
 			{
-				bloc = &(blocs[y][x][z]);
-				if (heightMap[x][z] * CHUNK_HEIGHT < y)
+				bloc = &(blocs[y][z][x]);
+				if (heightMap[z][x] * CHUNK_HEIGHT < y)
 				{
 					bloc->type = 0;
 					bloc->visible = 0;
@@ -52,7 +52,7 @@ Chunk::Chunk(int x, int z)
 		{
 			for(unsigned int z = 0; z < CHUNK_DEPTH; z++)
 			{
-				bloc = &(blocs[y][x][z]);
+				bloc = &(blocs[y][z][x]);
 				SetVisibilityByNeighbors(x, y, z);
 			}
 		}
@@ -63,7 +63,7 @@ Chunk::Chunk(int x, int z)
 		{
 			for(unsigned int z = 0; z < CHUNK_DEPTH; z++)
 			{
-				bloc = &(blocs[y][x][z]);
+				bloc = &(blocs[y][z][x]);
 				if (bloc->shouldUpdate)
 				{
 					bloc->visible = bloc->visibleInNextIteration;
@@ -81,23 +81,23 @@ Chunk::Chunk(int x, int z)
 void Chunk::SetVisibilityByNeighbors(int x, int y, int z)
 {
 	// TODO : Check coordinate to avoid overflow
-	struct bloc			*bloc = &(blocs[y][x][z]);
+	struct bloc			*bloc = &(blocs[y][z][x]);
 	std::vector<struct bloc*>	neighbors = {};
 	long unsigned int			hardNei = 0;
 	long unsigned int			invisibleNei = 0;
 
 	if (y > 0)
-		neighbors.push_back(&(blocs[y - 1][x][z]));
+		neighbors.push_back(&(blocs[y - 1][z][x]));
 	if (y < CHUNK_HEIGHT - 1)
-		neighbors.push_back(&(blocs[y + 1][x][z]));
+		neighbors.push_back(&(blocs[y + 1][z][x]));
 	if (x > 0)
-		neighbors.push_back(&(blocs[y][x - 1][z]));
+		neighbors.push_back(&(blocs[y][z][x - 1]));
 	if (x < CHUNK_WIDTH - 1)
-		neighbors.push_back(&(blocs[y][x + 1][z]));
+		neighbors.push_back(&(blocs[y][z][x + 1]));
 	if (z > 0)
-		neighbors.push_back(&(blocs[y][x][z - 1]));
+		neighbors.push_back(&(blocs[y][z - 1][x]));
 	if (z < CHUNK_DEPTH - 1)
-		neighbors.push_back(&(blocs[y][x][z + 1]));
+		neighbors.push_back(&(blocs[y][z + 1][x]));
 	for (struct bloc *nei: neighbors)
 	{
 		if (nei->type == 0)
@@ -138,7 +138,7 @@ GLfloat *Chunk::generatePosOffsets(void)
 				unsigned int indexX = 0;
 				unsigned int indexY = 0;
 				unsigned int indexZ = 0;
-				if (blocs[y][x][z].visible == 1)
+				if (blocs[y][z][x].visible == 1)
 				{
 					indexX = i * 3;
 					indexY = i * 3 + 1;
