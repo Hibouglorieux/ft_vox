@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/09/02 01:10:29 by nathan            #+#    #+#             */
-/*   Updated: 2021/10/19 22:08:13 by nathan           ###   ########.fr       */
+/*   Updated: 2021/10/20 13:24:54 by nathan           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,7 +17,7 @@
 #define X_ROTATION_SPEED 1
 #define Y_ROTATION_SPEED 1
 #define DEFAULT_CAMERA_POS Vec3(0.f, 100.f, 0.f)
-#define DEFAULT_CAMERA_ROT Vec3(35.f, 135.f, 0.f)
+#define DEFAULT_CAMERA_ROT Vec3(60.f, 135.f, 0.f)
 
 Camera::Camera() : Camera(DEFAULT_CAMERA_POS)
 {

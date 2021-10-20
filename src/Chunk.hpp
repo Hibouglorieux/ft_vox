@@ -7,12 +7,13 @@
 # include "Matrix.hpp"
 # include "RectangularCuboid.hpp"
 # include <cstring>
+# include "ft_vox.h"
 
-# define CHUNK_HEIGHT	16	// 256
+# define CHUNK_HEIGHT (HEIGHT / 32)	// 256
 
 // defined in VoxelGenerator
-# define CHUNK_WIDTH HEIGHTMAP_SIZE	//64	// 16
-# define CHUNK_DEPTH HEIGHTMAP_SIZE	//64	// 16
+# define CHUNK_WIDTH BLOC_WIDTH_PER_CHUNK
+# define CHUNK_DEPTH BLOC_WIDTH_PER_CHUNK
 
 # define CHUNK_SIZE CHUNK_HEIGHT * CHUNK_WIDTH * CHUNK_DEPTH
 

@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/10/15 13:08:40 by nathan            #+#    #+#             */
-/*   Updated: 2021/10/19 22:34:38 by nathan           ###   ########.fr       */
+/*   Updated: 2021/10/20 13:03:41 by nathan           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,19 +16,20 @@
 #include <cmath>
 #include <random>
 
+#define SCALE_HEIGHTMAP_TO_FRACTION_OF_NOISE ((float)1.0 / HEIGHTMAP_SIZE * GRADIENT_SIZE / (float)MAX_NB_OF_CHUNK)
 
-#define TMP_FIXED_GRADIENT_SIZE (GRADIENT_SIZE - 1)
-#define SCALE_HEIGHTMAP_TO_FRACTION_OF_NOISE (1.f / HEIGHTMAP_SIZE * TMP_FIXED_GRADIENT_SIZE / (float)ROW_OF_CHUNK)
+Gradients* VoxelGenerator::gradients = nullptr;
 
 HeightMap	VoxelGenerator::createMap(unsigned long seed)
 {
-	PerlinNoise perlin(seed);
+	if (gradients == nullptr)
+		createPerlinGradient(seed);
 	HeightMap* myHeightMap = new HeightMap;
 	for (int z = 0; z < HEIGHTMAP_SIZE; z++)
 	{
 		for (int x = 0; x < HEIGHTMAP_SIZE; x++)
 		{
-			(*myHeightMap)[z][x] = perlin.getValue((float)x * SCALE_HEIGHTMAP_TO_FRACTION_OF_NOISE, (float)z * SCALE_HEIGHTMAP_TO_FRACTION_OF_NOISE);
+			(*myHeightMap)[z][x] = getValue((float)x * SCALE_HEIGHTMAP_TO_FRACTION_OF_NOISE, (float)z * SCALE_HEIGHTMAP_TO_FRACTION_OF_NOISE);
 			float* tmp = &(*myHeightMap)[z][x];
 			*tmp = (*tmp + 1) / 2;
 		}
@@ -36,17 +37,19 @@ HeightMap	VoxelGenerator::createMap(unsigned long seed)
 	return *myHeightMap;
 }
 
-HeightMap	VoxelGenerator::createMap(unsigned long seed, int ox, int oz)
+
+HeightMap	VoxelGenerator::createMap(unsigned long seed, float ox, float oz)
 {
-	PerlinNoise perlin(seed);
-	ox *= TMP_FIXED_GRADIENT_SIZE / ROW_OF_CHUNK;
-	oz *= TMP_FIXED_GRADIENT_SIZE / ROW_OF_CHUNK;
+	if (gradients == nullptr)
+		createPerlinGradient(seed);
+	ox *= (GRADIENT_SIZE / (float)MAX_NB_OF_CHUNK);
+	oz *= (GRADIENT_SIZE / (float)MAX_NB_OF_CHUNK);
 	HeightMap* myHeightMap = new HeightMap;
 	for (int z = oz; z < HEIGHTMAP_SIZE + oz; z++)
 	{
 		for (int x = ox; x < HEIGHTMAP_SIZE + ox; x++)
 		{	
-			(*myHeightMap)[z - oz][x - ox] = perlin.getValue(ox + (float)(x - ox) * SCALE_HEIGHTMAP_TO_FRACTION_OF_NOISE, oz + (float)(z - oz) * SCALE_HEIGHTMAP_TO_FRACTION_OF_NOISE);
+			(*myHeightMap)[z - oz][x - ox] = getValue(ox + (float)(x - ox) * SCALE_HEIGHTMAP_TO_FRACTION_OF_NOISE, oz + (float)(z - oz) * SCALE_HEIGHTMAP_TO_FRACTION_OF_NOISE);
 			float* tmp = &(*myHeightMap)[z - oz][x - ox];
 			*tmp = (*tmp + 1) / 2;
 		}
@@ -57,12 +60,41 @@ HeightMap	VoxelGenerator::createMap(unsigned long seed, int ox, int oz)
 // Function to linearly interpolate between a0 and a1
 // Weight w should be in the range [0.0, 1.0]
 
-float	PerlinNoise::lerp(float a0, float a1, float w) const
+float	VoxelGenerator::lerp(float a0, float a1, float w)
 {
 	return (1.0 - w)*a0 + w*a1;
 }
 
-PerlinNoise::PerlinNoise(unsigned long seed)
+void		VoxelGenerator::createPerlinGradient(unsigned long seed)
+{
+	std::mt19937 generator(seed);
+	std::uniform_real_distribution<> distribution(0.f, 1.f);
+	auto dice = [&generator, &distribution](){return distribution(generator);};
+	float gradientLength;
+	Gradients* newGradients = new Gradients;
+	for (int i = 0; i < GRADIENT_SIZE; i++)
+	{
+		for (int j = 0; j < GRADIENT_SIZE; j++)
+		{
+			gradientLength = 2;
+			float& x = (*newGradients)[i][j][0];
+			float& y = (*newGradients)[i][j][1];
+			while (gradientLength > 1)
+			{
+				x = 2 * dice() - 1;
+				y = 2 * dice() - 1;
+				gradientLength = x * x + y * y;
+			}
+			gradientLength= sqrtf(gradientLength);
+			x /= gradientLength;
+			y /= gradientLength;
+		}
+	}
+	gradients = newGradients;
+}
+
+/*
+VoxelGenerator::VoxelGenerator::PerlinNoise(unsigned long seed)
 {
 	std::mt19937 generator(seed);
 	std::uniform_real_distribution<> distribution(0.f, 1.f);
@@ -88,9 +120,10 @@ PerlinNoise::PerlinNoise(unsigned long seed)
 		}
 	}
 }
+*/
 
 // Computes the dot product of the distance and gradient vectors.
-float PerlinNoise::dotGridGradient(int ix, int iy, float x, float y)
+float VoxelGenerator::dotGridGradient(int ix, int iy, float x, float y)
 {
 
 	// Precomputed (or otherwise) gradient vectors at each grid node
@@ -98,13 +131,14 @@ float PerlinNoise::dotGridGradient(int ix, int iy, float x, float y)
 	// Compute the distance vector
 	float dx = x - (float)ix;
 	float dy = y - (float)iy;
-
+	iy %= GRADIENT_SIZE;
+	ix %= GRADIENT_SIZE;
 	// Compute the dot-product
-	return (dx * gradients[iy][ix][0] + dy * gradients[iy][ix][1]);
+	return (dx * (*gradients)[iy][ix][0] + dy * (*gradients)[iy][ix][1]);
 }
 
 // Compute Perlin noise at coordinates x, y
-float	PerlinNoise::getValue(float x, float y)
+float	VoxelGenerator::getValue(float x, float y)
 {
 
 	// Determine grid cell coordinates

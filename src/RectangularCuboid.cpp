@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/08/08 17:52:01 by nathan            #+#    #+#             */
-/*   Updated: 2021/10/19 16:00:31 by nathan           ###   ########.fr       */
+/*   Updated: 2021/10/20 12:16:09 by nathan           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -88,6 +88,8 @@ void RectangularCuboid::clear()
 {
 	glBindVertexArray(VAO);
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glDeleteBuffers(1, &VBO);
+	glDeleteVertexArrays(1, &VAO);
 	glInvalidateBufferData(VBO);
 	initialized = false;
 }
