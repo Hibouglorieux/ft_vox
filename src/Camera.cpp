@@ -70,6 +70,9 @@ void Camera::move(bool forward, bool backward, bool right, bool left, float spee
 		realMovement += Matrix::createRotationMatrix(Matrix::RotationDirection::Y, -90) * moveDir;
 	}
 	pos += realMovement.getNormalized() * speedFactor;
+	currentChunk = Vec3((int)(floor(pos.x) / CHUNK_WIDTH),
+				 (int)(floor(pos.y) / CHUNK_HEIGHT),
+				 (int)(floor(pos.z) / CHUNK_DEPTH));
 }
 
 Vec3 Camera::getDirection() const

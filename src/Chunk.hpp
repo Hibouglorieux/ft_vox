@@ -24,6 +24,7 @@ public:
 
 	virtual ~Chunk(void);
 
+	void	initChunk(void);
 	virtual void	draw(Shader* shader) override;
 
 	Vec3	getPos() const { return position; }
@@ -34,17 +35,18 @@ private:
 	{
 		int type;
 		bool visible;
-		bool visibleInNextIteration;
 		bool shouldUpdate;
 	};
 
+	void	updateVisibility(void);
+	void	setVisibilityByNeighbors(int x, int y, int z);
 	GLfloat	*generatePosOffsets(void);
-	void	SetVisibilityByNeighbors(int x, int y, int z);
 
 	Vec3	position;
 	struct bloc	blocs[CHUNK_HEIGHT][CHUNK_WIDTH][CHUNK_DEPTH];
 	GLfloat	*blocsPosition;
 	bool	updateChunk;
+	bool	init;
 	HeightMap	heightMap;
 	unsigned int hardBloc;
 	unsigned int hardBlocVisible;

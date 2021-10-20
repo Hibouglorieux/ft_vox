@@ -14,9 +14,12 @@
 #ifndef WORLD_CLASS_H
 # define WORLD_CLASS_H
 
-#include "Object.hpp"
-#include "Camera.hpp"
+# include "Object.hpp"
+# include "Chunk.hpp"
+# include "Camera.hpp"
+# include <thread>
 
+# define VIEW_DISTANCE 160
 
 class World {
 public:

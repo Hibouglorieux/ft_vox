@@ -16,8 +16,9 @@
 #include "Matrix.hpp"
 #include "appWindow.hpp"
 #include "Vec3.hpp"
+# include "Chunk.hpp"
 
-#define Y_MOVE_SPEED 0.2f
+#define Y_MOVE_SPEED 1.0f
 
 class Camera {
 public:
@@ -40,6 +41,7 @@ private:
 	Matrix view;
 	Vec3 dir;
 	Vec3 pos;
+	Vec3 currentChunk;
 };
 
 #endif

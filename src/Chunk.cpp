@@ -6,14 +6,23 @@ Chunk::Chunk(int x, int z)
 	// Not necessary ?
 	memset(blocs, 0, CHUNK_HEIGHT * CHUNK_WIDTH * CHUNK_DEPTH * sizeof(struct bloc));
 
-	updateChunk = true;
 	blocsPosition = {};
+	// Should we recompute the chunk's blocs positions
+	updateChunk = false;
+	// How many solid bloc in chunk
 	hardBloc = 0;
-	struct bloc *bloc;
-	// Generate perlin noise and set blocs
-	// SET_BLOCS()
-	heightMap = VoxelGenerator::createMap(0, x, z);
+	hardBlocVisible = 0;
+	init = false;
+}
+
+void Chunk::initChunk(void)
+{
+	struct bloc	*bloc;
+	// Get height map for chunk
+	heightMap = VoxelGenerator::createMap(0, position.x / CHUNK_WIDTH, position.z / CHUNK_DEPTH);
 	texture = new Texture(heightMap);
+
+	// Set bloc type
 	for(unsigned int y = 0; y < CHUNK_HEIGHT; y++)	// Too big of a loop
 	{
 		for(unsigned int x = 0; x < CHUNK_WIDTH; x++)
@@ -25,68 +34,54 @@ Chunk::Chunk(int x, int z)
 				{
 					bloc->type = 0;
 					bloc->visible = 0;
-					bloc->visibleInNextIteration = 0;
 				}
 				else
 				{
 					bloc->type = 1;
 					bloc->visible = 1;
-					bloc->visibleInNextIteration = 1;
 					hardBloc += 1;
 				}
 				bloc->shouldUpdate = 0;
 			}
 		}
 	}
-	hardBlocVisible = 0;
-	/*
-	 *	Must check neighbor of a bloc to check if visible
-	 *	For bloc at x/y/z :
-	 *		- x + 1 / x - 1
-	 *		- y + 1 / y - 1
-	 *		- z + 1 / z - 1
-	 *	If all neighbors block are visible then current block is not visible
-	 *	If some neighbors are air then block is visible
-	 */
-	for(unsigned int y = 0; y < CHUNK_HEIGHT; y++)	// Too big of a loop
-	{
-		for(unsigned int x = 0; x < CHUNK_WIDTH; x++)
-		{
-			for(unsigned int z = 0; z < CHUNK_DEPTH; z++)
-			{
-				bloc = &(blocs[y][z][x]);
-				SetVisibilityByNeighbors(x, y, z);
-			}
-		}
-	}
-	for(unsigned int y = 0; y < CHUNK_HEIGHT; y++)	// Too big of a loop
-	{
-		for(unsigned int x = 0; x < CHUNK_WIDTH; x++)
-		{
-			for(unsigned int z = 0; z < CHUNK_DEPTH; z++)
-			{
-				bloc = &(blocs[y][z][x]);
-				if (bloc->shouldUpdate)
-				{
-					bloc->visible = bloc->visibleInNextIteration;
-					bloc->shouldUpdate = false;
-				}
-				if (bloc->visible == true)
-					hardBlocVisible += 1;
-			}
-		}
-	}
-	//std::cout << "[CHUNK] Hard bloc count    : " << hardBloc << "\n";
-	//std::cout << "[CHUNK] Visible bloc count : " << hardBlocVisible  << "\n";
+	updateChunk = true;
+	updateVisibility();
+	init = true;
 }
 
-void Chunk::SetVisibilityByNeighbors(int x, int y, int z)
+void Chunk::updateVisibility(void)
+{
+	struct bloc	*bloc;
+	hardBlocVisible = 0;
+	for(unsigned int y = CHUNK_HEIGHT; y > 0; y--)
+	{
+		for(unsigned int x = CHUNK_WIDTH; x > 0; x--)
+		{
+			for(unsigned int z = CHUNK_DEPTH; z > 0; z--)
+			{
+				bloc = &(blocs[y - 1][z - 1][x - 1]);
+				if (bloc->type == 0)
+					bloc->visible = 0;
+				else
+				{
+					setVisibilityByNeighbors(x - 1, y - 1, z - 1);
+					if (bloc->visible == true)
+						hardBlocVisible += 1;
+				}
+			}
+		}
+	}
+}
+
+void Chunk::setVisibilityByNeighbors(int x, int y, int z)
 {
 	// TODO : Check coordinate to avoid overflow
 	struct bloc			*bloc = &(blocs[y][z][x]);
 	std::vector<struct bloc*>	neighbors = {};
 	long unsigned int			hardNei = 0;
 	long unsigned int			invisibleNei = 0;
+	bool						set = false;
 
 	if (y > 0)
 		neighbors.push_back(&(blocs[y - 1][z][x]));
@@ -105,17 +100,16 @@ void Chunk::SetVisibilityByNeighbors(int x, int y, int z)
 		if (nei->type == 0)
 		{
 			bloc->visible = true;
+			set = true;
 			break;
 		}
-		hardNei += bloc->visible == true ? 1 : 0;
-		invisibleNei += bloc->visible == false ? 1 : 0;
+		hardNei += nei->type != 0 ? 1 : 0;
+		invisibleNei += nei->type == 0 || bloc->visible == false ? 1 : 0;
 	}
 	if (hardNei == neighbors.size())
-		bloc->visibleInNextIteration = false;
-	else if (invisibleNei == neighbors.size())
-		bloc->visibleInNextIteration = false;
-	if (bloc->visibleInNextIteration != bloc->visible)
-		bloc->shouldUpdate = true;
+		bloc->visible = false;
+	else if (invisibleNei == neighbors.size() && !set)
+		bloc->visible = false;
 }
 
 Chunk::~Chunk(void)
@@ -171,11 +165,11 @@ GLfloat *Chunk::generatePosOffsets(void)
 
 void Chunk::draw(Shader* shader)
 {
+	if (hardBloc == 0 || hardBlocVisible == 0 || !init)
+		return;
 	// Should draw instantiated bloc of same type once for each type.
 	GLfloat	*positionOffset = Chunk::generatePosOffsets();
 
-	//RectangularCuboid::drawInstance(pos, shader, texture,
-	//		modelMatrices, CHUNK_SIZE);
 	RectangularCuboid::drawInstance(shader, texture,
 			positionOffset, hardBlocVisible);
 }

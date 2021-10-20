@@ -21,6 +21,8 @@
 						// bigger == bigger noise
 						// is currently stretched to all chunk displayed as testing
 #define HEIGHTMAP_SIZE BLOC_WIDTH_PER_CHUNK
+#define ROW_OF_CHUNK 8
+
 typedef std::array<std::array<std::array<unsigned char, WIDTH>, LENGTH>, HEIGHT> VoxelMap;
 typedef std::array<std::array<float, HEIGHTMAP_SIZE>, HEIGHTMAP_SIZE> HeightMap;
 typedef std::array<std::array<std::array<float, 2>, GRADIENT_SIZE>, GRADIENT_SIZE> Gradients;

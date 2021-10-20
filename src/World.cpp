@@ -19,8 +19,24 @@ World::World()
 {
 	shader = new Shader();
 	shader->use();
-    glUniformMatrix4fv(glGetUniformLocation(shader->getID(), "projection"), 1, GL_TRUE, Object::getProjMat().exportForGL());
+	glUniformMatrix4fv(glGetUniformLocation(shader->getID(), "projection"), 1, GL_TRUE, Object::getProjMat().exportForGL());
 	objects = {};
+
+	for (int i = 0; i < ROW_OF_CHUNK; i++) // defined in VoxelGenerator, needed to scale the heightmap calculation
+	{
+		for (int j = 0; j < ROW_OF_CHUNK; j++)
+		{
+			Chunk* chnk = new Chunk(j, i);
+			addObject(chnk);
+
+			auto initNewChunk = [](Chunk *chnk) {
+				chnk->initChunk();
+			};
+
+			std::thread worker(initNewChunk, chnk); // Erreur ici
+			worker.detach();
+		}
+	}
 }
 
 World::~World()
@@ -35,10 +51,12 @@ World::~World()
 
 void World::render()
 {
+	//std::cout << camera.getPos().x << "," << camera.getPos().z << std::endl; 
+
 	Matrix precalculatedMat = Object::getProjMat() * camera.getMatrix();
 
-    glUniformMatrix4fv(glGetUniformLocation(shader->getID(), "precalcMat"), 1, GL_TRUE, precalculatedMat.exportForGL());
-    glUniformMatrix4fv(glGetUniformLocation(shader->getID(), "view"), 1, GL_TRUE, camera.getMatrix().exportForGL());
+	glUniformMatrix4fv(glGetUniformLocation(shader->getID(), "precalcMat"), 1, GL_TRUE, precalculatedMat.exportForGL());
+	glUniformMatrix4fv(glGetUniformLocation(shader->getID(), "view"), 1, GL_TRUE, camera.getMatrix().exportForGL());
 	for (Object* object : objects)
 	{
 		object->draw(shader);

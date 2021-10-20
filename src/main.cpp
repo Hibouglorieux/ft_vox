@@ -46,15 +46,6 @@ int		main( int argc, char *argv[] )
 
 
 	World* world = new World();
-#define ROW_OF_CHUNK 4
-	for (int i = 0; i < ROW_OF_CHUNK; i++) // defined in VoxelGenerator, needed to scale the heightmap calculation
-	{
-		for (int j = 0; j < ROW_OF_CHUNK; j++)
-		{
-			Chunk* chnk = new Chunk(j, i);
-			world->addObject(chnk);
-		}
-	}
 	//RectangularCuboid* floor = new RectangularCuboid(1000, 0.1, 1000);
 	//floor->setID("floor");
 	//floor->setColor({0.6, 0.7, 0.6});

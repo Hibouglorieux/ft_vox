@@ -16,9 +16,11 @@
 
 #define EMPTY 0
 #define HAS 1
+
 #define HEIGHT 256
 #define WIDTH  16384
 #define LENGTH WIDTH
+
 #define NEAR 0.1f
 #define PROJECT_NAME "ft_vox"
 #define FAR 1500.0f
