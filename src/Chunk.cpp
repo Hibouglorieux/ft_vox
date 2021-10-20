@@ -6,6 +6,8 @@ Chunk::Chunk(int x, int z)
 	// Not necessary ?
 	memset(blocs, 0, CHUNK_HEIGHT * CHUNK_WIDTH * CHUNK_DEPTH * sizeof(struct bloc));
 
+	updateChunk = true;
+	blocsPosition = {};
 	hardBloc = 0;
 	struct bloc *bloc;
 	// Generate perlin noise and set blocs
@@ -74,8 +76,8 @@ Chunk::Chunk(int x, int z)
 			}
 		}
 	}
-	std::cout << "[CHUNK] Hard bloc count    : " << hardBloc << "\n";
-	std::cout << "[CHUNK] Visible bloc count : " << hardBlocVisible  << "\n";
+	//std::cout << "[CHUNK] Hard bloc count    : " << hardBloc << "\n";
+	//std::cout << "[CHUNK] Visible bloc count : " << hardBlocVisible  << "\n";
 }
 
 void Chunk::SetVisibilityByNeighbors(int x, int y, int z)
@@ -118,6 +120,7 @@ void Chunk::SetVisibilityByNeighbors(int x, int y, int z)
 
 Chunk::~Chunk(void)
 {
+	delete [] blocsPosition;
 	delete texture;
 }
 
@@ -129,35 +132,41 @@ GLfloat *Chunk::generatePosOffsets(void)
 	// Should generate position of each bloc based on the chunk position
 	Matrix	mat;
 	unsigned int i = 0;
-	for(unsigned int y = 0; y < CHUNK_HEIGHT; y++)	// Too big of a loop
+	if (updateChunk)
 	{
-		for(unsigned int x = 0; x < CHUNK_WIDTH; x++)
+		for(unsigned int y = 0; y < CHUNK_HEIGHT; y++)	// Too big of a loop
 		{
-			for(unsigned int z = 0; z < CHUNK_DEPTH; z++)
+			for(unsigned int x = 0; x < CHUNK_WIDTH; x++)
 			{
-				unsigned int indexX = 0;
-				unsigned int indexY = 0;
-				unsigned int indexZ = 0;
-				if (blocs[y][z][x].visible == 1)
+				for(unsigned int z = 0; z < CHUNK_DEPTH; z++)
 				{
-					indexX = i * 3;
-					indexY = i * 3 + 1;
-					indexZ = i * 3 + 2;
-					i += 1;
+					unsigned int indexX = 0;
+					unsigned int indexY = 0;
+					unsigned int indexZ = 0;
+					if (blocs[y][z][x].visible == 1)
+					{
+						indexX = i * 3;
+						indexY = i * 3 + 1;
+						indexZ = i * 3 + 2;
+						i += 1;
+					}
+					else
+						continue;
+					//std::cout << indexX << " ; " << indexY << " ; " << indexZ << "\n\n";
+					WIP_transform[indexX] = position.x + x;
+					WIP_transform[indexY] = position.y + y;
+					WIP_transform[indexZ] = position.z + z;
+					/*std::cout << WIP_transform[indexX] << ";";
+					  std::cout << WIP_transform[indexY] << ";";
+					  std::cout << WIP_transform[indexZ] << "\n";*/
 				}
-				else
-					continue;
-				//std::cout << indexX << " ; " << indexY << " ; " << indexZ << "\n\n";
-				WIP_transform[indexX] = position.x + x;
-				WIP_transform[indexY] = position.y + y;
-				WIP_transform[indexZ] = position.z + z;
-				/*std::cout << WIP_transform[indexX] << ";";
-				  std::cout << WIP_transform[indexY] << ";";
-				  std::cout << WIP_transform[indexZ] << "\n";*/
 			}
 		}
+		updateChunk = false;
+		delete [] blocsPosition;
+		blocsPosition = WIP_transform;
 	}
-	return WIP_transform;
+	return blocsPosition;
 }
 
 void Chunk::draw(Shader* shader)
@@ -169,5 +178,4 @@ void Chunk::draw(Shader* shader)
 	//		modelMatrices, CHUNK_SIZE);
 	RectangularCuboid::drawInstance(shader, texture,
 			positionOffset, hardBlocVisible);
-	delete [] positionOffset;
 }

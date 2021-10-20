@@ -42,6 +42,8 @@ private:
 
 	Vec3	position;
 	struct bloc	blocs[CHUNK_HEIGHT][CHUNK_WIDTH][CHUNK_DEPTH];
+	GLfloat	*blocsPosition;
+	bool	updateChunk;
 	HeightMap	heightMap;
 	unsigned int hardBloc;
 	unsigned int hardBlocVisible;
