@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/07/21 18:11:30 by nathan            #+#    #+#             */
-/*   Updated: 2021/10/20 16:52:05 by nathan           ###   ########.fr       */
+/*   Updated: 2021/10/20 19:43:57 by nathan           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,6 +22,7 @@ World::World()
 	glUniformMatrix4fv(glGetUniformLocation(shader->getID(), "projection"), 1, GL_TRUE, Object::getProjMat().exportForGL());
 	objects = {};
 
+	Skybox::initialize();
 	for (int i = 0; i < ROW_OF_CHUNK; i++) // defined in VoxelGenerator, needed to scale the heightmap calculation
 	{
 		for (int j = 0; j < ROW_OF_CHUNK; j++)
@@ -47,14 +48,22 @@ World::~World()
 	}
 	objects.clear();
 	delete shader;
+	Skybox::clear();
 }
 
 void World::render()
 {
-	//std::cout << camera.getPos().x << "," << camera.getPos().z << std::endl; 
-
 	Matrix precalculatedMat = Object::getProjMat() * camera.getMatrix();
 
+
+	// draw skybox
+	Skybox::draw(precalculatedMat);
+
+
+	
+	// draw chunks
+	shader->use();
+	glEnable(GL_DEPTH_TEST);
 	glUniformMatrix4fv(glGetUniformLocation(shader->getID(), "precalcMat"), 1, GL_TRUE, precalculatedMat.exportForGL());
 	glUniformMatrix4fv(glGetUniformLocation(shader->getID(), "view"), 1, GL_TRUE, camera.getMatrix().exportForGL());
 	for (Object* object : objects)

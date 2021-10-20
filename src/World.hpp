@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/07/21 18:11:54 by nathan            #+#    #+#             */
-/*   Updated: 2021/10/20 15:44:02 by nathan           ###   ########.fr       */
+/*   Updated: 2021/10/20 19:14:32 by nathan           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,7 @@
 # include "Chunk.hpp"
 # include "Camera.hpp"
 # include <thread>
+#include "Skybox.hpp"
 
 # define VIEW_DISTANCE 160
 # define ROW_OF_CHUNK 8

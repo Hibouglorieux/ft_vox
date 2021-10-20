@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/10/15 13:08:40 by nathan            #+#    #+#             */
-/*   Updated: 2021/10/20 16:53:22 by nathan           ###   ########.fr       */
+/*   Updated: 2021/10/20 17:39:00 by nathan           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -57,9 +57,9 @@ HeightMap	VoxelGenerator::createMap(float ox, float oz)
 			float tmpz = oz + z * SCALE_HEIGHTMAP_TO_FRACTION_OF_NOISE;
 			float tmpx = ox + x * SCALE_HEIGHTMAP_TO_FRACTION_OF_NOISE;
 
-			*tmp = (1 + getValue(tmpx, tmpz)) * 0.5f;
-			*tmp = *tmp > 0.3 ? *tmp : 0.3;
-			/*
+			//*tmp = (1 + getValue(tmpx, tmpz)) * 0.5f;
+			//*tmp = *tmp > 0.3 ? *tmp : 0.3;
+			
 			//*tmp = getValue(ox + x * SCALE_HEIGHTMAP_TO_FRACTION_OF_NOISE, oz + z * SCALE_HEIGHTMAP_TO_FRACTION_OF_NOISE);
 			float fractal = 0;
 			float amplitude = 1;
@@ -74,14 +74,14 @@ HeightMap	VoxelGenerator::createMap(float ox, float oz)
 				maxVal = fractal;
 			//*tmp = (*tmp + 1) / 2;
 			*tmp = fractal;
-			*/
+			
 		}
 	}
 	for (int z = 0; z < HEIGHTMAP_SIZE; z++)
 	{
 		for (int x = 0; x < HEIGHTMAP_SIZE; x++)
 		{	
-			//(*myHeightMap)[z][x] /= 1.2;
+			(*myHeightMap)[z][x] /= maxVal;
 		}
 	}
 	return *myHeightMap;
@@ -115,7 +115,7 @@ void		VoxelGenerator::createPerlinGradient(unsigned long seed)
 				y = 2 * dice() - 1;
 				gradientLength = x * x + y * y;
 			}
-			gradientLength= sqrtf(gradientLength);
+			gradientLength = sqrtf(gradientLength);
 			x /= gradientLength;
 			y /= gradientLength;
 		}

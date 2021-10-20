@@ -23,6 +23,7 @@ FILES = main.cpp \
 		Matrix.cpp \
 		Vec3.cpp \
 		Texture.cpp \
+		Skybox.cpp \
 		appWindow.cpp \
 		Chunk.cpp
 

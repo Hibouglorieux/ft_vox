@@ -13,7 +13,7 @@ Chunk::Chunk(int x, int z)
 	hardBloc = 0;
 	hardBlocVisible = 0;
 	init = false;
-	texture = new Texture(heightMap);
+	texture = new Texture();
 }
 
 void Chunk::initChunk(void)
