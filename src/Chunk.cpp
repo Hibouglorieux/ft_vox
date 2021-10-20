@@ -13,14 +13,14 @@ Chunk::Chunk(int x, int z)
 	hardBloc = 0;
 	hardBlocVisible = 0;
 	init = false;
+	texture = new Texture(heightMap);
 }
 
 void Chunk::initChunk(void)
 {
 	struct bloc	*bloc;
 	// Get height map for chunk
-	heightMap = VoxelGenerator::createMap(0, position.x / CHUNK_WIDTH, position.z / CHUNK_DEPTH);
-	texture = new Texture(heightMap);
+	heightMap = VoxelGenerator::createMap(position.x / CHUNK_WIDTH, position.z / CHUNK_DEPTH);
 
 	// Set bloc type
 	for(unsigned int y = 0; y < CHUNK_HEIGHT; y++)	// Too big of a loop
@@ -30,7 +30,7 @@ void Chunk::initChunk(void)
 			for(unsigned int z = 0; z < CHUNK_DEPTH; z++)
 			{
 				bloc = &(blocs[y][z][x]);
-				if (heightMap[z][x] * CHUNK_HEIGHT < y)
+				if (heightMap[z][x] * CHUNK_HEIGHT - 1 < y)// TODO tmp to remove -1 when CHUNK has to check above/neighbours
 				{
 					bloc->type = 0;
 					bloc->visible = 0;
@@ -122,12 +122,12 @@ GLfloat *Chunk::generatePosOffsets(void)
 {
 	// TODO : Implement way of knowing which bloc should be shown to avoid loading
 	//		too much data.
-	GLfloat	*WIP_transform = new GLfloat[hardBlocVisible * 3];//CHUNK_HEIGHT * CHUNK_WIDTH * CHUNK_DEPTH * 3];
 	// Should generate position of each bloc based on the chunk position
 	Matrix	mat;
 	unsigned int i = 0;
 	if (updateChunk)
 	{
+		GLfloat	*WIP_transform = new GLfloat[hardBlocVisible * 3];//CHUNK_HEIGHT * CHUNK_WIDTH * CHUNK_DEPTH * 3];
 		for(unsigned int y = 0; y < CHUNK_HEIGHT; y++)	// Too big of a loop
 		{
 			for(unsigned int x = 0; x < CHUNK_WIDTH; x++)

@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/05/24 15:40:25 by nathan            #+#    #+#             */
-/*   Updated: 2021/10/19 22:35:02 by nathan           ###   ########.fr       */
+/*   Updated: 2021/10/20 16:38:44 by nathan           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -97,7 +97,8 @@ void Loop::processInput()
 	double oldMouseY = mouseY;
 	glfwGetCursorPos(appWindow::getWindow(), &mouseX, &mouseY);
 	world->getCamera().rotate(mouseX - oldMouseX, mouseY - oldMouseY);
-//	glfwSetCursorPos(appWindow::getWindow(), appWindow::getWindowWidth() * 0.5f, appWindow::getWindowHeight() * 0.5f);
+	glfwSetCursorPos(appWindow::getWindow(), appWindow::getWindowWidth() * 0.5f, appWindow::getWindowHeight() * 0.5f);
+	glfwGetCursorPos(appWindow::getWindow(), &mouseX, &mouseY);
 }
 
 void Loop::keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)

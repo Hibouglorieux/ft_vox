@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/07/21 18:11:30 by nathan            #+#    #+#             */
-/*   Updated: 2021/10/19 22:36:12 by nathan           ###   ########.fr       */
+/*   Updated: 2021/10/20 16:52:05 by nathan           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,7 +33,7 @@ World::World()
 				chnk->initChunk();
 			};
 
-			std::thread worker(initNewChunk, chnk); // Erreur ici
+			std::thread worker(initNewChunk, chnk);
 			worker.detach();
 		}
 	}
