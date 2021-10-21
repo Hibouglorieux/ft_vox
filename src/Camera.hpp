@@ -35,13 +35,19 @@ public:
 	Matrix getMatrix();
 	std::pair<Vec3, Vec3> unProject(float mouseX, float mouseY, Matrix projMat);
 	Vec3 unProjectToOrigin(float mouseX, float mouseY, Matrix projMat);
+
+	void setChunkUpdate(bool value) { shouldUpdateChunks = value; };
+	bool getChunkUpdate() const { return shouldUpdateChunks; };
+	Vec3 getChunkPos() const { return currentChunk; };
 private:
 	Vec3 getDirection() const;// meant to convert degree to rad
 	void actualizeView();
 	Matrix view;
 	Vec3 dir;
 	Vec3 pos;
+
 	Vec3 currentChunk;
+	bool shouldUpdateChunks;
 };
 
 #endif

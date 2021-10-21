@@ -28,6 +28,7 @@ public:
 	virtual void	draw(Shader* shader) override;
 
 	Vec3	getPos() const { return position; }
+	Vec3	getChunkCenterPos() const { return (position + Vec3(CHUNK_WIDTH / 2, 0, CHUNK_DEPTH / 2)); }
 	void	chunkUpdateBloc(void);
 	//char	*getBlocs() const { return blocs; }
 private:
@@ -51,6 +52,11 @@ private:
 	unsigned int hardBloc;
 	unsigned int hardBlocVisible;
 	Texture* texture;
+
+	Chunk	*forward;
+	Chunk	*right;
+	Chunk	*left;
+	Chunk	*backward;
 };
 
 #endif

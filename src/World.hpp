@@ -32,12 +32,20 @@ public:
 	std::vector<Object*>& getObjects();
 	void setCamera(Camera newCamera);
 	Camera& getCamera();
+
+	// Chunk Manager
+	void updateVisibleChunks(void);
+	void updatePreloadedChunks(void);
 private:
 	void onEnterAnim();
 	void onLeaveAnim();
 	Camera camera;
 	std::vector<Object*> objects;
 	Shader* shader;
+
+	// Chunk Manageri
+	std::vector<Chunk*> visibleChunks;
+	std::vector<Chunk*> preLoadedChunks;
 };
 
 #endif

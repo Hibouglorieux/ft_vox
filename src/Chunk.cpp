@@ -5,6 +5,7 @@
 Chunk::Chunk(int x, int z)
 {
 	position = Vec3(x * CHUNK_WIDTH, 0, z * CHUNK_DEPTH);
+	//std::cout << "Chunk : " << x << ",0," << z << std::endl;
 	// Not necessary ?
 	memset(blocs, 0, CHUNK_HEIGHT * CHUNK_WIDTH * CHUNK_DEPTH * sizeof(struct bloc));
 

@@ -16,8 +16,8 @@
 
 #define X_ROTATION_SPEED 1
 #define Y_ROTATION_SPEED 1
-#define DEFAULT_CAMERA_POS Vec3(0.f, 150.f, 0.f)
-#define DEFAULT_CAMERA_ROT Vec3(60.f, 135.f, 0.f)
+#define DEFAULT_CAMERA_POS Vec3(0.f, 32.f, 0.f)
+#define DEFAULT_CAMERA_ROT Vec3(0.f, 180.f, 0.f)
 
 Camera::Camera() : Camera(DEFAULT_CAMERA_POS)
 {
@@ -31,6 +31,9 @@ Camera::Camera(Vec3 position)
 {
 	pos = position;
 	dir = DEFAULT_CAMERA_ROT;// TODO tmp to view map generation from ahead
+	Vec3 newChunk = Vec3((int)(floor(pos.x) / CHUNK_WIDTH),
+				 (int)(floor(pos.y) / CHUNK_HEIGHT),
+				 (int)(floor(pos.z) / CHUNK_DEPTH));
 }
 
 Vec3 Camera::getPos() const
@@ -70,9 +73,15 @@ void Camera::move(bool forward, bool backward, bool right, bool left, float spee
 		realMovement += Matrix::createRotationMatrix(Matrix::RotationDirection::Y, -90) * moveDir;
 	}
 	pos += realMovement.getNormalized() * speedFactor;
-	currentChunk = Vec3((int)(floor(pos.x) / CHUNK_WIDTH),
+	Vec3 newChunk = Vec3((int)(floor(pos.x) / CHUNK_WIDTH),
 				 (int)(floor(pos.y) / CHUNK_HEIGHT),
 				 (int)(floor(pos.z) / CHUNK_DEPTH));
+	if (newChunk != currentChunk)
+	{
+		currentChunk = newChunk;
+		std::cout << currentChunk.x << "," << currentChunk.z << std::endl;
+		shouldUpdateChunks = true;
+	}
 }
 
 Vec3 Camera::getDirection() const
