@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/10/15 13:08:43 by nathan            #+#    #+#             */
-/*   Updated: 2021/10/20 15:43:44 by nathan           ###   ########.fr       */
+/*   Updated: 2021/10/21 12:07:22 by nathan           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,14 +22,18 @@
 						// is currently stretched to all chunk displayed as testing
 #define HEIGHTMAP_SIZE BLOC_WIDTH_PER_CHUNK
 
+#define BIG_HEIGHT_MAP_SIZE 1024
+
 typedef std::array<std::array<std::array<unsigned char, WIDTH>, LENGTH>, HEIGHT> VoxelMap;
 typedef std::array<std::array<float, HEIGHTMAP_SIZE>, HEIGHTMAP_SIZE> HeightMap;
+typedef std::array<std::array<float, BIG_HEIGHT_MAP_SIZE>, BIG_HEIGHT_MAP_SIZE> BigHeightMap;
 typedef std::array<std::array<std::array<float, 2>, GRADIENT_SIZE>, GRADIENT_SIZE> Gradients;
 
 class VoxelGenerator {
 public:
 	static void			Initialize(unsigned long seed);
 	static HeightMap	createMap();
+	static BigHeightMap	createBigMap();
 	static HeightMap	createMap(float ox, float oz);
 private:
 	static void	createPerlinGradient(unsigned long seed);

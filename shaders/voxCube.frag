@@ -3,16 +3,18 @@
 out vec4 FragColor;
 
 in vec3	vertexPos;
-in vec2 texCoord;
+in vec3 texCoord;
 
-uniform sampler2D texture0;
+uniform samplerCube texture0;
 
 void main()
 {
-	float colo = texture(texture0, texCoord).r;
-	FragColor = vec4(colo, colo, colo, 1.0);
+	// Texture
+	FragColor = texture(texture0, texCoord);
 
-	float w = ceil(vertexPos.y) / 16.0;
 
-	FragColor = vec4(0, w, 0, 1.0);
+	// Gradient color
+	
+	//float w = ceil(vertexPos.y) / 255.0;
+	//FragColor = vec4(0, w, 0, 1.0);
 }

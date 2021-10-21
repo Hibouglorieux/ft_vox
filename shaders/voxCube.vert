@@ -1,10 +1,11 @@
 #version 450 core
 
 layout (location = 0) in vec3 pos;
-layout (location = 1) in vec2 textureCoord;
+layout (location = 1) in vec2 textureCoord;// 2d might not be needed
 layout (location = 2) in vec3 posOffset;
+layout (location = 4) in vec3 texturePos3d; // 3d
 
-out vec2 texCoord;
+out vec3 texCoord;
 out	vec3 vertexPos;
 
 uniform mat4 projection;
@@ -16,7 +17,7 @@ uniform bool instanced;
 
 void main()
 {
-	texCoord = textureCoord;
+	texCoord = texturePos3d;
 
 	if (instanced)
 	{

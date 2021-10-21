@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/08/08 17:52:01 by nathan            #+#    #+#             */
-/*   Updated: 2021/10/20 19:33:21 by nathan           ###   ########.fr       */
+/*   Updated: 2021/10/21 15:41:50 by nathan           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -71,15 +71,61 @@ void RectangularCuboid::initialize()
      0.5f,  0.5f, -0.5f,  1.0f, 1.0f, // top-right     
      0.5f,  0.5f,  0.5f,  1.0f, 0.0f, // bottom-right
     -0.5f,  0.5f, -0.5f,  0.0f, 1.0f, // top-left
-    -0.5f,  0.5f,  0.5f,  0.0f, 0.0f  // bottom-left        
+    -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,  // bottom-left        
+
+	//tmp
+    -1.f, -1.f, -1.f, 
+     1.f,  1.f, -1.f, 
+     1.f, -1.f, -1.f,          
+     1.f,  1.f, -1.f, 
+    -1.f, -1.f, -1.f, 
+    -1.f,  1.f, -1.f, 
+    // Front face
+    -1.f, -1.f,  1.f, 
+     1.f, -1.f,  1.f, 
+     1.f,  1.f,  1.f, 
+     1.f,  1.f,  1.f, 
+    -1.f,  1.f,  1.f, 
+    -1.f, -1.f,  1.f, 
+    // Left face
+    -1.f,  1.f,  1.f, 
+    -1.f,  1.f, -1.f, 
+    -1.f, -1.f, -1.f, 
+    -1.f, -1.f, -1.f, 
+    -1.f, -1.f,  1.f, 
+    -1.f,  1.f,  1.f, 
+    // Right face
+     1.f,  1.f,  1.f, 
+     1.f, -1.f, -1.f, 
+     1.f,  1.f, -1.f,       
+     1.f, -1.f, -1.f, 
+     1.f,  1.f,  1.f, 
+     1.f, -1.f,  1.f,     
+    // Bottom face
+    -1.f, -1.f, -1.f, 
+     1.f, -1.f, -1.f, 
+     1.f, -1.f,  1.f, 
+     1.f, -1.f,  1.f, 
+    -1.f, -1.f,  1.f, 
+    -1.f, -1.f, -1.f, 
+    // Top face
+    -1.f,  1.f, -1.f, 
+     1.f,  1.f,  1.f, 
+     1.f,  1.f, -1.f,   
+     1.f,  1.f,  1.f, 
+    -1.f,  1.f, -1.f, 
+    -1.f,  1.f,  1.f         
     };
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);  
 
     // vertex positions
     glEnableVertexAttribArray(0);	
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(1);	
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(sizeof(float) * 3));
+    glEnableVertexAttribArray(4);	
+    glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)(sizeof(float) * 5 * 6 * 6));
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);  
+
 	glBindVertexArray(0);
 	initialized = true;
 }

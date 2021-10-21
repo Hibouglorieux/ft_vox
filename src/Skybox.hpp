@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/10/20 18:53:39 by nathan            #+#    #+#             */
-/*   Updated: 2021/10/20 19:24:40 by nathan           ###   ########.fr       */
+/*   Updated: 2021/10/21 11:17:37 by nathan           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,7 @@
 #include "Shader.hpp"
 #include "Matrix.hpp"
 #include "RectangularCuboid.hpp"
+#include "VoxelGenerator.hpp"
 
 class Skybox {
 public:

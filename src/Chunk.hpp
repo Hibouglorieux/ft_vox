@@ -9,7 +9,7 @@
 # include <cstring>
 # include "ft_vox.h"
 
-# define CHUNK_HEIGHT 64 // HEIGHT
+# define CHUNK_HEIGHT 256 // HEIGHT
 
 // defined in VoxelGenerator
 # define CHUNK_WIDTH BLOC_WIDTH_PER_CHUNK

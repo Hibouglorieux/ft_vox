@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/10/15 13:08:40 by nathan            #+#    #+#             */
-/*   Updated: 2021/10/20 17:39:00 by nathan           ###   ########.fr       */
+/*   Updated: 2021/10/21 15:46:44 by nathan           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,7 @@
 
 #define SCALE_HEIGHTMAP_TO_FRACTION_OF_NOISE ((float)1.0 / HEIGHTMAP_SIZE * GRADIENT_SIZE / (float)MAX_NB_OF_CHUNK)
 
+#define MAX_LAYER 1
 Gradients* VoxelGenerator::gradients = nullptr;
 
 void VoxelGenerator::Initialize(unsigned long seed)
@@ -38,17 +39,40 @@ HeightMap	VoxelGenerator::createMap()
 			*tmp = (*tmp + 1) / 2;
 		}
 	}
-	return *myHeightMap;
+	return *myHeightMap;// TODO Waw, nice leak bro
 }
 
+BigHeightMap	VoxelGenerator::createBigMap()
+{
+	BigHeightMap* myBigHeightMap = new BigHeightMap;
+	for (int z = 0; z < BIG_HEIGHT_MAP_SIZE; z++)
+	{
+		for (int x = 0; x < BIG_HEIGHT_MAP_SIZE; x++)
+		{
+#define TMP_BIG_HEIGHT_MAP_SCALE ((float)1.0 / (float)BIG_HEIGHT_MAP_SIZE * (float)GRADIENT_SIZE / 16.0)
+			int maxLayer = MAX_LAYER;
+			float& tmp = (*myBigHeightMap)[z][x];
+			float tmpx = x * TMP_BIG_HEIGHT_MAP_SCALE;
+			float tmpz = z * TMP_BIG_HEIGHT_MAP_SCALE;
+			//tmp = getValue((float)x * TMP_BIG_HEIGHT_MAP_SCALE, (float)z * TMP_BIG_HEIGHT_MAP_SCALE);
+			for (int layer = 0; layer < maxLayer; layer++)
+			{
+				tmp += ((1 + getValue(tmpx, tmpz)) * 0.5);
+				tmpx *= 2;
+				tmpz *= 2;
+			}
+			tmp /= (float)maxLayer;
+		}
+	}
+	return *myBigHeightMap;// TODO Waw, nice leak bro
+}
 
 HeightMap	VoxelGenerator::createMap(float ox, float oz)
 {
 	ox *= (GRADIENT_SIZE / (float)MAX_NB_OF_CHUNK);
 	oz *= (GRADIENT_SIZE / (float)MAX_NB_OF_CHUNK);
 	HeightMap* myHeightMap = new HeightMap;
-	int maxLayer = 1;
-	float maxVal = 0;
+	int maxLayer = MAX_LAYER;
 	for (int z = 0; z < HEIGHTMAP_SIZE; z++)
 	{
 		for (int x = 0; x < HEIGHTMAP_SIZE; x++)
@@ -62,29 +86,27 @@ HeightMap	VoxelGenerator::createMap(float ox, float oz)
 			
 			//*tmp = getValue(ox + x * SCALE_HEIGHTMAP_TO_FRACTION_OF_NOISE, oz + z * SCALE_HEIGHTMAP_TO_FRACTION_OF_NOISE);
 			float fractal = 0;
-			float amplitude = 1;
 			for (int layer = 0; layer < maxLayer; layer++)
 			{
-				fractal += (1 + getValue(tmpx, tmpz)) * 0.5 * amplitude;
+				fractal += (1 + getValue(tmpx, tmpz)) * 0.5;
 				tmpz *= 2;
 				tmpx *= 2;
-				amplitude *= 0.5;
 			}
-			if (fractal > maxVal)
-				maxVal = fractal;
 			//*tmp = (*tmp + 1) / 2;
 			*tmp = fractal;
-			
+			*tmp /= (float)maxLayer;		
 		}
 	}
+	/*
 	for (int z = 0; z < HEIGHTMAP_SIZE; z++)
 	{
 		for (int x = 0; x < HEIGHTMAP_SIZE; x++)
 		{	
-			(*myHeightMap)[z][x] /= maxVal;
+			(*myHeightMap)[z][x] /= maxLayer;
 		}
 	}
-	return *myHeightMap;
+	*/
+	return *myHeightMap;// TODO Waw, nice leak bro
 }
 
 // Function to linearly interpolate between a0 and a1

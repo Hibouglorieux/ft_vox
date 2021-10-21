@@ -27,6 +27,8 @@ FILES = main.cpp \
 		appWindow.cpp \
 		Chunk.cpp
 
+HEADERS = $(wildcard $(addprefix src/, $(FILES:.cpp=.hpp)))
+
 OBJ = $(addprefix obj/,$(FILES:.cpp=.o))
 
 #linkage
@@ -46,7 +48,7 @@ $(NAME): $(OBJ)
 	$(CXX) $^ -o $@ $(LIBS)
 	@$(ECHOc) "Compilation of $(Cyan)$(NAME)$(End) :    $(Green)Done$(End)"
 
-obj/%.o:src/%.cpp includes/*.h $(test -f src/%.hpp)
+obj/%.o:src/%.cpp includes/*.h src/*.hpp
 	@mkdir -p obj
 	$(CXX) $(CXXFLAGS) -c $< -o $@ -Iincludes -Ilibft
 	@$(ECHOc) "Compilation of $(Cyan)$@$(End) :    $(Green)Done$(End)"

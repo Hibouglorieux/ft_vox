@@ -1,5 +1,7 @@
 #include "Chunk.hpp"
 
+#define MAX(x, y) (x > y ? x : y)
+
 Chunk::Chunk(int x, int z)
 {
 	position = Vec3(x * CHUNK_WIDTH, 0, z * CHUNK_DEPTH);
@@ -13,7 +15,15 @@ Chunk::Chunk(int x, int z)
 	hardBloc = 0;
 	hardBlocVisible = 0;
 	init = false;
-	texture = new Texture();
+	//texture = new Texture();
+	
+	texture = new Texture({
+	{"grass/side.jpg"},
+	{"grass/side.jpg"},
+	{"grass/top.jpg"},
+	{"grass/bottom.jpg"},
+	{"grass/side.jpg"},
+	{"grass/side.jpg"}});
 }
 
 void Chunk::initChunk(void)
@@ -30,7 +40,7 @@ void Chunk::initChunk(void)
 			for(unsigned int z = 0; z < CHUNK_DEPTH; z++)
 			{
 				bloc = &(blocs[y][z][x]);
-				if (heightMap[z][x] * CHUNK_HEIGHT - 1 < y)// TODO tmp to remove -1 when CHUNK has to check above/neighbours
+				if (MAX(heightMap[z][x], 0.5) * CHUNK_HEIGHT - 1 < y)// TODO tmp to remove -1 when CHUNK has to check above/neighbours
 				{
 					bloc->type = 0;
 					bloc->visible = 0;
@@ -170,6 +180,7 @@ void Chunk::draw(Shader* shader)
 	// Should draw instantiated bloc of same type once for each type.
 	GLfloat	*positionOffset = Chunk::generatePosOffsets();
 
+	glBindTexture(GL_TEXTURE_CUBE_MAP, texture->getID());
 	RectangularCuboid::drawInstance(shader, texture,
 			positionOffset, hardBlocVisible);
 }
