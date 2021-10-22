@@ -6,7 +6,7 @@
 /*   By: nathan <nallani@student.s19.be>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/05/24 01:52:59 by nathan            #+#    #+#             */
-/*   Updated: 2021/10/21 15:48:12 by nathan           ###   ########.fr       */
+/*   Updated: 2021/10/22 11:14:31 by nathan           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,7 +45,7 @@ int		main( int argc, char *argv[] )
 	}
 
 
-	VoxelGenerator::Initialize(seed);
+	VoxelGenerator::initialize(seed);
 	World* world = new World();
 	//RectangularCuboid* floor = new RectangularCuboid(1000, 0.1, 1000);
 	//floor->setID("floor");
@@ -56,6 +56,7 @@ int		main( int argc, char *argv[] )
 	Loop::setWorld(world);
 
 	Loop::loop();
+	VoxelGenerator::clear();
 	delete world;
 
 	return 1;

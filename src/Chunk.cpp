@@ -1,6 +1,6 @@
 #include "Chunk.hpp"
 
-#define MAX(x, y) (x > y ? x : y)
+#define MAX(x, y) (x)//(x > y ? x : y)
 
 Chunk::Chunk(int x, int z)
 {
@@ -184,4 +184,12 @@ void Chunk::draw(Shader* shader)
 	glBindTexture(GL_TEXTURE_CUBE_MAP, texture->getID());
 	RectangularCuboid::drawInstance(shader, texture,
 			positionOffset, hardBlocVisible);
+}
+
+Vec2 Chunk::worldCoordToChunk(Vec3 worldPos)
+{
+	Vec2 pos;
+	pos.x = floor(worldPos.x / CHUNK_WIDTH);
+	pos.y = floor(worldPos.z / CHUNK_DEPTH);
+	return pos;
 }

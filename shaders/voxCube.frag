@@ -10,11 +10,11 @@ uniform samplerCube texture0;
 void main()
 {
 	// Texture
-	FragColor = texture(texture0, texCoord);
+	//FragColor = texture(texture0, texCoord);
 
 
 	// Gradient color
 	
-	//float w = ceil(vertexPos.y) / 255.0;
-	//FragColor = vec4(0, w, 0, 1.0);
+	float w = ceil(vertexPos.y) / 64.0;
+	FragColor = vec4(0, w, 0, 1.0);
 }

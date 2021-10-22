@@ -21,6 +21,7 @@ FILES = main.cpp \
 		World.cpp \
 		Camera.cpp \
 		Matrix.cpp \
+		Vec2.cpp \
 		Vec3.cpp \
 		Texture.cpp \
 		Skybox.cpp \

@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/10/15 13:08:40 by nathan            #+#    #+#             */
-/*   Updated: 2021/10/21 15:46:44 by nathan           ###   ########.fr       */
+/*   Updated: 2021/10/22 11:25:43 by nathan           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,13 +18,21 @@
 
 #define SCALE_HEIGHTMAP_TO_FRACTION_OF_NOISE ((float)1.0 / HEIGHTMAP_SIZE * GRADIENT_SIZE / (float)MAX_NB_OF_CHUNK)
 
-#define MAX_LAYER 1
+#define MAX_LAYER 4
 Gradients* VoxelGenerator::gradients = nullptr;
+Gradients* VoxelGenerator::gradients2 = nullptr;
 
-void VoxelGenerator::Initialize(unsigned long seed)
+void	VoxelGenerator::initialize(unsigned int seed)
 {
 	if (gradients == nullptr)
-		createPerlinGradient(seed);
+		gradients = createPerlinGradient(seed);
+	if (gradients2 == nullptr)
+		gradients2 = createPerlinGradient(0xFFFFFFFF - seed);
+}
+
+void	VoxelGenerator::clear()
+{
+	delete gradients;
 }
 
 HeightMap	VoxelGenerator::createMap()
@@ -34,7 +42,7 @@ HeightMap	VoxelGenerator::createMap()
 	{
 		for (int x = 0; x < HEIGHTMAP_SIZE; x++)
 		{
-			(*myHeightMap)[z][x] = getValue((float)x * SCALE_HEIGHTMAP_TO_FRACTION_OF_NOISE, (float)z * SCALE_HEIGHTMAP_TO_FRACTION_OF_NOISE);
+			(*myHeightMap)[z][x] = getValue((float)x * SCALE_HEIGHTMAP_TO_FRACTION_OF_NOISE, (float)z * SCALE_HEIGHTMAP_TO_FRACTION_OF_NOISE, gradients);
 			float* tmp = &(*myHeightMap)[z][x];
 			*tmp = (*tmp + 1) / 2;
 		}
@@ -57,7 +65,7 @@ BigHeightMap	VoxelGenerator::createBigMap()
 			//tmp = getValue((float)x * TMP_BIG_HEIGHT_MAP_SCALE, (float)z * TMP_BIG_HEIGHT_MAP_SCALE);
 			for (int layer = 0; layer < maxLayer; layer++)
 			{
-				tmp += ((1 + getValue(tmpx, tmpz)) * 0.5);
+				tmp += ((1 + getValue(tmpx, tmpz, gradients)) * 0.5);
 				tmpx *= 2;
 				tmpz *= 2;
 			}
@@ -88,13 +96,14 @@ HeightMap	VoxelGenerator::createMap(float ox, float oz)
 			float fractal = 0;
 			for (int layer = 0; layer < maxLayer; layer++)
 			{
-				fractal += (1 + getValue(tmpx, tmpz)) * 0.5;
+				fractal += (1 + getValue(tmpx, tmpz, gradients)) * 0.5;
+				fractal += (1 + getValue(tmpx, tmpz, gradients2)) * 0.5;
 				tmpz *= 2;
 				tmpx *= 2;
 			}
 			//*tmp = (*tmp + 1) / 2;
 			*tmp = fractal;
-			*tmp /= (float)maxLayer;		
+			*tmp /= ((float)maxLayer * 2);
 		}
 	}
 	/*
@@ -117,7 +126,7 @@ float	VoxelGenerator::lerp(float a0, float a1, float w)
 	return (1.0 - w)*a0 + w*a1;
 }
 
-void		VoxelGenerator::createPerlinGradient(unsigned long seed)
+Gradients*	VoxelGenerator::createPerlinGradient(unsigned int seed)
 {
 	std::mt19937 generator(seed);
 	std::uniform_real_distribution<> distribution(0.f, 1.f);
@@ -142,11 +151,11 @@ void		VoxelGenerator::createPerlinGradient(unsigned long seed)
 			y /= gradientLength;
 		}
 	}
-	gradients = newGradients;
+	return newGradients;
 }
 
 // Computes the dot product of the distance and gradient vectors.
-float VoxelGenerator::dotGridGradient(int ix, int iy, float x, float y)
+float VoxelGenerator::dotGridGradient(int ix, int iy, float x, float y, Gradients* grad)
 {
 
 	// Precomputed (or otherwise) gradient vectors at each grid node
@@ -157,11 +166,11 @@ float VoxelGenerator::dotGridGradient(int ix, int iy, float x, float y)
 	iy &= 255;
 	ix &= 255;
 	// Compute the dot-product
-	return (dx * (*gradients)[iy][ix][0] + dy * (*gradients)[iy][ix][1]);
+	return (dx * (*grad)[iy][ix][0] + dy * (*grad)[iy][ix][1]);
 }
 
 // Compute Perlin noise at coordinates x, y
-float	VoxelGenerator::getValue(float x, float y)
+float	VoxelGenerator::getValue(float x, float y, Gradients* grad)
 {
 
 	// Determine grid cell coordinates
@@ -177,11 +186,11 @@ float	VoxelGenerator::getValue(float x, float y)
 
 	// Interpolate between grid point gradients
 	float n0, n1, ix0, ix1, value;
-	n0 = dotGridGradient(x0, y0, x, y);
-	n1 = dotGridGradient(x1, y0, x, y);
+	n0 = dotGridGradient(x0, y0, x, y, grad);
+	n1 = dotGridGradient(x1, y0, x, y, grad);
 	ix0 = lerp(n0, n1, sx);
-	n0 = dotGridGradient(x0, y1, x, y);
-	n1 = dotGridGradient(x1, y1, x, y);
+	n0 = dotGridGradient(x0, y1, x, y, grad);
+	n1 = dotGridGradient(x1, y1, x, y, grad);
 	ix1 = lerp(n0, n1, sx);
 	value = lerp(ix0, ix1, sy);
 

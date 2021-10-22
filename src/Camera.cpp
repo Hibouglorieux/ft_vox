@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/09/02 01:10:29 by nathan            #+#    #+#             */
-/*   Updated: 2021/10/21 15:44:40 by nathan           ###   ########.fr       */
+/*   Updated: 2021/10/22 12:10:43 by nathan           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -76,12 +76,6 @@ void Camera::move(bool forward, bool backward, bool right, bool left, float spee
 	Vec3 newChunk = Vec3((int)(floor(pos.x) / CHUNK_WIDTH),
 				 (int)(floor(pos.y) / CHUNK_HEIGHT),
 				 (int)(floor(pos.z) / CHUNK_DEPTH));
-	if (newChunk != currentChunk)
-	{
-		currentChunk = newChunk;
-		std::cout << currentChunk.x << "," << currentChunk.z << std::endl;
-		shouldUpdateChunks = true;
-	}
 }
 
 Vec3 Camera::getDirection() const

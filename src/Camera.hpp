@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/09/02 01:10:32 by nathan            #+#    #+#             */
-/*   Updated: 2021/10/19 21:49:37 by nathan           ###   ########.fr       */
+/*   Updated: 2021/10/22 12:10:47 by nathan           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,9 +36,6 @@ public:
 	std::pair<Vec3, Vec3> unProject(float mouseX, float mouseY, Matrix projMat);
 	Vec3 unProjectToOrigin(float mouseX, float mouseY, Matrix projMat);
 
-	void setChunkUpdate(bool value) { shouldUpdateChunks = value; };
-	bool getChunkUpdate() const { return shouldUpdateChunks; };
-	Vec3 getChunkPos() const { return currentChunk; };
 private:
 	Vec3 getDirection() const;// meant to convert degree to rad
 	void actualizeView();
@@ -46,7 +43,6 @@ private:
 	Vec3 dir;
 	Vec3 pos;
 
-	Vec3 currentChunk;
 	bool shouldUpdateChunks;
 };
 

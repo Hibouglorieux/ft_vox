@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/07/21 18:11:30 by nathan            #+#    #+#             */
-/*   Updated: 2021/10/20 19:43:57 by nathan           ###   ########.fr       */
+/*   Updated: 2021/10/22 14:53:36 by nathan           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,8 +23,8 @@ World::World()
 	objects = {};
 	visibleChunks = {};
 	preLoadedChunks = {};
+	curPos = Chunk::worldCoordToChunk(camera.getPos());
 
-	int	 k = 0;
 	Skybox::initialize();
 	for (int i = -ROW_OF_CHUNK; i < ROW_OF_CHUNK; i++) // defined in VoxelGenerator, needed to scale the heightmap calculation
 	{
@@ -32,7 +32,7 @@ World::World()
 		{
 			Chunk* chnk = new Chunk(j, i);
 			//addObject(chnk);
-			visibleChunks.push_back(chnk);
+			visibleChunks.insert(std::pair<Vec2, Chunk*>(Vec2(j, i), chnk));
 
 			auto initNewChunk = [](Chunk *chnk) {
 				chnk->initChunk();
@@ -79,12 +79,125 @@ void World::render()
 	{
 		object->draw(shader);
 	}
-	for (Chunk* chnk: visibleChunks)
+	for (auto it : visibleChunks)
+	{
+		Chunk*& chnk = it.second;
 		chnk->draw(shader);
+	}
+}
+
+void World::update()
+{
+	Vec2 newChunkPos = Chunk::worldCoordToChunk(camera.getPos());
+	if (curPos != newChunkPos)
+	{
+		testUpdateChunks(newChunkPos);
+		curPos = newChunkPos;
+		std::cout << "currentPos : ";
+		curPos.print();
+		std::cout << "visibleCHunks: ";
+		for (auto it : visibleChunks)
+			it.first.print();
+	}
+}
+
+void World::testUpdateChunks(Vec2 newPos)
+{
+	std::vector<Vec2> posBuffer = {};
+	//delete useless chunk
+	for (auto it : preLoadedChunks)
+	{
+		Vec2 pos = it.first;
+		Vec2 relativePos = pos - newPos;
+		Chunk*& chunk = it.second;
+		if (relativePos.getLength() > PRELOAD_DISTANCE_DEL)
+		{
+			delete chunk;
+			posBuffer.push_back(pos);
+		}
+	}
+	for (Vec2& pos: posBuffer)
+		preLoadedChunks.erase(pos);
+	
+	//remove old visible to preloaded
+	posBuffer.clear();
+	for (auto it : visibleChunks)
+	{
+		const Vec2& pos = it.first;
+		Vec2 relativePos = pos - newPos;
+		//relativePos.print();
+		//std::cout << relativePos.getLength() << std::endl;
+		Chunk*& chunk = it.second;
+		if (relativePos.getLength() > CHUNK_VIEW_DISTANCE)
+		{
+			preLoadedChunks.insert(std::pair<Vec2, Chunk*>(pos, chunk));
+			posBuffer.push_back(pos);
+		}
+	}
+	for (Vec2& pos: posBuffer)
+	{
+		visibleChunks.erase(pos);
+	}
+
+	//preload new chunk
+	posBuffer = getPosInRange(newPos, MIN_PRELOAD_DISTANCE, MAX_PRELOAD_DISTANCE);
+	for (Vec2& preloadedPositions : posBuffer)
+	{
+		if (preLoadedChunks.find(preloadedPositions) == preLoadedChunks.end())
+		{
+			Chunk* chnk = new Chunk(preloadedPositions.x, preloadedPositions.y);
+			auto initNewChunk = [](Chunk *chnk) {
+				chnk->initChunk();
+			};
+
+			//initNewChunk(chnk);
+			std::thread worker(initNewChunk, chnk);
+			worker.detach();
+			preLoadedChunks.insert(std::pair<Vec2, Chunk*>(preloadedPositions, chnk));
+		}
+	}
+		
+	
+	//move from preloaded to visible // or load if thats not the case ?
+	posBuffer = getPosInRange(newPos, 0, CHUNK_VIEW_DISTANCE);
+	for (auto key : posBuffer)
+	{
+		if (visibleChunks.find(key) == visibleChunks.end())
+		{
+			if (preLoadedChunks.find(key) == preLoadedChunks.end())
+				std::cerr << "SHOULDNT HAPPEN, tried to moved from preloaded to visible but it wasnt preloaded" << std::endl;
+			else 
+			{
+				std::pair<Vec2, Chunk*> elem(key, preLoadedChunks[key]);
+				preLoadedChunks.erase(key);
+				visibleChunks.insert(elem);
+			}
+		}
+	}
+}
+
+std::vector<Vec2> World::getPosInRange(Vec2 center, float minDistance, float maxDistance)
+{
+	std::vector<Vec2> Positions;
+	for (int y = -maxDistance; y < maxDistance; y++)
+		for (int x = -maxDistance; x < maxDistance; x++)
+		{
+			Vec2 relative(x, y);
+			if (relative.getLength() >= minDistance && relative.getLength() < maxDistance)
+			{
+				Vec2 absolute = relative + center;
+				if (absolute.x > MAX_NB_OF_CHUNK / -2 && absolute.y > MAX_NB_OF_CHUNK / -2 
+						&& absolute.x < MAX_NB_OF_CHUNK / 2 && absolute.y < MAX_NB_OF_CHUNK / 2)
+					Positions.push_back(absolute);
+			}
+		}
+
+	return Positions;
 }
 
 void World::updateVisibleChunks(void)
 {
+	std::cout << "visible" << std::endl;
 	// TODO : Write updatePreloadedChunks, this function should be good.
 
 	/*std::vector<Chunk*> updatedVisibleChunks = {};
@@ -127,7 +240,8 @@ void World::updateVisibleChunks(void)
 
 void World::updatePreloadedChunks(void)
 {
-	camera.setChunkUpdate(false);
+	std::cout << "preloaded" << std::endl;
+	//camera.setChunkUpdate(false);
 	// Now we need to preload new chunks to ease the world render
 	// First we need to check which chunk (coordinate) should be generated
 	// How many chunks are visible ? (CHUNK_WIDTH && CHUNK_HEIGHT shoud be the same)
@@ -190,6 +304,7 @@ void World::updatePreloadedChunks(void)
 	std::cout << std::endl;
 	delete [] chunks;*/
 
+	/*
 	int chunksCount = ((VIEW_DISTANCE / CHUNK_WIDTH) + 1) * 2;
 	int maxVi = ((VIEW_DISTANCE / CHUNK_WIDTH) + 1);
 	int	side = chunksCount;
@@ -240,6 +355,7 @@ void World::updatePreloadedChunks(void)
 	}
 	std::cout << std::endl;
 	delete [] chunksRegion;
+	*/
 }
 
 void World::addObject(Object* newobj)
