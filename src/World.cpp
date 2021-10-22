@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/07/21 18:11:30 by nathan            #+#    #+#             */
-/*   Updated: 2021/10/22 16:08:03 by nathan           ###   ########.fr       */
+/*   Updated: 2021/10/22 16:49:08 by nathan           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,6 +45,8 @@ World::World()
 	positions = getPosInRange(Vec2(), CHUNK_VIEW_DISTANCE, MAX_PRELOAD_DISTANCE);
 	for (auto pos : positions)
 	{
+		if (visibleChunks.find(pos) == visibleChunks.end())
+		{
 			Chunk* chnk = new Chunk(pos.x, pos.y);
 			preLoadedChunks.insert(std::pair<Vec2, Chunk*>(pos, chnk));
 
@@ -54,6 +56,7 @@ World::World()
 
 			std::thread worker(initNewChunk, chnk);
 			worker.detach();
+		}
 	}
 	/*
 	for (int i = -ROW_OF_CHUNK; i < ROW_OF_CHUNK; i++) // defined in VoxelGenerator, needed to scale the heightmap calculation
@@ -141,16 +144,29 @@ void World::update()
 	}
 }
 
+void magicFunc(std::map<Vec2, Chunk*> visible, std::map<Vec2, Chunk*> preload, std::string msg)
+{
+	for (auto it : visible)
+	{
+		if (preload.find(it.first) != preload.end())
+		{
+			std::cout << msg << std::endl;
+		}
+	}
+}
+
 void World::testUpdateChunks(Vec2 newPos)
 {
 	std::vector<Vec2> posBuffer = {};
+
+
 	//delete useless chunk
 	for (auto it : preLoadedChunks)
 	{
 		Vec2 pos = it.first;
 		Vec2 relativePos = pos - newPos;
 		Chunk*& chunk = it.second;
-		if (relativePos.getLength() > PRELOAD_DISTANCE_DEL)
+		if (relativePos.getLength() >= PRELOAD_DISTANCE_DEL)
 		{
 			delete chunk;
 			posBuffer.push_back(pos);
@@ -158,6 +174,7 @@ void World::testUpdateChunks(Vec2 newPos)
 	}
 	for (Vec2& pos: posBuffer)
 		preLoadedChunks.erase(pos);
+	magicFunc(visibleChunks, preLoadedChunks, "after delete");
 	
 	//remove old visible to preloaded
 	posBuffer.clear();
@@ -168,8 +185,13 @@ void World::testUpdateChunks(Vec2 newPos)
 		//relativePos.print();
 		//std::cout << relativePos.getLength() << std::endl;
 		Chunk*& chunk = it.second;
-		if (relativePos.getLength() > CHUNK_VIEW_DISTANCE)
+		if (relativePos.getLength() >= CHUNK_VIEW_DISTANCE)
 		{
+			if (preLoadedChunks.find(pos) != preLoadedChunks.end())
+			{
+				std::cout << "yooo wtf" << std::endl;
+				pos.print();
+			}
 			preLoadedChunks.insert(std::pair<Vec2, Chunk*>(pos, chunk));
 			posBuffer.push_back(pos);
 		}
@@ -178,9 +200,11 @@ void World::testUpdateChunks(Vec2 newPos)
 	{
 		visibleChunks.erase(pos);
 	}
+	magicFunc(visibleChunks, preLoadedChunks, "old visible to preloaded");
 
 	//preload new chunk
 	
+	posBuffer.clear();
 	posBuffer = getPosInRange(newPos, CHUNK_VIEW_DISTANCE, MAX_PRELOAD_DISTANCE);
 	auto initNewChunks = [](std::vector<Chunk*> chunks) { for (auto it : chunks) it->initChunk();};
 	std::vector<Chunk*> chunks;
@@ -194,6 +218,7 @@ void World::testUpdateChunks(Vec2 newPos)
 	}
 	std::thread worker(initNewChunks, chunks);
 	worker.detach();
+	magicFunc(visibleChunks, preLoadedChunks, "after New on preload");
 		
 	
 	//move from preloaded to visible // or load if thats not the case ?
@@ -212,6 +237,7 @@ void World::testUpdateChunks(Vec2 newPos)
 			}
 		}
 	}
+	magicFunc(visibleChunks, preLoadedChunks, "after move from preload to visible");
 }
 
 std::vector<Vec2> World::getPosInRange(Vec2 center, float minDistance, float maxDistance)

@@ -12,7 +12,6 @@
 
 # define CHUNK_HEIGHT 64 // HEIGHT
 
-// defined in VoxelGenerator
 # define CHUNK_WIDTH BLOC_WIDTH_PER_CHUNK
 # define CHUNK_DEPTH BLOC_WIDTH_PER_CHUNK
 
@@ -33,6 +32,7 @@ public:
 	Vec3	getChunkCenterPos() const { return (position + Vec3(CHUNK_WIDTH / 2, 0, CHUNK_DEPTH / 2)); }
 	void	chunkUpdateBloc(void);
 	static	Vec2 worldCoordToChunk(Vec3 worldPos);
+	static	int totalChunks;
 	//char	*getBlocs() const { return blocs; }
 private:
 	struct bloc

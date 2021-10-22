@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/07/21 18:11:54 by nathan            #+#    #+#             */
-/*   Updated: 2021/10/22 15:51:23 by nathan           ###   ########.fr       */
+/*   Updated: 2021/10/22 16:46:27 by nathan           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,7 +24,6 @@
 # define VIEW_DISTANCE 160
 # define ROW_OF_CHUNK 4
 # define CHUNK_VIEW_DISTANCE (VIEW_DISTANCE / CHUNK_WIDTH + 1)
-# define MIN_PRELOAD_DISTANCE ((float)CHUNK_VIEW_DISTANCE + 1)
 # define MAX_PRELOAD_DISTANCE ((float)CHUNK_VIEW_DISTANCE + 2)
 # define PRELOAD_DISTANCE_DEL ((float)CHUNK_VIEW_DISTANCE + 4)
 

@@ -2,9 +2,12 @@
 
 #define MAX(x, y) (x)//(x > y ? x : y)
 
-#include <chrono>
+
+int Chunk::totalChunks = 0;
+
 Chunk::Chunk(int x, int z)
 {
+	totalChunks++;
 	position = Vec3(x * CHUNK_WIDTH, 0, z * CHUNK_DEPTH);
 	//std::cout << "Chunk : " << x << ",0," << z << std::endl;
 	// Not necessary ?
@@ -129,6 +132,7 @@ Chunk::~Chunk(void)
 	delete [] blocsPosition;
 	delete texture;
 	delete heightMap;
+	totalChunks--;
 }
 
 GLfloat *Chunk::generatePosOffsets(void)
