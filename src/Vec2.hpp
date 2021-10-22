@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/10/22 12:33:49 by nathan            #+#    #+#             */
-/*   Updated: 2021/10/22 13:31:24 by nathan           ###   ########.fr       */
+/*   Updated: 2021/10/22 15:26:34 by nathan           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,6 +23,7 @@ class Vec2 {
 public:
 	Vec2(void);
 	Vec2(int xx, int yy);
+	Vec2(const Vec2& copy);
 	~Vec2(void){};
 	float getLength() const;
 	std::string toString() const;

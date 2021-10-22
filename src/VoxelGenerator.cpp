@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/10/15 13:08:40 by nathan            #+#    #+#             */
-/*   Updated: 2021/10/22 11:25:43 by nathan           ###   ########.fr       */
+/*   Updated: 2021/10/22 15:01:40 by nathan           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,7 +35,7 @@ void	VoxelGenerator::clear()
 	delete gradients;
 }
 
-HeightMap	VoxelGenerator::createMap()
+HeightMap*	VoxelGenerator::createMap()
 {
 	HeightMap* myHeightMap = new HeightMap;
 	for (int z = 0; z < HEIGHTMAP_SIZE; z++)
@@ -47,10 +47,10 @@ HeightMap	VoxelGenerator::createMap()
 			*tmp = (*tmp + 1) / 2;
 		}
 	}
-	return *myHeightMap;// TODO Waw, nice leak bro
+	return myHeightMap;
 }
 
-BigHeightMap	VoxelGenerator::createBigMap()
+BigHeightMap*	VoxelGenerator::createBigMap()
 {
 	BigHeightMap* myBigHeightMap = new BigHeightMap;
 	for (int z = 0; z < BIG_HEIGHT_MAP_SIZE; z++)
@@ -72,10 +72,10 @@ BigHeightMap	VoxelGenerator::createBigMap()
 			tmp /= (float)maxLayer;
 		}
 	}
-	return *myBigHeightMap;// TODO Waw, nice leak bro
+	return myBigHeightMap;
 }
 
-HeightMap	VoxelGenerator::createMap(float ox, float oz)
+HeightMap*	VoxelGenerator::createMap(float ox, float oz)
 {
 	ox *= (GRADIENT_SIZE / (float)MAX_NB_OF_CHUNK);
 	oz *= (GRADIENT_SIZE / (float)MAX_NB_OF_CHUNK);
@@ -115,7 +115,7 @@ HeightMap	VoxelGenerator::createMap(float ox, float oz)
 		}
 	}
 	*/
-	return *myHeightMap;// TODO Waw, nice leak bro
+	return myHeightMap;
 }
 
 // Function to linearly interpolate between a0 and a1

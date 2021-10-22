@@ -33,7 +33,7 @@ HEADERS = $(wildcard $(addprefix src/, $(FILES:.cpp=.hpp)))
 OBJ = $(addprefix obj/,$(FILES:.cpp=.o))
 
 #linkage
-LIBS = -lglfw -lX11 -lXrandr -lXinerama -lXi -lXxf86vm -lXcursor -lGL -lpthread -ldl `pkg-config --libs glew` -lm
+LIBS = -lglfw -lX11 -lXrandr -lXinerama -lXi -lXxf86vm -lXcursor -lGL -lpthread -ldl `pkg-config --libs glew` -lm -fsanitize=address
 
 UNAME = $(shell uname -s)
 ifneq (, $(findstring MINGW, $(UNAME)))
@@ -41,7 +41,7 @@ ifneq (, $(findstring MINGW, $(UNAME)))
 	NAME = humangl.exe
 endif
 
-CXXFLAGS = -std=gnu++11 -Wall -Wextra -g
+CXXFLAGS = -std=gnu++11 -Wall -Wextra -g -fsanitize=address
 
 all: $(NAME)
 

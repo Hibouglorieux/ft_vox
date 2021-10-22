@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/10/22 12:33:53 by nathan            #+#    #+#             */
-/*   Updated: 2021/10/22 13:31:08 by nathan           ###   ########.fr       */
+/*   Updated: 2021/10/22 15:27:13 by nathan           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,6 +22,12 @@ Vec2::Vec2(int xx, int yy)
 {
 	x = xx;
 	y = yy;
+}
+
+Vec2::Vec2(const Vec2& copy)
+{
+	x = copy.x;
+	y = copy.y;
 }
 
 float Vec2::getLength() const

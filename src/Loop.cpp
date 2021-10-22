@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/05/24 15:40:25 by nathan            #+#    #+#             */
-/*   Updated: 2021/10/22 11:45:36 by nathan           ###   ########.fr       */
+/*   Updated: 2021/10/22 16:02:41 by nathan           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,7 +27,6 @@ double Loop::mouseY = 0.0;
 double Loop::fpsRefreshTime = 0.0;
 unsigned char Loop::frameCount = 0;
 
-#define SEC_TO_MICROSEC 1000000
 #define CAMERA_MOUVEMENT_SPEED 0.3f
 #define REFRESH_FPS_RATE 0.5
 

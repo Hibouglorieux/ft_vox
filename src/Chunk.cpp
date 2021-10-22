@@ -2,12 +2,12 @@
 
 #define MAX(x, y) (x)//(x > y ? x : y)
 
+#include <chrono>
 Chunk::Chunk(int x, int z)
 {
 	position = Vec3(x * CHUNK_WIDTH, 0, z * CHUNK_DEPTH);
 	//std::cout << "Chunk : " << x << ",0," << z << std::endl;
 	// Not necessary ?
-	memset(blocs, 0, CHUNK_HEIGHT * CHUNK_WIDTH * CHUNK_DEPTH * sizeof(struct bloc));
 
 	blocsPosition = {};
 	// Should we recompute the chunk's blocs positions
@@ -31,6 +31,7 @@ void Chunk::initChunk(void)
 {
 	struct bloc	*bloc;
 	// Get height map for chunk
+	memset(blocs, 0, CHUNK_HEIGHT * CHUNK_WIDTH * CHUNK_DEPTH * sizeof(struct bloc));
 	heightMap = VoxelGenerator::createMap(position.x / CHUNK_WIDTH, position.z / CHUNK_DEPTH);
 
 	// Set bloc type
@@ -41,7 +42,7 @@ void Chunk::initChunk(void)
 			for(unsigned int z = 0; z < CHUNK_DEPTH; z++)
 			{
 				bloc = &(blocs[y][z][x]);
-				if (MAX(heightMap[z][x], 0.5) * CHUNK_HEIGHT - 1 < y)// TODO tmp to remove -1 when CHUNK has to check above/neighbours
+				if (MAX((*heightMap)[z][x], 0.5) * CHUNK_HEIGHT - 1 < y)// TODO tmp to remove -1 when CHUNK has to check above/neighbours
 				{
 					bloc->type = 0;
 					bloc->visible = 0;
@@ -127,6 +128,7 @@ Chunk::~Chunk(void)
 {
 	delete [] blocsPosition;
 	delete texture;
+	delete heightMap;
 }
 
 GLfloat *Chunk::generatePosOffsets(void)

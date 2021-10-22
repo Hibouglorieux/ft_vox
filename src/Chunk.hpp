@@ -26,6 +26,7 @@ public:
 
 
 	void	initChunk(void);
+	bool	hasThreadFinished(void) {return init;}
 	virtual void	draw(Shader* shader) override;
 
 	Vec3	getPos() const { return position; }
@@ -50,7 +51,7 @@ private:
 	GLfloat	*blocsPosition;
 	bool	updateChunk;
 	bool	init;
-	HeightMap	heightMap;
+	HeightMap*	heightMap;
 	unsigned int hardBloc;
 	unsigned int hardBlocVisible;
 	Texture* texture;

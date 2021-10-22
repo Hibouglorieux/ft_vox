@@ -6,7 +6,7 @@
 /*   By: nathan <nallani@student.s19.be>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/05/24 01:52:59 by nathan            #+#    #+#             */
-/*   Updated: 2021/10/22 11:14:31 by nathan           ###   ########.fr       */
+/*   Updated: 2021/10/22 15:59:03 by nathan           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -56,8 +56,8 @@ int		main( int argc, char *argv[] )
 	Loop::setWorld(world);
 
 	Loop::loop();
-	VoxelGenerator::clear();
 	delete world;
+	VoxelGenerator::clear();
 
 	return 1;
 }
