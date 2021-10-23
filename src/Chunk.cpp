@@ -1,6 +1,9 @@
 #include "Chunk.hpp"
+#include <unistd.h>
+#include <thread>
 
 #define MAX(x, y) (x)//(x > y ? x : y)
+#define TEST 0.05 * SEC_TO_MICROSEC
 
 
 int Chunk::totalChunks = 0;
@@ -67,7 +70,11 @@ void Chunk::initChunk(void)
 		}
 	}
 	updateVisibility();
+	init = true;
+	updateChunk = true;
+
 	Vec2 myPos = worldCoordToChunk(getPos());
+	std::vector<std::thread> threads;
 	for (auto it : myNeighbours)
 	{
 		threadUseCount++;
@@ -76,17 +83,23 @@ void Chunk::initChunk(void)
 			(const BlocData& neighbourBlocs)
 			{this->updateVisibilityWithNeighbour(neighbourPos, neighbourBlocs, nullptr);
 			};
-		it.second->updateVisibilityWithNeighbour(myPos, blocs, callBack);
+		auto threadFunc = [myPos, callBack](const BlocData& bd, Chunk* neighbour){neighbour->updateVisibilityWithNeighbour(myPos, bd, callBack);};
+		threads.push_back(std::thread(threadFunc, blocs, it.second));
+		//it.second->updateVisibilityWithNeighbour(myPos, blocs, callBack);
+	}
+	for (std::thread& worker : threads)
+	{
+		worker.join();
 	}
 	threadUseCount--;
-	updateChunk = true;
-	init = true;
 }
 
 void Chunk::updateVisibilityWithNeighbour(Vec2 NeighbourPos, const BlocData& neighbourBlocs, std::function<void(const BlocData&)> callBack)
 {
 	Vec2 relativePos = NeighbourPos - worldCoordToChunk(getPos());
 
+	while (!init)
+		usleep(TEST);
 	draw_safe.lock();
 	if (relativePos.x != 0)
 	{
@@ -96,7 +109,7 @@ void Chunk::updateVisibilityWithNeighbour(Vec2 NeighbourPos, const BlocData& nei
 			for (int z = 0; z < CHUNK_DEPTH; z++)
 			{
 				struct bloc& bloc = blocs[y][z][x];
-				if (bloc.type != 0 && !bloc.visible && !neighbourBlocs[y][z][neighbourX].type)
+				if (bloc.type != 0 && !bloc.visible && neighbourBlocs[y][z][neighbourX].type == 0)
 				{
 					hardBlocVisible++;
 					bloc.visible = true;
@@ -112,7 +125,7 @@ void Chunk::updateVisibilityWithNeighbour(Vec2 NeighbourPos, const BlocData& nei
 			for (int x = 0; x < CHUNK_WIDTH; x++)
 			{
 				struct bloc& bloc = blocs[y][z][x];
-				if (bloc.type != 0 && !bloc.visible && !neighbourBlocs[y][neighbourZ][x].type)
+				if (bloc.type != 0 && !bloc.visible && neighbourBlocs[y][neighbourZ][x].type == 0)
 				{
 					hardBlocVisible++;
 					bloc.visible = true;
