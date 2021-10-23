@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/10/20 18:53:42 by nathan            #+#    #+#             */
-/*   Updated: 2021/10/21 15:47:35 by nathan           ###   ########.fr       */
+/*   Updated: 2021/10/22 18:57:32 by nathan           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,22 +19,26 @@ GLuint Skybox::VBO = 0;
 
 void Skybox::initialize()
 {
+	std::vector<std::string> names = 
+	{{"skybox/right.jpg"},
+	{"skybox/left.jpg"},
+	{"skybox/top.jpg"},
+	{"skybox/bottom.jpg"},// TODO temporary not used to see heightmap instead
+	{"skybox/front.jpg"},
+	{"skybox/back.jpg"}};
+	/*
 	texture = new Texture( {{"skybox/right.jpg"},
 	{"skybox/left.jpg"},
 	{"skybox/top.jpg"},
 	{"skybox/bottom.jpg"},
 	{"skybox/front.jpg"},
 	{"skybox/back.jpg"}});
-	/* heightmap call
-	BigHeightMap bigHeightMap = VoxelGenerator::createBigMap();
-	HeightMap heightmap = VoxelGenerator::createMap(1, 1);
-	texture = new Texture( {{"skybox/right.jpg"},
-	{"skybox/left.jpg"},
-	{"skybox/top.jpg"},
-	{"skybox/bottom.jpg"},// TODO temporary not used to see heightmap instead
-	{"skybox/front.jpg"},
-	{"skybox/back.jpg"}}, heightmap);
-	 */
+	*/
+	 //heightmap call
+	BigHeightMap* bigHeightMap = VoxelGenerator::createBigMap();
+	HeightMap* heightmap = VoxelGenerator::createMap(1, 1);
+	texture = new Texture(names, *heightmap, true);
+	 
 	shader = new Shader("skybox.vert", "skybox.frag");
 
     glGenVertexArrays(1, &VAO);

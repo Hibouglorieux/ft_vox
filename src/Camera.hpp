@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/09/02 01:10:32 by nathan            #+#    #+#             */
-/*   Updated: 2021/10/22 12:10:47 by nathan           ###   ########.fr       */
+/*   Updated: 2021/10/22 21:59:06 by nathan           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,7 +16,6 @@
 #include "Matrix.hpp"
 #include "appWindow.hpp"
 #include "Vec3.hpp"
-# include "Chunk.hpp"
 
 #define Y_MOVE_SPEED 1.0f
 
@@ -42,8 +41,6 @@ private:
 	Matrix view;
 	Vec3 dir;
 	Vec3 pos;
-
-	bool shouldUpdateChunks;
 };
 
 #endif

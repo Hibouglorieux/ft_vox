@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/07/21 18:11:30 by nathan            #+#    #+#             */
-/*   Updated: 2021/10/22 16:49:08 by nathan           ###   ########.fr       */
+/*   Updated: 2021/10/23 17:13:17 by nathan           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,7 +31,10 @@ World::World()
 	auto positions = getPosInRange(Vec2(), 0, CHUNK_VIEW_DISTANCE);
 	for (auto pos : positions)
 	{
-			Chunk* chnk = new Chunk(pos.x, pos.y);
+			auto allocatedNeighbours = getAllocatedNeighbours(pos);
+			for (auto it: allocatedNeighbours)
+				it.second->increaseThreadCount();
+			Chunk* chnk = new Chunk(pos.x, pos.y, allocatedNeighbours);
 			visibleChunks.insert(std::pair<Vec2, Chunk*>(pos, chnk));
 
 			auto initNewChunk = [](Chunk *chnk) {
@@ -47,7 +50,10 @@ World::World()
 	{
 		if (visibleChunks.find(pos) == visibleChunks.end())
 		{
-			Chunk* chnk = new Chunk(pos.x, pos.y);
+			auto allocatedNeighbours = getAllocatedNeighbours(pos);
+			for (auto it: allocatedNeighbours)
+				it.second->increaseThreadCount();
+			Chunk* chnk = new Chunk(pos.x, pos.y, allocatedNeighbours);
 			preLoadedChunks.insert(std::pair<Vec2, Chunk*>(pos, chnk));
 
 			auto initNewChunk = [](Chunk *chnk) {
@@ -144,17 +150,6 @@ void World::update()
 	}
 }
 
-void magicFunc(std::map<Vec2, Chunk*> visible, std::map<Vec2, Chunk*> preload, std::string msg)
-{
-	for (auto it : visible)
-	{
-		if (preload.find(it.first) != preload.end())
-		{
-			std::cout << msg << std::endl;
-		}
-	}
-}
-
 void World::testUpdateChunks(Vec2 newPos)
 {
 	std::vector<Vec2> posBuffer = {};
@@ -166,7 +161,7 @@ void World::testUpdateChunks(Vec2 newPos)
 		Vec2 pos = it.first;
 		Vec2 relativePos = pos - newPos;
 		Chunk*& chunk = it.second;
-		if (relativePos.getLength() >= PRELOAD_DISTANCE_DEL)
+		if (relativePos.getLength() >= PRELOAD_DISTANCE_DEL && chunk->hasThreadFinished())
 		{
 			delete chunk;
 			posBuffer.push_back(pos);
@@ -174,7 +169,6 @@ void World::testUpdateChunks(Vec2 newPos)
 	}
 	for (Vec2& pos: posBuffer)
 		preLoadedChunks.erase(pos);
-	magicFunc(visibleChunks, preLoadedChunks, "after delete");
 	
 	//remove old visible to preloaded
 	posBuffer.clear();
@@ -200,7 +194,6 @@ void World::testUpdateChunks(Vec2 newPos)
 	{
 		visibleChunks.erase(pos);
 	}
-	magicFunc(visibleChunks, preLoadedChunks, "old visible to preloaded");
 
 	//preload new chunk
 	
@@ -212,13 +205,15 @@ void World::testUpdateChunks(Vec2 newPos)
 	{
 		if (preLoadedChunks.find(preloadedPositions) == preLoadedChunks.end())
 		{
-			chunks.push_back(new Chunk(preloadedPositions.x, preloadedPositions.y));
+			auto allocatedNeighbours = getAllocatedNeighbours(preloadedPositions);
+			for (auto it: allocatedNeighbours)
+				it.second->increaseThreadCount();
+			chunks.push_back(new Chunk(preloadedPositions.x, preloadedPositions.y, allocatedNeighbours));
 			preLoadedChunks.insert(std::pair<Vec2, Chunk*>(preloadedPositions, chunks.back()));
 		}
 	}
 	std::thread worker(initNewChunks, chunks);
 	worker.detach();
-	magicFunc(visibleChunks, preLoadedChunks, "after New on preload");
 		
 	
 	//move from preloaded to visible // or load if thats not the case ?
@@ -237,7 +232,6 @@ void World::testUpdateChunks(Vec2 newPos)
 			}
 		}
 	}
-	magicFunc(visibleChunks, preLoadedChunks, "after move from preload to visible");
 }
 
 std::vector<Vec2> World::getPosInRange(Vec2 center, float minDistance, float maxDistance)
@@ -256,6 +250,29 @@ std::vector<Vec2> World::getPosInRange(Vec2 center, float minDistance, float max
 			}
 		}
 	return Positions;
+}
+
+std::vector<std::pair<Vec2, Chunk*>>	World::getAllocatedNeighbours(Vec2 chunkPos)
+{
+	std::vector<std::pair<Vec2, Chunk*>> neighbours;
+	for (int y = -1; y < 2; y++)
+		for (int x = -1; x < 2; x++)
+		{
+			if ((y == 0) != (x == 0))
+			{
+				Vec2 relativePos = chunkPos + Vec2(x, y);
+				auto searchResult = visibleChunks.find(relativePos);
+				if (searchResult != visibleChunks.end())
+					neighbours.push_back(*searchResult);
+				else
+				{
+					searchResult = preLoadedChunks.find(relativePos);
+					if (searchResult != preLoadedChunks.end())
+						neighbours.push_back(*searchResult);
+				}
+			}
+		}
+	return neighbours;
 }
 
 void World::setCamera(Camera newCamera)

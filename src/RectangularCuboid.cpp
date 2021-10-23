@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/08/08 17:52:01 by nathan            #+#    #+#             */
-/*   Updated: 2021/10/21 15:41:50 by nathan           ###   ########.fr       */
+/*   Updated: 2021/10/23 17:11:20 by nathan           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -160,6 +160,13 @@ void RectangularCuboid::drawInstance(Shader* shader, Texture* texture,
 
     glBindVertexArray(VAO);
 	glBindBuffer(GL_ARRAY_BUFFER, transformBuffer);
+	for (int i = 0; i < 1000; i++)
+	{
+		float f = 43;
+		float g = 32;
+		float h = 19;
+		f /= g / h / f / h / g  / f / g / h / g / f ;
+	}
 	glBufferData(GL_ARRAY_BUFFER, count * 3 * sizeof(float),
 			instanceTransforms, GL_STATIC_DRAW);
 

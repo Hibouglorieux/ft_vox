@@ -19,6 +19,7 @@ Chunk::Chunk(int x, int z)
 	hardBloc = 0;
 	hardBlocVisible = 0;
 	init = false;
+	threadUseCount = 1;
 	//texture = new Texture();
 	
 	texture = new Texture({
@@ -28,13 +29,19 @@ Chunk::Chunk(int x, int z)
 	{"grass/bottom.jpg"},
 	{"grass/side.jpg"},
 	{"grass/side.jpg"}});
+	myNeighbours = {};
+}
+
+Chunk::Chunk(int x, int z, std::vector<std::pair<Vec2, Chunk*>> neighbours) : Chunk(x, z)
+{
+	myNeighbours = neighbours;
 }
 
 void Chunk::initChunk(void)
 {
 	struct bloc	*bloc;
 	// Get height map for chunk
-	memset(blocs, 0, CHUNK_HEIGHT * CHUNK_WIDTH * CHUNK_DEPTH * sizeof(struct bloc));
+	blocs = BlocData();// memset equivalent (needed)
 	heightMap = VoxelGenerator::createMap(position.x / CHUNK_WIDTH, position.z / CHUNK_DEPTH);
 
 	// Set bloc type
@@ -56,24 +63,86 @@ void Chunk::initChunk(void)
 					bloc->visible = 1;
 					hardBloc += 1;
 				}
-				bloc->shouldUpdate = 0;
 			}
 		}
 	}
-	updateChunk = true;
 	updateVisibility();
+	Vec2 myPos = worldCoordToChunk(getPos());
+	for (auto it : myNeighbours)
+	{
+		threadUseCount++;
+		Vec2 neighbourPos = it.first;
+		auto callBack = [this, neighbourPos]
+			(const BlocData& neighbourBlocs)
+			{this->updateVisibilityWithNeighbour(neighbourPos, neighbourBlocs, nullptr);
+			};
+		it.second->updateVisibilityWithNeighbour(myPos, blocs, callBack);
+	}
+	threadUseCount--;
+	updateChunk = true;
 	init = true;
+}
+
+void Chunk::updateVisibilityWithNeighbour(Vec2 NeighbourPos, const BlocData& neighbourBlocs, std::function<void(const BlocData&)> callBack)
+{
+	Vec2 relativePos = NeighbourPos - worldCoordToChunk(getPos());
+
+	draw_safe.lock();
+	if (relativePos.x != 0)
+	{
+		int x = relativePos.x == -1 ? 0 : CHUNK_WIDTH - 1;
+		int neighbourX = x == 0 ? CHUNK_WIDTH - 1 : 0;
+		for(int y = 0; y < CHUNK_HEIGHT; y++)
+			for (int z = 0; z < CHUNK_DEPTH; z++)
+			{
+				struct bloc& bloc = blocs[y][z][x];
+				if (bloc.type != 0 && !bloc.visible && !neighbourBlocs[y][z][neighbourX].type)
+				{
+					hardBlocVisible++;
+					bloc.visible = true;
+					updateChunk = true;
+				}
+			}
+	}
+	else  // relativePos.y != 0
+	{
+		int z = relativePos.y == -1 ? 0 : CHUNK_DEPTH - 1;
+		int neighbourZ = z == 0 ? CHUNK_DEPTH - 1 : 0;
+		for(int y = 0; y < CHUNK_HEIGHT; y++)
+			for (int x = 0; x < CHUNK_WIDTH; x++)
+			{
+				struct bloc& bloc = blocs[y][z][x];
+				if (bloc.type != 0 && !bloc.visible && !neighbourBlocs[y][neighbourZ][x].type)
+				{
+					hardBlocVisible++;
+					bloc.visible = true;
+					updateChunk = true;
+				}
+			}
+	}
+	draw_safe.unlock();
+	if (callBack)
+		callBack(blocs);
+	threadUseCount--;
+}
+
+Chunk::~Chunk(void)
+{
+	delete [] blocsPosition;
+	delete texture;
+	delete heightMap;
+	totalChunks--;
 }
 
 void Chunk::updateVisibility(void)
 {
 	struct bloc	*bloc;
 	hardBlocVisible = 0;
-	for(unsigned int y = CHUNK_HEIGHT; y > 0; y--)
+	for(int y = CHUNK_HEIGHT; y > 0; y--)
 	{
-		for(unsigned int x = CHUNK_WIDTH; x > 0; x--)
+		for(int z = CHUNK_DEPTH; z > 0; z--)
 		{
-			for(unsigned int z = CHUNK_DEPTH; z > 0; z--)
+			for(int x = CHUNK_WIDTH; x > 0; x--)
 			{
 				bloc = &(blocs[y - 1][z - 1][x - 1]);
 				if (bloc->type == 0)
@@ -127,14 +196,6 @@ void Chunk::setVisibilityByNeighbors(int x, int y, int z)
 		bloc->visible = false;
 }
 
-Chunk::~Chunk(void)
-{
-	delete [] blocsPosition;
-	delete texture;
-	delete heightMap;
-	totalChunks--;
-}
-
 GLfloat *Chunk::generatePosOffsets(void)
 {
 	// TODO : Implement way of knowing which bloc should be shown to avoid loading
@@ -147,9 +208,9 @@ GLfloat *Chunk::generatePosOffsets(void)
 		GLfloat	*WIP_transform = new GLfloat[hardBlocVisible * 3];//CHUNK_HEIGHT * CHUNK_WIDTH * CHUNK_DEPTH * 3];
 		for(unsigned int y = 0; y < CHUNK_HEIGHT; y++)	// Too big of a loop
 		{
-			for(unsigned int x = 0; x < CHUNK_WIDTH; x++)
+			for(unsigned int z = 0; z < CHUNK_DEPTH; z++)
 			{
-				for(unsigned int z = 0; z < CHUNK_DEPTH; z++)
+				for(unsigned int x = 0; x < CHUNK_WIDTH; x++)
 				{
 					unsigned int indexX = 0;
 					unsigned int indexY = 0;
@@ -182,14 +243,19 @@ GLfloat *Chunk::generatePosOffsets(void)
 
 void Chunk::draw(Shader* shader)
 {
+	draw_safe.lock();
 	if (hardBloc == 0 || hardBlocVisible == 0 || !init)
+	{
+		draw_safe.unlock();
 		return;
+	}
 	// Should draw instantiated bloc of same type once for each type.
 	GLfloat	*positionOffset = Chunk::generatePosOffsets();
 
 	glBindTexture(GL_TEXTURE_CUBE_MAP, texture->getID());
 	RectangularCuboid::drawInstance(shader, texture,
 			positionOffset, hardBlocVisible);
+	draw_safe.unlock();
 }
 
 Vec2 Chunk::worldCoordToChunk(Vec3 worldPos)
