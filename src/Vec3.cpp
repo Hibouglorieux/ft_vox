@@ -35,6 +35,11 @@ Vec3::Vec3( const Vec3& copy)
 	z = copy.z;
 }
 
+float Vec3::getSquaredLength() const
+{
+	return (x * x + y * y + z * z);
+}
+
 float Vec3::getLength() const
 {
 	return sqrtf( x * x + y * y + z * z );
@@ -117,6 +122,12 @@ Vec3 Vec3::operator*(const float scale) const
 Vec3 Vec3::operator*(const Vec3& rhs) const
 {
 	Vec3 newVector( x * rhs.x, y * rhs.y, z * rhs.z);
+	return newVector;
+}
+
+Vec3 Vec3::operator/=(const float value) const
+{
+	Vec3 newVector( x / value, y / value, z / value);
 	return newVector;
 }
 

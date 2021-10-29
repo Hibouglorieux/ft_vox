@@ -28,6 +28,7 @@ public:
 	Vec3( const Vec3& copy );
 	~Vec3(){}
 
+	float getSquaredLength() const;
 	float getLength() const;
 	Vec3 getAngle() const;
 	Vec3 getNormalized() const;
@@ -41,6 +42,7 @@ public:
 	Vec3 operator-=( const Vec3& rhs);
 	Vec3 operator*( const float scale ) const;
 	Vec3 operator*( const Vec3& rhs ) const;
+	Vec3 operator/=( const float value ) const;
 	bool operator==( const Vec3& rhs ) const;
 	bool operator!=( const Vec3& rhs ) const;
 	Vec3& operator=( const Vec3& rhs );

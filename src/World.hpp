@@ -19,10 +19,11 @@
 # include "Camera.hpp"
 # include <thread>
 # include "Skybox.hpp"
+# include "Vec2.hpp"
 # include <map>
 
 # define VIEW_DISTANCE 160
-# define ROW_OF_CHUNK 4
+# define ROW_OF_CHUNK 8
 # define CHUNK_VIEW_DISTANCE (VIEW_DISTANCE / CHUNK_WIDTH + 1)
 # define MAX_PRELOAD_DISTANCE ((float)CHUNK_VIEW_DISTANCE + 2)
 # define PRELOAD_DISTANCE_DEL ((float)CHUNK_VIEW_DISTANCE + 4)

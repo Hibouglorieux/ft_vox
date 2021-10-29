@@ -24,7 +24,7 @@ Chunk::Chunk(int x, int z)
 	init = false;
 	threadUseCount = 1;
 	//texture = new Texture();
-	
+
 	texture = new Texture({
 	{"grass/side.jpg"},
 	{"grass/side.jpg"},
@@ -45,8 +45,11 @@ void Chunk::initChunk(void)
 	struct bloc	*bloc;
 	// Get height map for chunk
 	blocs = BlocData();// memset equivalent (needed)
-	heightMap = VoxelGenerator::createMap(position.x / CHUNK_WIDTH, position.z / CHUNK_DEPTH);
-
+	//heightMap = VoxelGenerator::createMap(position.x / CHUNK_WIDTH, position.z / CHUNK_DEPTH);
+	/*heightMap = VoxelGenerator::createMap(position.x / CHUNK_WIDTH,
+	  position.z / CHUNK_DEPTH, 7, 2.51525f, 0.7567f);*/
+	heightMap = VoxelGenerator::createMap(position.x / CHUNK_WIDTH,
+			position.z / CHUNK_DEPTH, 6, 2, 0.5);
 	// Set bloc type
 	for(unsigned int y = 0; y < CHUNK_HEIGHT; y++)	// Too big of a loop
 	{
@@ -55,16 +58,40 @@ void Chunk::initChunk(void)
 			for(unsigned int z = 0; z < CHUNK_DEPTH; z++)
 			{
 				bloc = &(blocs[y][z][x]);
-				if (MAX((*heightMap)[z][x], 0.5) * CHUNK_HEIGHT - 1 < y)// TODO tmp to remove -1 when CHUNK has to check above/neighbours
-				{
-					bloc->type = 0;
-					bloc->visible = 0;
-				}
-				else
+
+				if (y <= 1)
 				{
 					bloc->type = 1;
 					bloc->visible = 1;
 					hardBloc += 1;
+				}
+				else
+				{
+					float localheight = (*heightMap)[z][x];
+					int ty = (int)(localheight * (CHUNK_HEIGHT / 2)
+						+ CHUNK_HEIGHT / 3);// % (CHUNK_HEIGHT - 1);
+					if (ty >= CHUNK_HEIGHT)
+					{
+						ty = ty % (CHUNK_HEIGHT - 1);
+						std::cout << ty << std::endl;
+					}
+					if (ty < (int)y)
+					{
+						bloc->type = 1;
+						bloc->visible = 1;
+						hardBloc += 1;
+					}
+					else if (ty > (int)y && ty < WATER_LEVEL)
+					{
+						bloc->type = 2;
+						bloc->visible = 0;
+						hardBloc += 1;
+					}
+					else
+					{
+						bloc->type = 0;
+						bloc->visible = 0;
+					}
 				}
 			}
 		}

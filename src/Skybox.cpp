@@ -26,18 +26,12 @@ void Skybox::initialize()
 	{"skybox/bottom.jpg"},// TODO temporary not used to see heightmap instead
 	{"skybox/front.jpg"},
 	{"skybox/back.jpg"}};
-	/*
-	texture = new Texture( {{"skybox/right.jpg"},
-	{"skybox/left.jpg"},
-	{"skybox/top.jpg"},
-	{"skybox/bottom.jpg"},
-	{"skybox/front.jpg"},
-	{"skybox/back.jpg"}});
-	*/
-	 //heightmap call
-	BigHeightMap* bigHeightMap = VoxelGenerator::createBigMap();
-	HeightMap* heightmap = VoxelGenerator::createMap(1, 1);
-	texture = new Texture(names, *heightmap, true);
+	
+	// heightmap call
+	BigHeightMap *bigHeightMap = VoxelGenerator::createBigMap(6, 2, 0.5);
+	//HeightMap *heightmap = VoxelGenerator::createMap(1, 1);
+	//HeightMap* heightmap = VoxelGenerator::createMap(1, 1);
+	texture = new Texture(names, *bigHeightMap);
 	 
 	shader = new Shader("skybox.vert", "skybox.frag");
 

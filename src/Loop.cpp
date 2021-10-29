@@ -87,7 +87,7 @@ void Loop::processInput()
 	if (glfwGetKey(appWindow::getWindow(), GLFW_KEY_A) == GLFW_PRESS)
 		left = true;
 	bool shift = glfwGetKey(appWindow::getWindow(), GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS ? true : false;
-	world->getCamera().move(forward, backward, left, right, (shift == true ? 2 : 1)* CAMERA_MOUVEMENT_SPEED);
+	world->getCamera().move(forward, backward, left, right, (shift == true ? 10 : 1)* CAMERA_MOUVEMENT_SPEED);
 	if (glfwGetKey(appWindow::getWindow(), GLFW_KEY_SPACE) == GLFW_PRESS)
 		world->getCamera().moveUp();
 	if (glfwGetKey(appWindow::getWindow(), GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)

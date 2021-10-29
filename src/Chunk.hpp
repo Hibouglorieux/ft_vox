@@ -12,13 +12,14 @@
 # include <functional>
 # include <mutex>
 
-# define CHUNK_HEIGHT 64 // HEIGHT
+# define CHUNK_HEIGHT 64 //HEIGHT
 
 # define CHUNK_WIDTH BLOC_WIDTH_PER_CHUNK
 # define CHUNK_DEPTH BLOC_WIDTH_PER_CHUNK
 
 # define CHUNK_SIZE CHUNK_HEIGHT * CHUNK_WIDTH * CHUNK_DEPTH
 
+# define WATER_LEVEL 10
 
 class Chunk : public Object{
 public:

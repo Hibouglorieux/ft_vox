@@ -118,7 +118,7 @@ World::~World()
 
 void World::render()
 {
-	//std::cout << camera.getPos().x << "," << camera.getPos().z << std::endl; 
+	//std::cout << camera.getPos().x << "," << camera.getPos().z << std::endl;
 
 	Matrix precalculatedMat = Object::getProjMat() * camera.getMatrix();
 
@@ -126,8 +126,6 @@ void World::render()
 	// draw skybox
 	Skybox::draw(precalculatedMat);
 
-
-	
 	// draw chunks
 	shader->use();
 	glEnable(GL_DEPTH_TEST);

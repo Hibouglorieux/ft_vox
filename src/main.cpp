@@ -44,6 +44,7 @@ int		main( int argc, char *argv[] )
 		seed = stoi(argv[1]);
 	}
 
+	std::srand(std::time(nullptr));
 
 	VoxelGenerator::initialize(seed);
 	World* world = new World();

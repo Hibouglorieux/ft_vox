@@ -28,7 +28,7 @@
 #define SEC_TO_MICROSEC 1000000
 #define BLOC_WIDTH_PER_CHUNK 32
 //#define MAX_NB_OF_CHUNK (WIDTH / BLOC_WIDTH_PER_CHUNK)
-#define MAX_NB_OF_CHUNK 512 // TODO this has to be (WIDTH / BLOCK_WIDTH_PER_CHUNK) but chang be changed to have a better view of the Heightmap on less chunks
+#define MAX_NB_OF_CHUNK 1024 // TODO this has to be (WIDTH / BLOCK_WIDTH_PER_CHUNK) but chang be changed to have a better view of the Heightmap on less chunks
 
 /* Profiler code:
  

@@ -17,7 +17,7 @@
 #include "appWindow.hpp"
 #include "Vec3.hpp"
 
-#define Y_MOVE_SPEED 1.0f
+#define Y_MOVE_SPEED 5.0f
 
 class Camera {
 public:

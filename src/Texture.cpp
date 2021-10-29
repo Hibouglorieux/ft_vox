@@ -137,6 +137,7 @@ Texture::Texture(std::vector<std::string> paths, BigHeightMap& heightMap)
 
 Texture::Texture(std::vector<std::string> paths, HeightMap& heightMap, bool smoll)
 {
+	(void)smoll;
 	path = paths[0];
 	if (textureLoaded.find(path) == textureLoaded.end())
 		textureLoaded.insert(std::pair<std::string, TextureCommonData>(path, {0, 1}));
