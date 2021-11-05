@@ -7,6 +7,7 @@ layout (location = 4) in vec3 texturePos3d; // 3d
 
 out vec3 texCoord;
 out	vec3 vertexPos;
+out vec3 vertexPosFromCamera;
 
 uniform mat4 projection;
 uniform mat4 view;
@@ -28,4 +29,5 @@ void main()
 		gl_Position = projection * view * model * vec4(pos, 1.0);
 	}
 	vertexPos = vec3(pos + posOffset);
+	vertexPosFromCamera = vec3(gl_Position);
 }

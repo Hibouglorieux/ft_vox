@@ -53,6 +53,8 @@ typedef std::array<std::array<std::array<struct bloc, CHUNK_WIDTH>, CHUNK_DEPTH>
 			std::function<void(const BlocData&)> callBack = nullptr);
 	void	updateVisibility(void);
 	void	setVisibilityByNeighbors(int x, int y, int z);
+	void	caveTest();
+	void	destroyIlots();
 	GLfloat	*generatePosOffsets(void);
 
 	Vec3	position;
@@ -63,6 +65,7 @@ typedef std::array<std::array<std::array<struct bloc, CHUNK_WIDTH>, CHUNK_DEPTH>
 	bool	init;
 	unsigned char	threadUseCount;
 	HeightMap*	heightMap;
+	CaveMap*	caveMap;
 	unsigned int hardBloc;
 	unsigned int hardBlocVisible;
 	std::mutex	draw_safe;

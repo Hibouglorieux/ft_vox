@@ -3,7 +3,7 @@
 #include <thread>
 
 #define MAX(x, y) (x)//(x > y ? x : y)
-#define TEST 0.05 * SEC_TO_MICROSEC
+#define TMP_SLEEP_VALUE 0.05 * SEC_TO_MICROSEC
 
 
 int Chunk::totalChunks = 0;
@@ -26,12 +26,12 @@ Chunk::Chunk(int x, int z)
 	//texture = new Texture();
 
 	texture = new Texture({
-	{"grass/side.jpg"},
-	{"grass/side.jpg"},
-	{"grass/top.jpg"},
-	{"grass/bottom.jpg"},
-	{"grass/side.jpg"},
-	{"grass/side.jpg"}});
+			{"grass/side.jpg"},
+			{"grass/side.jpg"},
+			{"grass/top.jpg"},
+			{"grass/bottom.jpg"},
+			{"grass/side.jpg"},
+			{"grass/side.jpg"}});
 	myNeighbours = {};
 }
 
@@ -50,53 +50,58 @@ void Chunk::initChunk(void)
 	  position.z / CHUNK_DEPTH, 7, 2.51525f, 0.7567f);*/
 	heightMap = VoxelGenerator::createMap(position.x / CHUNK_WIDTH,
 			position.z / CHUNK_DEPTH, 6, 2, 0.5);
+	caveMap = VoxelGenerator::createCaveMap(position.x / CHUNK_WIDTH,
+			position.z / CHUNK_DEPTH, 5, 3, 0.5);
 	// Set bloc type
 	for(unsigned int y = 0; y < CHUNK_HEIGHT; y++)	// Too big of a loop
 	{
-		for(unsigned int x = 0; x < CHUNK_WIDTH; x++)
+		for(unsigned int z = 0; z < CHUNK_DEPTH; z++)
 		{
-			for(unsigned int z = 0; z < CHUNK_DEPTH; z++)
+			for(unsigned int x = 0; x < CHUNK_WIDTH; x++)
 			{
 				bloc = &(blocs[y][z][x]);
+				bloc->visible = 0;// will be updated after with updateVisibility
 
-				if (y <= 1)
+				if (y <= 1) // need explanation
 				{
 					bloc->type = 1;
-					bloc->visible = 1;
 					hardBloc += 1;
 				}
 				else
 				{
 					float localheight = (*heightMap)[z][x];
 					int ty = (int)(localheight * (CHUNK_HEIGHT / 2)
-						+ CHUNK_HEIGHT / 3);// % (CHUNK_HEIGHT - 1);
-					if (ty >= CHUNK_HEIGHT)
+							+ CHUNK_HEIGHT / 3);// % (CHUNK_HEIGHT - 1);
+					if (ty >= CHUNK_HEIGHT) // need explanation ? error case ?
 					{
 						ty = ty % (CHUNK_HEIGHT - 1);
 						std::cout << ty << std::endl;
 					}
-					if (ty < (int)y)
+					if (ty >= (int)y)// NOICE
 					{
 						bloc->type = 1;
-						bloc->visible = 1;
 						hardBloc += 1;
 					}
-					else if (ty > (int)y && ty < WATER_LEVEL)
-					{
-						bloc->type = 2;
-						bloc->visible = 0;
-						hardBloc += 1;
-					}
+					/*
+					   else if (ty > (int)y && ty < WATER_LEVEL)
+					   {
+					   bloc->type = 2;
+					   hardBloc += 1;
+					   }
+					   */
 					else
 					{
 						bloc->type = 0;
-						bloc->visible = 0;
 					}
 				}
 			}
 		}
 	}
+	caveTest();
+	//destroyIlots();
 	updateVisibility();
+	//if (position.x == 0 && position.z == 0)
+		//std::cout << hardBlocVisible << std::endl;;
 	init = true;
 	updateChunk = true;
 
@@ -121,12 +126,36 @@ void Chunk::initChunk(void)
 	threadUseCount--;
 }
 
+void	Chunk::caveTest() // destroying blocks following a 3d map to generate caves
+{
+	struct bloc	*bloc;
+	for(unsigned int y = 3; y < CHUNK_HEIGHT; y++)// random numberm can dig lower than 3
+		for(unsigned int x = 0; x < CHUNK_WIDTH; x++)
+			for(unsigned int z = 0; z < CHUNK_DEPTH; z++)
+			{
+				bloc = &(blocs[y][z][x]);
+				if (bloc->type != 0) // block exists
+					if ((*caveMap)[y][z][x] >= 0.4f) // random value
+					{
+						// destroy the block
+						bloc->type = 0;
+						hardBloc--;
+					}
+			}
+}
+
+void Chunk::destroyIlots()// recursive
+{
+}
+
 void Chunk::updateVisibilityWithNeighbour(Vec2 NeighbourPos, const BlocData& neighbourBlocs, std::function<void(const BlocData&)> callBack)
 {
 	Vec2 relativePos = NeighbourPos - worldCoordToChunk(getPos());
 
-	while (!init)
-		usleep(TEST);
+	while (!init) // this happens when a neighbours has finished initializing but the one being called to update hasnt finished yet
+	{
+		usleep(TMP_SLEEP_VALUE);
+	}
 	draw_safe.lock();
 	if (relativePos.x != 0)
 	{
@@ -185,9 +214,7 @@ void Chunk::updateVisibility(void)
 			for(int x = CHUNK_WIDTH; x > 0; x--)
 			{
 				bloc = &(blocs[y - 1][z - 1][x - 1]);
-				if (bloc->type == 0)
-					bloc->visible = 0;
-				else
+				if (bloc->type != 0)
 				{
 					setVisibilityByNeighbors(x - 1, y - 1, z - 1);
 					if (bloc->visible == true)
@@ -198,14 +225,15 @@ void Chunk::updateVisibility(void)
 	}
 }
 
-void Chunk::setVisibilityByNeighbors(int x, int y, int z)
+
+void Chunk::setVisibilityByNeighbors(int x, int y, int z) // Activates visibility if one neighbour is transparent
 {
 	// TODO : Check coordinate to avoid overflow
 	struct bloc			*bloc = &(blocs[y][z][x]);
 	std::vector<struct bloc*>	neighbors = {};
-	long unsigned int			hardNei = 0;
-	long unsigned int			invisibleNei = 0;
-	bool						set = false;
+	//long unsigned int			hardNei = 0;
+	//long unsigned int			invisibleNei = 0;
+	//bool						set = false;
 
 	if (y > 0)
 		neighbors.push_back(&(blocs[y - 1][z][x]));
@@ -224,17 +252,18 @@ void Chunk::setVisibilityByNeighbors(int x, int y, int z)
 		if (nei->type == 0)
 		{
 			bloc->visible = true;
-			set = true;
+			//set = true;
 			break;
 		}
-		hardNei += nei->type != 0 ? 1 : 0;
-		invisibleNei += nei->type == 0 || bloc->visible == false ? 1 : 0;
+		//hardNei += nei->type != 0 ? 1 : 0;
+		//invisibleNei += nei->type == 0 || bloc->visible == false ? 1 : 0;
 	}
-	if (hardNei == neighbors.size())
-		bloc->visible = false;
-	else if (invisibleNei == neighbors.size() && !set)
-		bloc->visible = false;
+	//if (hardNei == neighbors.size())
+		//bloc->visible = false;
+	//else if (invisibleNei == neighbors.size() && !set)
+		//bloc->visible = false;
 }
+
 
 GLfloat *Chunk::generatePosOffsets(void)
 {

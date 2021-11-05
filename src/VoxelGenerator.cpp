@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/10/15 13:08:40 by nathan            #+#    #+#             */
-/*   Updated: 2021/10/22 11:25:43 by nathan           ###   ########.fr       */
+/*   Updated: 2021/11/05 18:28:23 by nathan           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -184,6 +184,37 @@ HeightMap*	VoxelGenerator::createMap(float ox, float oz, int octaves = 1, float 
 	return myHeightMap;
 }
 
+CaveMap*	VoxelGenerator::createCaveMap(float ox, float oz, int octaves = 1, float lacunarity = 2.0f, float gain = 0.5f)
+{
+	ox *= (GRADIENT_SIZE / (float)MAX_NB_OF_CHUNK);
+	oz *= (GRADIENT_SIZE / (float)MAX_NB_OF_CHUNK);
+	CaveMap* cavemap = new CaveMap;
+	for (int y = 0; y < 64; y++)
+		for (int z = 0; z < HEIGHTMAP_SIZE; z++)
+			for (int x = 0; x < HEIGHTMAP_SIZE; x++)
+			{
+				float* tmp = &(*cavemap)[y][z][x];
+				float tmpz = oz + z * SCALE_HEIGHTMAP_TO_FRACTION_OF_NOISE;
+				float tmpx = ox + x * SCALE_HEIGHTMAP_TO_FRACTION_OF_NOISE;
+				float tmpy = y / 64.f;
+
+				float amplitude = 1.0;
+				float frequency = 1.0;
+				float sum = 0.0;
+				for(int i = 0; i < octaves; ++i)
+				{
+					//sum += amplitude * (getValue(tmpx * frequency, tmpz * frequency
+					//			, gradients));
+					//sum += amplitude * (1.0 - fabsf(eval(tmpx * frequency, 0, tmpz * frequency)));
+					sum += amplitude * eval(tmpx * frequency, tmpy * frequency, tmpz * frequency);
+					amplitude *= gain;
+					frequency *= lacunarity;
+				}
+				*tmp = fabsf(sum);
+			}
+	return cavemap;
+}
+
 float	VoxelGenerator::getLocalDensity(float x, float y, float z,
 		float ox, float oy, float oz,
 		int octaves = 1, float lacunarity = 2.0f, float gain = 0.5f)
@@ -222,7 +253,7 @@ float	VoxelGenerator::smoothstep(float t)
 
 float	VoxelGenerator::quintic(float t)
 {
-	return t * t * t * (t * (t * 6 - 15) + 10);
+	return t * t * t * (t * (t * 6 - 15) + 10);// need explanation
 	// t^5 * 6 - t^4 * 15 + t^3 * 10
 }
 

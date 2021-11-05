@@ -5,10 +5,19 @@ else
 	ECHOc = echo
 endif
 
-Green=\x1b[32m
-Cyan=\x1b[36m
-Red=\x1b[31m
-End=\x1b[0m
+NATH = nathan
+
+ifeq ($(findstring $(NATH), $(shell hostname)), $(NATH))
+	Green=\033[32m
+	Cyan=\033[36m
+	Red=\033[31m
+	End=\033[0m
+else
+	Green=\x1b[32m
+	Cyan=\x1b[36m
+	Red=\x1b[31m
+	End=\x1b[0m
+endif
 
 NAME = ft_vox
 

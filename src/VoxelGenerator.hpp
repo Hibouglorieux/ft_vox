@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/10/15 13:08:43 by nathan            #+#    #+#             */
-/*   Updated: 2021/10/22 15:02:00 by nathan           ###   ########.fr       */
+/*   Updated: 2021/11/05 15:02:41 by nathan           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,6 +27,7 @@
 
 typedef std::array<std::array<std::array<unsigned char, WIDTH>, LENGTH>, HEIGHT> VoxelMap;
 typedef std::array<std::array<float, HEIGHTMAP_SIZE>, HEIGHTMAP_SIZE> HeightMap;
+typedef std::array<std::array<std::array<float, HEIGHTMAP_SIZE>, HEIGHTMAP_SIZE>, 64> CaveMap;
 typedef std::array<std::array<float, BIG_HEIGHT_MAP_SIZE>, BIG_HEIGHT_MAP_SIZE> BigHeightMap;
 typedef std::array<std::array<std::array<float, 2>, GRADIENT_SIZE>, GRADIENT_SIZE> Gradients;
 //typedef std::array<std::array<std::array<float, HEIGHTMAP_SIZE>, HEIGHTMAP_SIZE>, HEIGHTMAP_SIZE> 3DHeightMap;
@@ -42,6 +43,7 @@ public:
 	static BigHeightMap*	createBigMap(int octaves, float lacunarity, float gain);
 	static HeightMap*		createMap(float ox, float oz);
 	static HeightMap*		createMap(float ox, float oz, int octaves, float lacunarity, float gain);
+	static CaveMap*			createCaveMap(float ox, float oz, int octaves, float lacunarity, float gain);
 	static float			getLocalDensity(float x, float y, float z,
 			float ox, float oy, float oz, int octaves,
 			float lacunarity, float gain);
