@@ -12,7 +12,7 @@
 # include <functional>
 # include <mutex>
 
-# define CHUNK_HEIGHT 64 //HEIGHT
+# define CHUNK_HEIGHT HEIGHT
 
 # define CHUNK_WIDTH BLOC_WIDTH_PER_CHUNK
 # define CHUNK_DEPTH BLOC_WIDTH_PER_CHUNK
@@ -46,7 +46,8 @@ private:
 		int type;
 		bool visible;
 	};
-typedef std::array<std::array<std::array<struct bloc, CHUNK_WIDTH>, CHUNK_DEPTH>, CHUNK_HEIGHT> BlocData;
+	typedef std::array<std::array<std::array<struct bloc, CHUNK_WIDTH>, CHUNK_DEPTH>, CHUNK_HEIGHT> BlocData;
+	typedef std::array<std::array<std::array<int, CHUNK_WIDTH>, CHUNK_DEPTH>, CHUNK_HEIGHT> BlocSearchData;
 
 	void	updateVisibilityWithNeighbour(Vec2 NeighbourPos,
 			const BlocData& neighbourBlocs,
@@ -55,10 +56,12 @@ typedef std::array<std::array<std::array<struct bloc, CHUNK_WIDTH>, CHUNK_DEPTH>
 	void	setVisibilityByNeighbors(int x, int y, int z);
 	void	caveTest();
 	void	destroyIlots();
+	bool 	destroyIlotsSearchAndDestroy(struct bloc *block, Vec3 pos, std::vector<struct bloc*> *blockGroup);
 	GLfloat	*generatePosOffsets(void);
 
 	Vec3	position;
 	BlocData blocs;
+	BlocSearchData blocsTests;
 	//struct bloc	blocs[CHUNK_HEIGHT][CHUNK_DEPTH][CHUNK_WIDTH];
 	GLfloat	*blocsPosition;
 	bool	updateChunk;

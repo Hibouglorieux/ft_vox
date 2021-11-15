@@ -45,6 +45,7 @@ void Chunk::initChunk(void)
 	struct bloc	*bloc;
 	// Get height map for chunk
 	blocs = BlocData();// memset equivalent (needed)
+	blocsTests = BlocSearchData();// memset equivalent (needed)
 	//heightMap = VoxelGenerator::createMap(position.x / CHUNK_WIDTH, position.z / CHUNK_DEPTH);
 	/*heightMap = VoxelGenerator::createMap(position.x / CHUNK_WIDTH,
 	  position.z / CHUNK_DEPTH, 7, 2.51525f, 0.7567f);*/
@@ -53,52 +54,35 @@ void Chunk::initChunk(void)
 	caveMap = VoxelGenerator::createCaveMap(position.x / CHUNK_WIDTH,
 			position.z / CHUNK_DEPTH, 5, 3, 0.5);
 	// Set bloc type
-	for(unsigned int y = 0; y < CHUNK_HEIGHT; y++)	// Too big of a loop
+	for(unsigned int z = 0; z < CHUNK_DEPTH; z++)
 	{
-		for(unsigned int z = 0; z < CHUNK_DEPTH; z++)
+		for(unsigned int x = 0; x < CHUNK_WIDTH; x++)
 		{
-			for(unsigned int x = 0; x < CHUNK_WIDTH; x++)
+			bloc = &(blocs[0][z][x]);
+			bloc->type = 0;
+			bloc->visible = 0;// will be updated after with updateVisibility
+
+			float localheight = (*heightMap)[z][x];
+			int ty = (int)(localheight * (CHUNK_HEIGHT / 2)
+					+ CHUNK_HEIGHT / 3);// % (CHUNK_HEIGHT - 1);
+			if (ty >= CHUNK_HEIGHT) // In case of little magic trick is over (or equal to) the max height
+			{
+				ty = ty % (CHUNK_HEIGHT - 1);
+				std::cout << ty << std::endl;
+			}
+
+			for (int y = 0; y < ty && y < CHUNK_HEIGHT; y++)
 			{
 				bloc = &(blocs[y][z][x]);
-				bloc->visible = 0;// will be updated after with updateVisibility
-
-				if (y <= 1) // need explanation
-				{
-					bloc->type = 1;
-					hardBloc += 1;
-				}
-				else
-				{
-					float localheight = (*heightMap)[z][x];
-					int ty = (int)(localheight * (CHUNK_HEIGHT / 2)
-							+ CHUNK_HEIGHT / 3);// % (CHUNK_HEIGHT - 1);
-					if (ty >= CHUNK_HEIGHT) // need explanation ? error case ?
-					{
-						ty = ty % (CHUNK_HEIGHT - 1);
-						std::cout << ty << std::endl;
-					}
-					if (ty >= (int)y)// NOICE
-					{
-						bloc->type = 1;
-						hardBloc += 1;
-					}
-					/*
-					   else if (ty > (int)y && ty < WATER_LEVEL)
-					   {
-					   bloc->type = 2;
-					   hardBloc += 1;
-					   }
-					   */
-					else
-					{
-						bloc->type = 0;
-					}
-				}
+				bloc->type = 1;
+				hardBloc += 1;
 			}
 		}
 	}
 	caveTest();
-	//destroyIlots();
+	if (CHUNK_HEIGHT <= 64) // TODO : Make better function, this one crash with HEIGHT > 64
+		destroyIlots();
+
 	updateVisibility();
 	//if (position.x == 0 && position.z == 0)
 		//std::cout << hardBlocVisible << std::endl;;
@@ -129,10 +113,12 @@ void Chunk::initChunk(void)
 void	Chunk::caveTest() // destroying blocks following a 3d map to generate caves
 {
 	struct bloc	*bloc;
-	for(unsigned int y = 3; y < CHUNK_HEIGHT; y++)// random numberm can dig lower than 3
+	for(unsigned int y = 3; y < CHUNK_HEIGHT; y++)// random number, can dig lower than 3
 		for(unsigned int x = 0; x < CHUNK_WIDTH; x++)
 			for(unsigned int z = 0; z < CHUNK_DEPTH; z++)
 			{
+				if (y >= 64.0f)
+					continue;
 				bloc = &(blocs[y][z][x]);
 				if (bloc->type != 0) // block exists
 					if ((*caveMap)[y][z][x] >= 0.4f) // random value
@@ -144,8 +130,122 @@ void	Chunk::caveTest() // destroying blocks following a 3d map to generate caves
 			}
 }
 
-void Chunk::destroyIlots()// recursive
+void Chunk::destroyIlots()
 {
+	// 	This function goal is to delete floating block at initilization, not after player removed some and created a floating block.
+	// 	So this function should only be used at init of chunk
+	//
+	//	To delete floating block(s), the function must be able to check if the bloc is connected to the ground.
+	//	To check if a block is connected to the ground we need to be able to find its neighbors, we will try the worst way first which is
+	//	to look for each neighbor recursively till we get a block at y=0.
+	// 
+	//	If that function return False, then we delete the block group, else it stays
+
+	//	1-st Step : Find blocks that do not have solid neighbors
+	struct bloc					*block;
+	std::vector<struct bloc*>	blockGroup = {};
+	//BlocSearchData				visitedGroup = BlocSearchData();
+	Vec3						pos;
+	bool						floating = false;
+	blocsTests = BlocSearchData();
+	for(unsigned int y = CHUNK_HEIGHT; y > 0; y--)
+		for(unsigned int x = 0; x < CHUNK_WIDTH; x++)
+			for(unsigned int z = 0; z < CHUNK_DEPTH; z++)
+			{
+				if (blocsTests[y - 1][z][x] == 1)
+					continue;
+				block = &(blocs[y - 1][z][x]);
+				if (block->type == 0)
+					continue;
+				else if (block->type != 0)
+				{
+					blockGroup.clear();
+					pos = Vec3(x, y - 1, z);
+					floating = !destroyIlotsSearchAndDestroy(block, pos, &blockGroup);
+					if (floating) // Floating groups detected, will now replace each block in blockGroup by air
+					{
+						for (auto it = blockGroup.begin(); it != blockGroup.end(); it++)
+						{
+							(*it)->type = 0;
+						}
+					}
+					blockGroup.clear();
+				}
+			}
+	blockGroup.clear();
+}
+
+bool Chunk::destroyIlotsSearchAndDestroy(struct bloc *block, Vec3 pos, std::vector<struct bloc*> *blockGroup) // Return true if block isn't connected to ground, false if connected to a block at y=0
+{
+	bool	anchored = false;
+	bool	anchored_tmp = false;
+	
+	int x, y, z;
+	x = (int)(pos.x);
+	y = (int)(pos.y);
+	z = (int)(pos.z);
+
+	(blocsTests[y][z][x]) = 1;
+	blockGroup->push_back(block);
+
+	if (pos.y == 0 && block->type != 0)	// Block is the floor, group is valid, we only keep visited block in memory, clear blockGroup
+	{
+		blockGroup->clear();
+		return true;
+	}
+
+	//	First we retrieve the neighbors, avoid the one we already visited
+	std::vector<struct bloc*>	neighbors = {};
+	std::vector<Vec3>			neighborsPos = {};
+	if (y > 0 && (blocs[y - 1][z][x]).type != 0)
+	{
+		neighbors.push_back(&(blocs[y - 1][z][x]));
+		neighborsPos.push_back(Vec3(x, y - 1, z));
+	}
+	if (y < CHUNK_HEIGHT - 1 && (blocs[y + 1][z][x]).type != 0)
+	{
+		neighbors.push_back(&(blocs[y + 1][z][x]));
+		neighborsPos.push_back(Vec3(x, y + 1, z));
+	}
+	if (x > 0 && (blocs[y][z][x - 1]).type != 0)
+	{
+		neighbors.push_back(&(blocs[y][z][x - 1]));
+		neighborsPos.push_back(Vec3(x - 1, y, z));
+	}
+	if (x < CHUNK_WIDTH - 1 && (blocs[y][z][x + 1]).type != 0)
+	{
+		neighbors.push_back(&(blocs[y][z][x + 1]));
+		neighborsPos.push_back(Vec3(x + 1, y, z));
+	}
+	if (z > 0 && (blocs[y][z - 1][x]).type != 0)
+	{
+		neighbors.push_back(&(blocs[y][z - 1][x]));
+		neighborsPos.push_back(Vec3(x, y, z - 1));
+	}
+	if (z < CHUNK_DEPTH - 1 && (blocs[y][z + 1][x]).type != 0)
+	{
+		neighbors.push_back(&(blocs[y][z + 1][x]));
+		neighborsPos.push_back(Vec3(x, y, z + 1));
+	}
+
+	// Second, we iterate through the neighbors and seek their neighbor is they haven't already been visited
+	for(int nei = 0; (unsigned int)nei < neighbors.size(); ++nei) {
+		Vec3 npos = neighborsPos[nei];
+		if (blocsTests[(int)npos.y][(int)npos.z][(int)npos.x] == 1)
+			continue;
+		anchored_tmp = destroyIlotsSearchAndDestroy(neighbors[nei], neighborsPos[nei], blockGroup);
+		if (anchored_tmp && !anchored) 		// Meaning a block rattached to the current block is the floor so the group is valid
+		{
+			anchored = true;	// We let the function continue to mark all connected blocks
+		}
+	}
+	if (anchored)
+	{
+		if (blockGroup->size() != 0)
+			blockGroup->clear();
+		return true;
+	}
+	return false; // Meaning no block rattached to the current block is touching the floor, group is invalid and must be deleted (replaced by air)
 }
 
 void Chunk::updateVisibilityWithNeighbour(Vec2 NeighbourPos, const BlocData& neighbourBlocs, std::function<void(const BlocData&)> callBack)
@@ -253,7 +353,7 @@ void Chunk::setVisibilityByNeighbors(int x, int y, int z) // Activates visibilit
 		{
 			bloc->visible = true;
 			//set = true;
-			break;
+			//break;
 		}
 		//hardNei += nei->type != 0 ? 1 : 0;
 		//invisibleNei += nei->type == 0 || bloc->visible == false ? 1 : 0;

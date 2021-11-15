@@ -196,7 +196,7 @@ CaveMap*	VoxelGenerator::createCaveMap(float ox, float oz, int octaves = 1, floa
 				float* tmp = &(*cavemap)[y][z][x];
 				float tmpz = oz + z * SCALE_HEIGHTMAP_TO_FRACTION_OF_NOISE;
 				float tmpx = ox + x * SCALE_HEIGHTMAP_TO_FRACTION_OF_NOISE;
-				float tmpy = y / 64.f;
+				float tmpy = y / 64.0f;
 
 				float amplitude = 1.0;
 				float frequency = 1.0;

@@ -17,7 +17,7 @@
 #define EMPTY 0
 #define HAS 1
 
-#define HEIGHT 256
+#define HEIGHT 64
 #define WIDTH  16384
 #define LENGTH WIDTH
 

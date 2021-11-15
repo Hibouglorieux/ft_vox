@@ -55,7 +55,7 @@ int		main( int argc, char *argv[] )
 
 	//world->addObject(floor);
 	Loop::setWorld(world);
-
+	
 	Loop::loop();
 	delete world;
 	VoxelGenerator::clear();
