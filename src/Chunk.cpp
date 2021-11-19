@@ -16,6 +16,7 @@ Chunk::Chunk(int x, int z)
 	// Not necessary ?
 
 	blocsPosition = {};
+	blocsType = {};
 	// Should we recompute the chunk's blocs positions
 	updateChunk = false;
 	// How many solid bloc in chunk
@@ -23,21 +24,69 @@ Chunk::Chunk(int x, int z)
 	hardBlocVisible = 0;
 	init = false;
 	threadUseCount = 1;
-	//texture = new Texture();
-
 	texture = new Texture({
-			{"grass/side.jpg"},
-			{"grass/side.jpg"},
-			{"grass/top.jpg"},
-			{"grass/bottom.jpg"},
-			{"grass/side.jpg"},
-			{"grass/side.jpg"}});
+		{"packDefault/GRASS_SIDE.jpg"},
+		{"packDefault/GRASS_SIDE.jpg"},
+		{"packDefault/GRASS_TOP.jpg"},
+		{"packDefault/GRASS_BOTTOM.jpg"},
+		{"packDefault/GRASS_SIDE.jpg"},
+		{"packDefault/GRASS_SIDE.jpg"}});
 	myNeighbours = {};
 }
 
 Chunk::Chunk(int x, int z, std::vector<std::pair<Vec2, Chunk*>> neighbours) : Chunk(x, z)
 {
 	myNeighbours = neighbours;
+}
+
+float Chunk::getBlockBiome(int x, int z)
+{
+	float flatTerrain = VoxelGenerator::Noise2D(position.x + x, position.z + z, 0.0f, 0.00033f, 0.45f, 4, 0, 2, 0.65); // Kind of flat
+	flatTerrain = pow(flatTerrain * 0.75, 2);
+	//float heightValue = VoxelGenerator::Noise2D(position.x + x, position.z + z, 0.0f, 0.00025f, 2.66f, 2, 1, 2.45, 0.55); // Big hills or mountains ?
+	//float heightValue = VoxelGenerator::Noise2D(position.x + x, position.z + z, 0.0f, 0.005f, 0.66f, 1, 1, 2, 1); // Initial form of mountains
+	float moutainBiomeValue = VoxelGenerator::Noise2D(position.x + x, position.z + z, 0.0f, 0.000125f, 0.75f, 2, 1, 4, 1); // Nice moutains ? (flat with 2 octaves instead of 1)
+	//float heightValue = VoxelGenerator::Noise2D(position.x + x, position.z + z, 0.0f, 0.0025f, 1.2f, 1, 1); // Nice moutains ?
+
+	float heightValue = (flatTerrain * (HEIGHT - 1) * 0.66);
+
+	if (moutainBiomeValue > 0.65) // TODO : Set textures (stone/snow) and add decoration (trees ?)
+	{
+		//std::cout << moutainBiomeValue << std::endl;
+		if (moutainBiomeValue < 0.75) // If value is inferior to 0.70, we smooth the passage from mountain to other biome
+		{
+			float moutainTerrain = VoxelGenerator::Noise2D(position.x + x, position.z + z, 0.15f, 0.00225f, 1.5f, 1, 0, 3, 0.65); // Nice moutains!
+			moutainTerrain = pow(moutainTerrain, 1.66);
+			float biomeRange = (0.75 - 0.65);
+			float surfaceRange = (moutainTerrain - flatTerrain);
+			float interpolationValue = (((moutainBiomeValue - 0.65) * surfaceRange) / biomeRange) + flatTerrain;
+			if (interpolationValue > 1)
+				interpolationValue = 1;
+			heightValue = (interpolationValue * (HEIGHT - 1) * 0.66);
+		}
+		else	// Biome is fully mountain
+		{
+			float moutainTerrain = VoxelGenerator::Noise2D(position.x + x, position.z + z, 0.15f, 0.00225f, 1.5f, 1, 0, 3, 1.65); // Nice moutains!
+			moutainTerrain = pow(moutainTerrain, 1.66);// * 0.65;
+			heightValue = (moutainTerrain * (HEIGHT - 1) * 0.66);
+		}
+	}
+	else if (moutainBiomeValue < 0.55)
+	{
+		// Create a little mountain biome ? Or canyon or i don't know what
+	}	
+	
+	float deleteNoise = VoxelGenerator::Noise2D(position.x + x, position.z + z, 0.2, 0.0045, 0.065, 2, 3, 2, 0.5); // Noise used to create hole / entrance to caves in the ground
+	//std::cout << deleteNoise << std::endl;
+
+	//std::cout << heightValue << std::endl;
+	struct bloc	*bloc = &(blocs[(int)heightValue][z][x]);
+	bloc->type = BLOCK_GRASS;
+	bloc->visible = 1;
+	hardBloc += 1;
+	hardBlocVisible++;
+
+	return heightValue;
 }
 
 void Chunk::initChunk(void)
@@ -49,41 +98,59 @@ void Chunk::initChunk(void)
 	//heightMap = VoxelGenerator::createMap(position.x / CHUNK_WIDTH, position.z / CHUNK_DEPTH);
 	/*heightMap = VoxelGenerator::createMap(position.x / CHUNK_WIDTH,
 	  position.z / CHUNK_DEPTH, 7, 2.51525f, 0.7567f);*/
-	heightMap = VoxelGenerator::createMap(position.x / CHUNK_WIDTH,
-			position.z / CHUNK_DEPTH, 6, 2, 0.5);
-	caveMap = VoxelGenerator::createCaveMap(position.x / CHUNK_WIDTH,
-			position.z / CHUNK_DEPTH, 5, 3, 0.5);
+	/*heightMap = VoxelGenerator::createMap(position.x / CHUNK_WIDTH,
+			position.z / CHUNK_DEPTH, 8, 2, 0.5);*/
+	/*caveMap = VoxelGenerator::createCaveMap(position.x / CHUNK_WIDTH,
+			position.z / CHUNK_DEPTH, 5, 3, 0.5);*/
+	heightMap = nullptr;
+	caveMap = nullptr;
 	// Set bloc type
 	for(unsigned int z = 0; z < CHUNK_DEPTH; z++)
 	{
 		for(unsigned int x = 0; x < CHUNK_WIDTH; x++)
 		{
 			bloc = &(blocs[0][z][x]);
-			bloc->type = 0;
-			bloc->visible = 0;// will be updated after with updateVisibility
+			bloc->type = 99;
+			bloc->visible = 0; // will be updated after with updateVisibility
 
-			float localheight = (*heightMap)[z][x];
-			int ty = (int)(localheight * (CHUNK_HEIGHT / 2)
-					+ CHUNK_HEIGHT / 3);// % (CHUNK_HEIGHT - 1);
-			if (ty >= CHUNK_HEIGHT) // In case of little magic trick is over (or equal to) the max height
-			{
-				ty = ty % (CHUNK_HEIGHT - 1);
-				std::cout << ty << std::endl;
-			}
+			float blockValue = this->getBlockBiome(x, z);
+			(void)blockValue;
 
-			for (int y = 0; y < ty && y < CHUNK_HEIGHT; y++)
+			//float blockValue = SimplexNoise::getBlockBiome(position.x - x, position.z - z, x, z);
+			//float blockValue = (*heightMap)[z][x];
+			//float blockValue = VoxelGenerator::Noise2D(position.x + x, position.z + z, 0.5f, 0.0006f, 0.55f, 8, 0);
+			//blockValue = pow(blockValue * 0.5, 2);
+			//float blockValue = VoxelGenerator::Noise2D(position.x + x, position.z + z, 0.0f, 0.00025, 0.75f, 1, 0);
+			/*float blockValue = VoxelGenerator::Noise2D(position.x + x, position.z + z, 0.0f, 0.00125, 0.5, 3, 0);
+			blockValue = pow(blockValue * 1.75, 2);*/
+			//std::cout << blockValue << std::endl;
+			//int ty = ((int)(blockValue * (HEIGHT / 2.0f) + (HEIGHT / 3.))) % HEIGHT;
+			/*int ty = (int)(blockValue * (HEIGHT * 2 / 3 - 1));*/
+			for (int y = blockValue - 1; y > blockValue - 3; y--)
 			{
 				bloc = &(blocs[y][z][x]);
-				bloc->type = 1;
-				hardBloc += 1;
+				/*float cavernValue = VoxelGenerator::Noise3D(position.x - x, y, position.z - z, 0.25f, 0.04, 0.45, 2, 0);
+				//std::cout << cavernValue << std::endl;
+				if (cavernValue < 0.5)
+				{
+					bloc->type = 99;
+					bloc->visible = 0;
+				}
+				else
+				{*/
+					bloc->type = BLOCK_GRASS;
+					bloc->visible = 1;
+					hardBloc += 1;
+					hardBlocVisible++;
+				//}
 			}
 		}
 	}
-	caveTest();
+	/*caveTest();
 	if (CHUNK_HEIGHT <= 64) // TODO : Make better function, this one crash with HEIGHT > 64
-		destroyIlots();
+		destroyIlots();*/
 
-	updateVisibility();
+	//updateVisibility();
 	//if (position.x == 0 && position.z == 0)
 		//std::cout << hardBlocVisible << std::endl;;
 	init = true;
@@ -120,11 +187,13 @@ void	Chunk::caveTest() // destroying blocks following a 3d map to generate caves
 				if (y >= 64.0f)
 					continue;
 				bloc = &(blocs[y][z][x]);
-				if (bloc->type != 0) // block exists
+				if (bloc->type != 99) // block exists
 					if ((*caveMap)[y][z][x] >= 0.4f) // random value
-					{
+					{			
+						texture = ResourceManager::getBlockTexture(BLOCK_STONE);
+
 						// destroy the block
-						bloc->type = 0;
+						bloc->type = 99;
 						hardBloc--;
 					}
 			}
@@ -155,9 +224,9 @@ void Chunk::destroyIlots()
 				if (blocsTests[y - 1][z][x] == 1)
 					continue;
 				block = &(blocs[y - 1][z][x]);
-				if (block->type == 0)
+				if (block->type == 99)
 					continue;
-				else if (block->type != 0)
+				else if (block->type != 99)
 				{
 					blockGroup.clear();
 					pos = Vec3(x, y - 1, z);
@@ -166,7 +235,7 @@ void Chunk::destroyIlots()
 					{
 						for (auto it = blockGroup.begin(); it != blockGroup.end(); it++)
 						{
-							(*it)->type = 0;
+							(*it)->type = 99;
 						}
 					}
 					blockGroup.clear();
@@ -188,7 +257,7 @@ bool Chunk::destroyIlotsSearchAndDestroy(struct bloc *block, Vec3 pos, std::vect
 	(blocsTests[y][z][x]) = 1;
 	blockGroup->push_back(block);
 
-	if (pos.y == 0 && block->type != 0)	// Block is the floor, group is valid, we only keep visited block in memory, clear blockGroup
+	if (pos.y == 0 && block->type != 99)	// Block is the floor, group is valid, we only keep visited block in memory, clear blockGroup
 	{
 		blockGroup->clear();
 		return true;
@@ -197,32 +266,32 @@ bool Chunk::destroyIlotsSearchAndDestroy(struct bloc *block, Vec3 pos, std::vect
 	//	First we retrieve the neighbors, avoid the one we already visited
 	std::vector<struct bloc*>	neighbors = {};
 	std::vector<Vec3>			neighborsPos = {};
-	if (y > 0 && (blocs[y - 1][z][x]).type != 0)
+	if (y > 0 && (blocs[y - 1][z][x]).type != 99)
 	{
 		neighbors.push_back(&(blocs[y - 1][z][x]));
 		neighborsPos.push_back(Vec3(x, y - 1, z));
 	}
-	if (y < CHUNK_HEIGHT - 1 && (blocs[y + 1][z][x]).type != 0)
+	if (y < CHUNK_HEIGHT - 1 && (blocs[y + 1][z][x]).type != 99)
 	{
 		neighbors.push_back(&(blocs[y + 1][z][x]));
 		neighborsPos.push_back(Vec3(x, y + 1, z));
 	}
-	if (x > 0 && (blocs[y][z][x - 1]).type != 0)
+	if (x > 0 && (blocs[y][z][x - 1]).type != 99)
 	{
 		neighbors.push_back(&(blocs[y][z][x - 1]));
 		neighborsPos.push_back(Vec3(x - 1, y, z));
 	}
-	if (x < CHUNK_WIDTH - 1 && (blocs[y][z][x + 1]).type != 0)
+	if (x < CHUNK_WIDTH - 1 && (blocs[y][z][x + 1]).type != 99)
 	{
 		neighbors.push_back(&(blocs[y][z][x + 1]));
 		neighborsPos.push_back(Vec3(x + 1, y, z));
 	}
-	if (z > 0 && (blocs[y][z - 1][x]).type != 0)
+	if (z > 0 && (blocs[y][z - 1][x]).type != 99)
 	{
 		neighbors.push_back(&(blocs[y][z - 1][x]));
 		neighborsPos.push_back(Vec3(x, y, z - 1));
 	}
-	if (z < CHUNK_DEPTH - 1 && (blocs[y][z + 1][x]).type != 0)
+	if (z < CHUNK_DEPTH - 1 && (blocs[y][z + 1][x]).type != 99)
 	{
 		neighbors.push_back(&(blocs[y][z + 1][x]));
 		neighborsPos.push_back(Vec3(x, y, z + 1));
@@ -265,7 +334,7 @@ void Chunk::updateVisibilityWithNeighbour(Vec2 NeighbourPos, const BlocData& nei
 			for (int z = 0; z < CHUNK_DEPTH; z++)
 			{
 				struct bloc& bloc = blocs[y][z][x];
-				if (bloc.type != 0 && !bloc.visible && neighbourBlocs[y][z][neighbourX].type == 0)
+				if (bloc.type != 99 && !bloc.visible && neighbourBlocs[y][z][neighbourX].type == 99)
 				{
 					hardBlocVisible++;
 					bloc.visible = true;
@@ -281,7 +350,7 @@ void Chunk::updateVisibilityWithNeighbour(Vec2 NeighbourPos, const BlocData& nei
 			for (int x = 0; x < CHUNK_WIDTH; x++)
 			{
 				struct bloc& bloc = blocs[y][z][x];
-				if (bloc.type != 0 && !bloc.visible && neighbourBlocs[y][neighbourZ][x].type == 0)
+				if (bloc.type != 99 && !bloc.visible && neighbourBlocs[y][neighbourZ][x].type == 99)
 				{
 					hardBlocVisible++;
 					bloc.visible = true;
@@ -298,7 +367,7 @@ void Chunk::updateVisibilityWithNeighbour(Vec2 NeighbourPos, const BlocData& nei
 Chunk::~Chunk(void)
 {
 	delete [] blocsPosition;
-	delete texture;
+	//delete texture;
 	delete heightMap;
 	totalChunks--;
 }
@@ -314,7 +383,7 @@ void Chunk::updateVisibility(void)
 			for(int x = CHUNK_WIDTH; x > 0; x--)
 			{
 				bloc = &(blocs[y - 1][z - 1][x - 1]);
-				if (bloc->type != 0)
+				if (bloc->type != 99)
 				{
 					setVisibilityByNeighbors(x - 1, y - 1, z - 1);
 					if (bloc->visible == true)
@@ -349,14 +418,14 @@ void Chunk::setVisibilityByNeighbors(int x, int y, int z) // Activates visibilit
 		neighbors.push_back(&(blocs[y][z + 1][x]));
 	for (struct bloc *nei: neighbors)
 	{
-		if (nei->type == 0)
+		if (nei->type == 99)
 		{
 			bloc->visible = true;
 			//set = true;
 			//break;
 		}
-		//hardNei += nei->type != 0 ? 1 : 0;
-		//invisibleNei += nei->type == 0 || bloc->visible == false ? 1 : 0;
+		//hardNei += nei->type != 99 ? 1 : 0;
+		//invisibleNei += nei->type == 99 || bloc->visible == false ? 1 : 0;
 	}
 	//if (hardNei == neighbors.size())
 		//bloc->visible = false;
@@ -375,6 +444,7 @@ GLfloat *Chunk::generatePosOffsets(void)
 	if (updateChunk)
 	{
 		GLfloat	*WIP_transform = new GLfloat[hardBlocVisible * 3];//CHUNK_HEIGHT * CHUNK_WIDTH * CHUNK_DEPTH * 3];
+		GLint	*WIP_type = new GLint[hardBlocVisible];
 		for(unsigned int y = 0; y < CHUNK_HEIGHT; y++)	// Too big of a loop
 		{
 			for(unsigned int z = 0; z < CHUNK_DEPTH; z++)
@@ -389,6 +459,7 @@ GLfloat *Chunk::generatePosOffsets(void)
 						indexX = i * 3;
 						indexY = i * 3 + 1;
 						indexZ = i * 3 + 2;
+						WIP_type[i] = blocs[y][z][x].type;
 						i += 1;
 					}
 					else
@@ -406,6 +477,8 @@ GLfloat *Chunk::generatePosOffsets(void)
 		updateChunk = false;
 		delete [] blocsPosition;
 		blocsPosition = WIP_transform;
+		delete [] blocsType;
+		blocsType = WIP_type;
 	}
 	return blocsPosition;
 }
@@ -418,12 +491,12 @@ void Chunk::draw(Shader* shader)
 		draw_safe.unlock();
 		return;
 	}
-	// Should draw instantiated bloc of same type once for each type.
 	GLfloat	*positionOffset = Chunk::generatePosOffsets();
 
-	glBindTexture(GL_TEXTURE_CUBE_MAP, texture->getID());
-	RectangularCuboid::drawInstance(shader, texture,
-			positionOffset, hardBlocVisible);
+	ResourceManager::bindTextures();
+	//glBindTexture(GL_TEXTURE_CUBE_MAP, texture->getID());	// TODO : Modify in order to use more than one texture at once and those texture should not be loaded here but
+															// in ResourceManager.
+	RectangularCuboid::drawInstance(shader, blocsType, positionOffset, hardBlocVisible);
 	draw_safe.unlock();
 }
 

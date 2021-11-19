@@ -16,7 +16,7 @@
 
 #define X_ROTATION_SPEED 1
 #define Y_ROTATION_SPEED 1
-#define DEFAULT_CAMERA_POS Vec3(0.f, 32.f, 0.f)
+#define DEFAULT_CAMERA_POS Vec3(0.f, 90.f, 0.f)
 #define DEFAULT_CAMERA_ROT Vec3(0.f, 0.f, 0.f)
 
 Camera::Camera() : Camera(DEFAULT_CAMERA_POS)

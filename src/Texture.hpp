@@ -16,8 +16,12 @@
 #include <string>
 #include <map>
 #include <vector>
+#include <iostream>
+#include <filesystem>
 
 #include "VoxelGenerator.hpp" //TODO tmp to remove
+
+#define TEXTURECOUNT 8
 
 class Texture {
 public:
@@ -33,9 +37,20 @@ private:
 	{
 		unsigned int ID;
 		unsigned int nbOfInstance;
+		unsigned int blockType;
 	};
 	static std::map<std::string, TextureCommonData> textureLoaded;
 	std::string path;
 };
 
+class ResourceManager {
+public:
+	static void 	loadPack(void);
+	static void 	deletePack(void);
+	static void 	bindTextures(void);
+	static Texture *getBlockTexture(int blockType);
+private:
+	static std::array<Texture*, TEXTURECOUNT> texturePack;
+	static bool textureLoaded;
+};
 #endif

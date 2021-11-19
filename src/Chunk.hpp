@@ -6,6 +6,7 @@
 # include "Texture.hpp"
 # include "Matrix.hpp"
 # include "RectangularCuboid.hpp"
+# include "VoxelGenerator.hpp"
 # include <cstring>
 # include "ft_vox.h"
 # include "Vec2.hpp"
@@ -19,7 +20,7 @@
 
 # define CHUNK_SIZE CHUNK_HEIGHT * CHUNK_WIDTH * CHUNK_DEPTH
 
-# define WATER_LEVEL 10
+# define WATER_LEVEL 32
 
 class Chunk : public Object{
 public:
@@ -57,13 +58,14 @@ private:
 	void	caveTest();
 	void	destroyIlots();
 	bool 	destroyIlotsSearchAndDestroy(struct bloc *block, Vec3 pos, std::vector<struct bloc*> *blockGroup);
-	GLfloat	*generatePosOffsets(void);
+	GLfloat	*generatePosOffsets();
 
 	Vec3	position;
 	BlocData blocs;
 	BlocSearchData blocsTests;
 	//struct bloc	blocs[CHUNK_HEIGHT][CHUNK_DEPTH][CHUNK_WIDTH];
 	GLfloat	*blocsPosition;
+	GLint	*blocsType;
 	bool	updateChunk;
 	bool	init;
 	unsigned char	threadUseCount;
@@ -75,10 +77,8 @@ private:
 	Texture* texture;
 
 	std::vector<std::pair<Vec2, Chunk*>> myNeighbours;
-	Chunk	*forward;
-	Chunk	*right;
-	Chunk	*left;
-	Chunk	*backward;
+
+	float	getBlockBiome(int x, int z);
 };
 
 #endif

@@ -17,6 +17,17 @@
 #include "ft_vox.h"
 #include "Vec3.hpp"
 
+enum blockType {
+	BLOCK_WATER = 0,
+	BLOCK_SAND = 1,
+	BLOCK_DIRT = 2,
+	BLOCK_GRASS,
+	BLOCK_GRASS_SNOW,
+	BLOCK_STONE,
+	BLOCK_SNOW,
+	BLOCK_BEDROCK
+};
+
 #define GRADIENT_SIZE 256 // will change in the future, it is 2pow(n) + 1 because
 						// it's not yet looping on itself
 						// bigger == bigger noise
@@ -34,19 +45,25 @@ typedef std::array<std::array<std::array<float, 2>, GRADIENT_SIZE>, GRADIENT_SIZ
 
 typedef std::array<Vec3, GRADIENT_SIZE> Gradient;
 
+# define PERMUTATION_COUNT 3
+
+typedef std::array<std::array<uint8_t, 512>, 3> permTable;
+typedef std::array<std::array<Vec3, 512>, 3> gradTable; 
+
 class VoxelGenerator {
 public:
 	static void				initialize(unsigned int seed);
 	static void				clear();
-	static HeightMap*		createMap();
-	static BigHeightMap*	createBigMap();
 	static BigHeightMap*	createBigMap(int octaves, float lacunarity, float gain);
-	static HeightMap*		createMap(float ox, float oz);
 	static HeightMap*		createMap(float ox, float oz, int octaves, float lacunarity, float gain);
 	static CaveMap*			createCaveMap(float ox, float oz, int octaves, float lacunarity, float gain);
 	static float			getLocalDensity(float x, float y, float z,
 			float ox, float oy, float oz, int octaves,
 			float lacunarity, float gain);
+
+	static void				initialize(int seed, bool ok);
+	static float			Noise2D(float x, float z, float output, float frequency, float amplitude, int octaves, int tableId, float lacunarity = 2.0f, float gain = 0.5f);
+	static float			Noise3D(float x, float y, float z, float output, float frequency, float amplitude, int octaves, int tableId, float lacunarity = 2.0f, float gain = 0.5f);
 private:
 	static Gradients*	createPerlinGradient(unsigned int seed);
 	static float dotGridGradient(int ix, int iy, float x, float y, Gradients* grad);
@@ -59,14 +76,27 @@ private:
 	static float quinticDeriv(float t);
 	static float seventic(float t);
 
-	static int hash(int &x, int &y, int &z);
+	static int hash(int &x, int &y, int &z, int tableId);
 	static float gradientDotV(int perm, float x, float y, float z);
-	static float eval(float x, float y, float z);
+	static float eval(float x, float y, float z, int tableId);
 
 	static Gradients* gradients;
 	static Gradients* gradients2;
 	static Gradient* grad;
 	static unsigned* permutationTable;
+
+	//--------------------------------------------------------------------
+
+	static permTable permsP;
+	static gradTable gradsP;
+
+	static bool tableInit;
+
+	static void	initializePermutations(int seed, int tableId);
+	static void shuffleTables(int seed, int tableId);
+
+	static float simplexNoise2D(float x, float y, int tableId);
+
 };
 
 #endif

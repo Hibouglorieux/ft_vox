@@ -46,7 +46,11 @@ int		main( int argc, char *argv[] )
 
 	std::srand(std::time(nullptr));
 
+	//ResourceManager rm = ResourceManager();
+	ResourceManager::loadPack();
+
 	VoxelGenerator::initialize(seed);
+	VoxelGenerator::initialize(seed, true);
 	World* world = new World();
 	//RectangularCuboid* floor = new RectangularCuboid(1000, 0.1, 1000);
 	//floor->setID("floor");

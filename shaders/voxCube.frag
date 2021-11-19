@@ -5,8 +5,18 @@ out vec4 FragColor;
 in vec3	vertexPos;
 in vec3 texCoord;
 in vec3 vertexPosFromCamera;
+flat in int texId;
 
-uniform samplerCube texture0;
+uniform bool color = false;
+
+uniform samplerCube water;
+uniform samplerCube sand;
+uniform samplerCube dirt;
+uniform samplerCube grass;
+uniform samplerCube grass_snow;
+uniform samplerCube stone;
+uniform samplerCube snow;
+uniform samplerCube bedrock;
 
 float interpolate(float value, float minimum, float maximum)
 {
@@ -21,15 +31,38 @@ void main()
 	// Texture
 
 	// Gradient color
-	float w = ceil(vertexPos.y) / 64.0;
-	if (ceil(vertexPos.y) <= 1.0)
-		FragColor = vec4(76.0 / 255.0, 70.0 / 255.0, 50.0 / 255.0, 1.0);
-	else if (w != 1)
+	if (color)
 	{
-		w *= interpolate(vertexPosFromCamera.z, 70.f, 140.f);
-		FragColor = vec4(0, w, 0, 1.0);
+		float w = ceil(vertexPos.y) / 256.0;
+		if (w >= 0.0 && w <= 1.0)
+		{
+			//w *= interpolate(vertexPosFromCamera.z, 70.f, 140.f);
+			FragColor = vec4(0, w, 0, 1.0);
+		}
+		else if (w > 1.0)
+			FragColor = vec4(1, 0, 0, 1.0); // show in red to debug
+		else if (w < 0.0)
+			FragColor = vec4(1, 0, 1, 1.0); // show in red to debug
 	}
 	else
-		FragColor = vec4(1, 0, 0, 1.0); // show in red to debug
-	//FragColor = texture(texture0, texCoord);
+	{
+		if (texId == 0)
+			FragColor = texture(water, texCoord);
+		else if (texId == 1)
+			FragColor = texture(sand, texCoord);
+		else if (texId == 2)
+			FragColor = texture(dirt, texCoord);
+		else if (texId == 3)
+			FragColor = texture(grass, texCoord);
+		else if (texId == 4)
+			FragColor = texture(grass_snow, texCoord);
+		else if (texId == 5)
+			FragColor = texture(stone, texCoord);
+		else if (texId == 6)
+			FragColor = texture(snow, texCoord);
+		else if (texId == 7)
+			FragColor = texture(bedrock, texCoord);
+		else
+			FragColor = vec4(1, 0, 0, 1.0); // show in red to debug
+	}
 }

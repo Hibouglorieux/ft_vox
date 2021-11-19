@@ -24,6 +24,82 @@ Gradients* VoxelGenerator::gradients2 = nullptr;
 unsigned* VoxelGenerator::permutationTable = nullptr;
 Gradient* VoxelGenerator::grad = nullptr;
 
+static const uint8_t perm[256] = {
+    151, 160, 137, 91, 90, 15,
+    131, 13, 201, 95, 96, 53, 194, 233, 7, 225, 140, 36, 103, 30, 69, 142, 8, 99, 37, 240, 21, 10, 23,
+    190, 6, 148, 247, 120, 234, 75, 0, 26, 197, 62, 94, 252, 219, 203, 117, 35, 11, 32, 57, 177, 33,
+    88, 237, 149, 56, 87, 174, 20, 125, 136, 171, 168, 68, 175, 74, 165, 71, 134, 139, 48, 27, 166,
+    77, 146, 158, 231, 83, 111, 229, 122, 60, 211, 133, 230, 220, 105, 92, 41, 55, 46, 245, 40, 244,
+    102, 143, 54, 65, 25, 63, 161, 1, 216, 80, 73, 209, 76, 132, 187, 208, 89, 18, 169, 200, 196,
+    135, 130, 116, 188, 159, 86, 164, 100, 109, 198, 173, 186, 3, 64, 52, 217, 226, 250, 124, 123,
+    5, 202, 38, 147, 118, 126, 255, 82, 85, 212, 207, 206, 59, 227, 47, 16, 58, 17, 182, 189, 28, 42,
+    223, 183, 170, 213, 119, 248, 152, 2, 44, 154, 163, 70, 221, 153, 101, 155, 167, 43, 172, 9,
+    129, 22, 39, 253, 19, 98, 108, 110, 79, 113, 224, 232, 178, 185, 112, 104, 218, 246, 97, 228,
+    251, 34, 242, 193, 238, 210, 144, 12, 191, 179, 162, 241, 81, 51, 145, 235, 249, 14, 239, 107,
+    49, 192, 214, 31, 181, 199, 106, 157, 184, 84, 204, 176, 115, 121, 50, 45, 127, 4, 150, 254,
+    138, 236, 205, 93, 222, 114, 67, 29, 24, 72, 243, 141, 128, 195, 78, 66, 215, 61, 156, 180
+};
+
+static const Vec3 defaultGrad[16] = {
+	Vec3(1, 1, 0), Vec3(-1, 1, 0), Vec3(1, -1, 0), Vec3(-1, -1, 0),
+	Vec3(1, 0, 1), Vec3(-1, 0, 1), Vec3(1, 0, -1), Vec3(-1, 0, -1),
+	Vec3(0, 1, 1), Vec3(0, -1, 1), Vec3(0, 1, -1), Vec3(0, -1, -1),
+	Vec3(1, 1, 0), Vec3(-1, 1, 0), Vec3(1, -1, 0), Vec3(-1, -1, 0)
+};
+
+permTable 	VoxelGenerator::permsP;
+gradTable 	VoxelGenerator::gradsP;
+bool		VoxelGenerator::tableInit = false;
+
+void	VoxelGenerator::initializePermutations(int seed, int tableId)
+{
+	seed *= 79864;
+
+	for (int i = 0; i < 256; i++)
+	{
+		int value = perm[i] ^ (seed & 255);	// Maybe try to add more variation
+		if ((i & 1) != 1)
+			value = perm[i] ^ ((seed >> 8) & 255);
+		
+		permsP[tableId][i] = value;
+		permsP[tableId][i + 256] = value;
+		gradsP[tableId][i] = defaultGrad[value % 16];
+		gradsP[tableId][i + 256] = defaultGrad[value % 16];
+	}
+}
+
+void	VoxelGenerator::shuffleTables(int seed, int tableId) // Fisher-Yates
+{
+	std::mt19937 generator(seed);
+	std::uniform_real_distribution<> distribution(0.f, 1.f);
+	auto dice = [&generator, &distribution](){return distribution(generator);};
+
+	for (int i = permsP[tableId].size(); i > 0; i--)
+	{
+		int j = (int)dice() * (i - 0.0001);
+		int a = permsP[tableId][i];
+		int b = permsP[tableId][j];
+
+		permsP[tableId][i] = b;
+		permsP[tableId][j] = a;
+	}
+}
+
+void 	VoxelGenerator::initialize(int seed, bool toDelete)
+{
+	(void)toDelete;
+
+	VoxelGenerator::initializePermutations(seed, 0);
+	VoxelGenerator::initializePermutations(seed * 1.62, 1);
+	VoxelGenerator::initializePermutations(seed * 3.24, 2);
+	
+	VoxelGenerator::shuffleTables(seed * 1.62, 0);
+	VoxelGenerator::shuffleTables(seed * 3.24, 1);
+	VoxelGenerator::shuffleTables(seed * 6.48, 2);
+
+	VoxelGenerator::tableInit = true;
+}
+
 void	VoxelGenerator::initialize(unsigned int seed)
 {
 	if (grad == nullptr || permutationTable == nullptr)
@@ -41,231 +117,6 @@ void	VoxelGenerator::initialize(unsigned int seed)
 void	VoxelGenerator::clear()
 {
 	delete gradients;
-}
-
-HeightMap*	VoxelGenerator::createMap()
-{
-	HeightMap* myHeightMap = new HeightMap;
-	for (int z = 0; z < HEIGHTMAP_SIZE; z++)
-	{
-		for (int x = 0; x < HEIGHTMAP_SIZE; x++)
-		{
-			(*myHeightMap)[z][x] = getValue((float)x * SCALE_HEIGHTMAP_TO_FRACTION_OF_NOISE, (float)z * SCALE_HEIGHTMAP_TO_FRACTION_OF_NOISE, gradients);
-			float* tmp = &(*myHeightMap)[z][x];
-			*tmp = (*tmp + 1) / 2;
-		}
-	}
-	return myHeightMap;
-}
-
-BigHeightMap*	VoxelGenerator::createBigMap()
-{
-	BigHeightMap* myBigHeightMap = new BigHeightMap;
-	for (int z = 0; z < BIG_HEIGHT_MAP_SIZE; z++)
-	{
-		for (int x = 0; x < BIG_HEIGHT_MAP_SIZE; x++)
-		{
-#define TMP_BIG_HEIGHT_MAP_SCALE ((float)1.0 / (float)BIG_HEIGHT_MAP_SIZE * (float)GRADIENT_SIZE / 16.0)
-			int maxLayer = MAX_LAYER;
-			float& tmp = (*myBigHeightMap)[z][x];
-			float tmpx = x * TMP_BIG_HEIGHT_MAP_SCALE;
-			float tmpz = z * TMP_BIG_HEIGHT_MAP_SCALE;
-			//tmp = getValue((float)x * TMP_BIG_HEIGHT_MAP_SCALE, (float)z * TMP_BIG_HEIGHT_MAP_SCALE);
-			for (int layer = 0; layer < maxLayer; layer++)
-			{
-				tmp += ((1 + getValue(tmpx, tmpz, gradients)) * 0.5);
-				tmpx *= 2;
-				tmpz *= 2;
-			}
-			tmp /= (float)maxLayer;
-		}
-	}
-	return myBigHeightMap;
-}
-
-BigHeightMap*	VoxelGenerator::createBigMap(int octaves = 1, float lacunarity = 2.0f, float gain = 0.5f)
-{
-	BigHeightMap* myBigHeightMap = new BigHeightMap;
-	for (int z = 0; z < BIG_HEIGHT_MAP_SIZE; z++)
-	{
-		for (int x = 0; x < BIG_HEIGHT_MAP_SIZE; x++)
-		{
-#define TMP_BIG_HEIGHT_MAP_SCALE ((float)1.0 / (float)BIG_HEIGHT_MAP_SIZE * (float)GRADIENT_SIZE / 16.0)
-			float& tmp = (*myBigHeightMap)[z][x];
-			float tmpx = x * TMP_BIG_HEIGHT_MAP_SCALE;
-			float tmpz = z * TMP_BIG_HEIGHT_MAP_SCALE;
-
-			float amplitude = 1.0;
-			float frequency = 1.0;
-			float sum = 0.0;
-			for(int i = 0; i < octaves; ++i)
-			{
-				sum += amplitude * (getValue(tmpx * frequency, tmpz * frequency
-							, gradients));
-				amplitude *= gain;
-				frequency *= lacunarity;
-			}
-			tmp = sum;
-		}
-	}
-	return myBigHeightMap;
-}
-
-HeightMap*	VoxelGenerator::createMap(float ox, float oz)
-{
-	ox *= (GRADIENT_SIZE / (float)MAX_NB_OF_CHUNK);
-	oz *= (GRADIENT_SIZE / (float)MAX_NB_OF_CHUNK);
-	HeightMap* myHeightMap = new HeightMap;
-	int maxLayer = MAX_LAYER;
-	for (int z = 0; z < HEIGHTMAP_SIZE; z++)
-	{
-		for (int x = 0; x < HEIGHTMAP_SIZE; x++)
-		{
-			float* tmp = &(*myHeightMap)[z][x];
-			float tmpz = oz + z * SCALE_HEIGHTMAP_TO_FRACTION_OF_NOISE;
-			float tmpx = ox + x * SCALE_HEIGHTMAP_TO_FRACTION_OF_NOISE;
-
-			//*tmp = (1 + getValue(tmpx, tmpz)) * 0.5f;
-			//*tmp = *tmp > 0.3 ? *tmp : 0.3;
-			//*tmp = getValue(ox + x * SCALE_HEIGHTMAP_TO_FRACTION_OF_NOISE, oz + z * SCALE_HEIGHTMAP_TO_FRACTION_OF_NOISE);
-			float fractal = 0;
-			for (int layer = 0; layer < maxLayer; layer++)
-			{
-				fractal += (1 + getValue(tmpx, tmpz, gradients)) * 0.5;
-				fractal += (1 + getValue(tmpx, tmpz, gradients2)) * 0.5;
-				tmpz *= 2;
-				tmpx *= 2;
-			}
-			//*tmp = (*tmp + 1) / 2;
-			*tmp = fractal;
-			*tmp /= ((float)maxLayer * 2);
-		}
-	}
-	/*
-	   for (int z = 0; z < HEIGHTMAP_SIZE; z++)
-	   {
-	   for (int x = 0; x < HEIGHTMAP_SIZE; x++)
-	   {
-	   (*myHeightMap)[z][x] /= maxLayer;
-	   }
-	   }
-	   */
-	return myHeightMap;
-}
-
-HeightMap*	VoxelGenerator::createMap(float ox, float oz, int octaves = 1, float lacunarity = 2.0f, float gain = 0.5f)
-{
-	ox *= (GRADIENT_SIZE / (float)MAX_NB_OF_CHUNK);
-	oz *= (GRADIENT_SIZE / (float)MAX_NB_OF_CHUNK);
-	HeightMap* myHeightMap = new HeightMap;
-	for (int z = 0; z < HEIGHTMAP_SIZE; z++)
-	{
-		for (int x = 0; x < HEIGHTMAP_SIZE; x++)
-		{
-			float* tmp = &(*myHeightMap)[z][x];
-			float tmpz = oz + z * SCALE_HEIGHTMAP_TO_FRACTION_OF_NOISE;
-			float tmpx = ox + x * SCALE_HEIGHTMAP_TO_FRACTION_OF_NOISE;
-
-			float amplitude = 1.0;
-			float frequency = 1.0;
-			float sum = 0.0;
-			for(int i = 0; i < octaves; ++i)
-			{
-				//sum += amplitude * (getValue(tmpx * frequency, tmpz * frequency
-				//			, gradients));
-				//sum += amplitude * (1.0 - fabsf(eval(tmpx * frequency, 0, tmpz * frequency)));
-				sum += amplitude * eval(tmpx * frequency, 0, tmpz * frequency);
-				amplitude *= gain;
-				frequency *= lacunarity;
-			}
-			*tmp = fabsf(sum);
-		}
-	}
-	return myHeightMap;
-}
-
-CaveMap*	VoxelGenerator::createCaveMap(float ox, float oz, int octaves = 1, float lacunarity = 2.0f, float gain = 0.5f)
-{
-	ox *= (GRADIENT_SIZE / (float)MAX_NB_OF_CHUNK);
-	oz *= (GRADIENT_SIZE / (float)MAX_NB_OF_CHUNK);
-	CaveMap* cavemap = new CaveMap;
-	for (int y = 0; y < 64; y++)
-		for (int z = 0; z < HEIGHTMAP_SIZE; z++)
-			for (int x = 0; x < HEIGHTMAP_SIZE; x++)
-			{
-				float* tmp = &(*cavemap)[y][z][x];
-				float tmpz = oz + z * SCALE_HEIGHTMAP_TO_FRACTION_OF_NOISE;
-				float tmpx = ox + x * SCALE_HEIGHTMAP_TO_FRACTION_OF_NOISE;
-				float tmpy = y / 64.0f;
-
-				float amplitude = 1.0;
-				float frequency = 1.0;
-				float sum = 0.0;
-				for(int i = 0; i < octaves; ++i)
-				{
-					//sum += amplitude * (getValue(tmpx * frequency, tmpz * frequency
-					//			, gradients));
-					//sum += amplitude * (1.0 - fabsf(eval(tmpx * frequency, 0, tmpz * frequency)));
-					sum += amplitude * eval(tmpx * frequency, tmpy * frequency, tmpz * frequency);
-					amplitude *= gain;
-					frequency *= lacunarity;
-				}
-				*tmp = fabsf(sum);
-			}
-	return cavemap;
-}
-
-float	VoxelGenerator::getLocalDensity(float x, float y, float z,
-		float ox, float oy, float oz,
-		int octaves = 1, float lacunarity = 2.0f, float gain = 0.5f)
-{
-	ox *= (GRADIENT_SIZE / (float)MAX_NB_OF_CHUNK);
-	oz *= (GRADIENT_SIZE / (float)MAX_NB_OF_CHUNK);
-	oy *= (GRADIENT_SIZE / (float)MAX_NB_OF_CHUNK);
-	float tmpz = oz + z * SCALE_HEIGHTMAP_TO_FRACTION_OF_NOISE;
-	float tmpx = ox + x * SCALE_HEIGHTMAP_TO_FRACTION_OF_NOISE;
-	float tmpy = oy + y * SCALE_HEIGHTMAP_TO_FRACTION_OF_NOISE;
-
-	float amplitude = 1.0;
-	float frequency = 1.0;
-	float sum = 0.0;
-	for(int i = 0; i < octaves; ++i)
-	{
-		sum += amplitude * eval(tmpx * frequency, tmpy * frequency, tmpz * frequency);
-		amplitude *= gain;
-		frequency *= lacunarity;
-	}
-	return sum;
-}
-
-// Function to linearly interpolate between a0 and a1
-// Weight w should be in the range [0.0, 1.0]
-
-float	VoxelGenerator::lerp(float a0, float a1, float w)
-{
-	return (1.0 - w) * a0 + w * a1;
-}
-
-float	VoxelGenerator::smoothstep(float t)
-{
-	return t * t * (3 - 2 * t);
-}
-
-float	VoxelGenerator::quintic(float t)
-{
-	return t * t * t * (t * (t * 6 - 15) + 10);// need explanation
-	// t^5 * 6 - t^4 * 15 + t^3 * 10
-}
-
-float	VoxelGenerator::quinticDeriv(float t)
-{
-	return 30 * t * t * (t * (t - 2) + 1);
-	// (t^4 - t^3 * 2 + t^2) * 30
-}
-
-float	VoxelGenerator::seventic(float t)
-{
-	return t * t * t * t * (35 + (t * -84 + t * (t * 70 + t * t * -20)));
 }
 
 Gradients*	VoxelGenerator::createPerlinGradient(unsigned int seed)
@@ -320,6 +171,130 @@ Gradients*	VoxelGenerator::createPerlinGradient(unsigned int seed)
 		grad = gradi;
 	}
 	return newGradients;
+}
+
+BigHeightMap*	VoxelGenerator::createBigMap(int octaves = 1, float lacunarity = 2.0f, float gain = 0.5f)
+{
+	BigHeightMap* myBigHeightMap = new BigHeightMap;
+	for (int z = 0; z < BIG_HEIGHT_MAP_SIZE; z++)
+	{
+		for (int x = 0; x < BIG_HEIGHT_MAP_SIZE; x++)
+		{
+#define TMP_BIG_HEIGHT_MAP_SCALE ((float)1.0 / (float)BIG_HEIGHT_MAP_SIZE * (float)GRADIENT_SIZE / 16.0)
+			float& tmp = (*myBigHeightMap)[z][x];
+			float tmpx = x * TMP_BIG_HEIGHT_MAP_SCALE;
+			float tmpz = z * TMP_BIG_HEIGHT_MAP_SCALE;
+
+			float amplitude = 1.0;
+			float frequency = 1.0;
+			float sum = 0.0;
+			for(int i = 0; i < octaves; ++i)
+			{
+				sum += amplitude * (getValue(tmpx * frequency, tmpz * frequency
+							, gradients));
+				amplitude *= gain;
+				frequency *= lacunarity;
+			}
+			tmp = sum;
+		}
+	}
+	return myBigHeightMap;
+}
+
+HeightMap*	VoxelGenerator::createMap(float ox, float oz, int octaves = 1, float lacunarity = 2.0f, float gain = 0.5f)
+{
+	ox *= (GRADIENT_SIZE / (float)MAX_NB_OF_CHUNK);
+	oz *= (GRADIENT_SIZE / (float)MAX_NB_OF_CHUNK);
+	HeightMap* myHeightMap = new HeightMap;
+	for (int z = 0; z < HEIGHTMAP_SIZE; z++)
+	{
+		for (int x = 0; x < HEIGHTMAP_SIZE; x++)
+		{
+			float* tmp = &(*myHeightMap)[z][x];
+			float tmpz = oz + z * SCALE_HEIGHTMAP_TO_FRACTION_OF_NOISE;
+			float tmpx = ox + x * SCALE_HEIGHTMAP_TO_FRACTION_OF_NOISE;
+
+			float amplitude = 1.0;
+			float frequency = 1.0;
+			float sum = 0.0;
+			for(int i = 0; i < octaves; ++i)
+			{
+				//sum += amplitude * (getValue(tmpx * frequency, tmpz * frequency
+				//			, gradients));
+				//sum += amplitude * (1.0 - fabsf(eval(tmpx * frequency, 0, tmpz * frequency)));
+				sum += amplitude * eval(tmpx * frequency, 0, tmpz * frequency, 2);
+				amplitude *= gain;
+				frequency *= lacunarity;
+			}
+			*tmp = (sum + 1) * 0.5;
+			if (*tmp < 0)
+				*tmp = 0;
+			else if (*tmp >= 1.0)
+				*tmp = 1;
+		}
+	}
+	return myHeightMap;
+}
+
+CaveMap*	VoxelGenerator::createCaveMap(float ox, float oz, int octaves = 1, float lacunarity = 2.0f, float gain = 0.5f)
+{
+	ox *= (GRADIENT_SIZE / (float)MAX_NB_OF_CHUNK);
+	oz *= (GRADIENT_SIZE / (float)MAX_NB_OF_CHUNK);
+	CaveMap* cavemap = new CaveMap;
+	for (int y = 0; y < 64; y++)
+		for (int z = 0; z < HEIGHTMAP_SIZE; z++)
+			for (int x = 0; x < HEIGHTMAP_SIZE; x++)
+			{
+				float* tmp = &(*cavemap)[y][z][x];
+				float tmpz = oz + z * SCALE_HEIGHTMAP_TO_FRACTION_OF_NOISE;
+				float tmpx = ox + x * SCALE_HEIGHTMAP_TO_FRACTION_OF_NOISE;
+				float tmpy = y / 64.0f;
+
+				float amplitude = 0.05;
+				float frequency = .5;
+				float sum = 0.0;
+				for(int i = 0; i < octaves; ++i)
+				{
+					//sum += amplitude * (getValue(tmpx * frequency, tmpz * frequency
+					//			, gradients));
+					//sum += amplitude * (1.0 - fabsf(eval(tmpx * frequency, 0, tmpz * frequency)));
+					sum += amplitude * eval(tmpx * frequency, tmpy * frequency, tmpz * frequency, 2);
+					amplitude *= gain;
+					frequency *= lacunarity;
+				}
+				*tmp = fabsf(sum);
+			}
+	return cavemap;
+}
+
+// Function to linearly interpolate between a0 and a1
+// Weight w should be in the range [0.0, 1.0]
+
+float	VoxelGenerator::lerp(float a0, float a1, float w)
+{
+	return (1.0 - w) * a0 + w * a1;
+}
+
+float	VoxelGenerator::smoothstep(float t)
+{
+	return t * t * (3 - 2 * t);
+}
+
+float	VoxelGenerator::quintic(float t)
+{
+	return t * t * t * (t * (t * 6 - 15) + 10);// need explanation
+	// t^5 * 6 - t^4 * 15 + t^3 * 10
+}
+
+float	VoxelGenerator::quinticDeriv(float t)
+{
+	return 30 * t * t * (t * (t - 2) + 1);
+	// (t^4 - t^3 * 2 + t^2) * 30
+}
+
+float	VoxelGenerator::seventic(float t)
+{
+	return t * t * t * t * (35 + (t * -84 + t * (t * 70 + t * t * -20)));
 }
 
 // Computes the dot product of the distance and gradient vectors.
@@ -383,9 +358,11 @@ float	VoxelGenerator::getValue(float x, float y, Gradients* grad)
 	return value;
 }
 
-int VoxelGenerator::hash(int &x, int &y, int &z)
+inline int VoxelGenerator::hash(int &x, int &y, int &z, int tableId)
 {
-	return permutationTable[permutationTable[permutationTable[x] + y] + z];
+	(void)tableId;
+	return permsP[tableId][permsP[tableId][permsP[tableId][x] + y] + z];
+	//return permutationTable[permutationTable[permutationTable[x] + y] + z];
 }
 
 float	VoxelGenerator::gradientDotV(int perm, float x, float y, float z)
@@ -412,28 +389,37 @@ float	VoxelGenerator::gradientDotV(int perm, float x, float y, float z)
 	return 0.0;
 }
 
-float VoxelGenerator::eval(float x, float y, float z)
+static inline int32_t fastfloor(float fp) {
+    int32_t i = static_cast<int32_t>(fp);
+    return (fp < i) ? (i - 1) : (i);
+}
+
+float VoxelGenerator::eval(float x, float y, float z, int tableId)
 {
-	//x *= 0.25;
-	//z *= 0.25;
-	int xi0 = (int)floor(x) & (GRADIENT_SIZE - 1);
-	int yi0 = (int)floor(y) & (GRADIENT_SIZE - 1);
-	int zi0 = (int)floor(z) & (GRADIENT_SIZE - 1);
+	/*x *= 0.25;
+	z *= 0.25;*/
+
+	x *= 7.5;
+	z *= 7.5;
+
+	int xi0 = (int)fastfloor(x) & (GRADIENT_SIZE - 1);
+	int yi0 = (int)fastfloor(y) & (GRADIENT_SIZE - 1);
+	int zi0 = (int)fastfloor(z) & (GRADIENT_SIZE - 1);
 
 	int xi1 = (xi0 + 1) & (GRADIENT_SIZE - 1);
 	int yi1 = (yi0 + 1) & (GRADIENT_SIZE - 1);
 	int zi1 = (zi0 + 1) & (GRADIENT_SIZE - 1);
 
-	float tx = x - (float)floor(x);
-	float ty = y - (float)floor(y);
-	float tz = z - (float)floor(z);
+	float tx = x - (float)fastfloor(x);
+	float ty = y - (float)fastfloor(y);
+	float tz = z - (float)fastfloor(z);
 
-	float u = quintic(tx);
+	/*float u = quintic(tx);
 	float v = quintic(ty);
-	float w = quintic(tz);
-	/*float u = smoothstep(tx);
+	float w = quintic(tz);*/
+	float u = smoothstep(tx);
 	float v = smoothstep(ty);
-	float w = smoothstep(tz);*/
+	float w = smoothstep(tz);
 
 	float x0 = tx;
 	float x1 = tx - 1;
@@ -442,14 +428,14 @@ float VoxelGenerator::eval(float x, float y, float z)
 	float z0 = tz;
 	float z1 = tz - 1;
 
-	float a = gradientDotV(hash(xi0, yi0, zi0), x0, y0, z0);
-	float b = gradientDotV(hash(xi1, yi0, zi0), x1, y0, z0);
-	float c = gradientDotV(hash(xi0, yi1, zi0), x0, y1, z0);
-	float d = gradientDotV(hash(xi1, yi1, zi0), x1, y1, z0);
-	float e = gradientDotV(hash(xi0, yi0, zi1), x0, y0, z1);
-	float f = gradientDotV(hash(xi1, yi0, zi1), x1, y0, z1);
-	float g = gradientDotV(hash(xi0, yi1, zi1), x0, y1, z1);
-	float h = gradientDotV(hash(xi1, yi1, zi1), x1, y1, z1);
+	float a = gradientDotV(hash(xi0, yi0, zi0, tableId), x0, y0, z0);
+	float b = gradientDotV(hash(xi1, yi0, zi0, tableId), x1, y0, z0);
+	float c = gradientDotV(hash(xi0, yi1, zi0, tableId), x0, y1, z0);
+	float d = gradientDotV(hash(xi1, yi1, zi0, tableId), x1, y1, z0);
+	float e = gradientDotV(hash(xi0, yi0, zi1, tableId), x0, y0, z1);
+	float f = gradientDotV(hash(xi1, yi0, zi1, tableId), x1, y0, z1);
+	float g = gradientDotV(hash(xi0, yi1, zi1, tableId), x0, y1, z1);
+	float h = gradientDotV(hash(xi1, yi1, zi1, tableId), x1, y1, z1);
 
 	float k0 = a;
 	float k1 = (b - a);
@@ -468,4 +454,145 @@ float VoxelGenerator::eval(float x, float y, float z)
 		k5 * u * w +
 		k6 * v * w +
 		k7 * u * v * w;
+}
+
+float	VoxelGenerator::Noise2D(float x, float z, float output, float frequency, float amplitude, int octaves, int tableId, float lacunarity, float gain)
+{
+	for(int i = 0; i < octaves; ++i)
+	{
+		output += amplitude * eval(x * frequency, 0 * frequency, z * frequency, tableId);
+
+		amplitude *= gain;
+		frequency *= lacunarity;
+	}
+	output = (output + 1) * 0.5;
+	if (output < 0)
+		output = 0;
+	else if (output >= 1.0)
+		output = 1;
+	return output;
+}
+
+float	VoxelGenerator::Noise3D(float x, float y, float z, float output, float frequency, float amplitude, int octaves, int tableId, float lacunarity, float gain)
+{
+	for(int i = 0; i < octaves; ++i)
+	{
+		output += amplitude * eval(x * frequency, y * frequency, z * frequency, tableId);
+
+		amplitude *= gain;
+		frequency *= lacunarity;
+	}
+	output = (output + 1) * 0.5;
+
+	// We to cleave/clamp the cavern noise;
+	output = pow(output, 1.65);
+	if (output < 0)
+		output = 0;
+	else if (output >= 1.0)
+		output = 1;
+	return output;
+}
+
+/*inline uint8_t hash(int32_t i, int tableId) {
+    return permsP[tableId][static_cast<uint8_t>(i)];
+}*/
+
+/**
+ * 2D Perlin simplex noise
+ *
+ *  Takes around 150ns on an AMD APU.
+ *
+ * @param[in] x float coordinate
+ * @param[in] y float coordinate
+ *
+ * @return Noise value in the range[-1; 1], value of 0 on all integer coordinates.
+ */
+float VoxelGenerator::simplexNoise2D(float x, float y, int tableId) {
+    float n0, n1, n2;   // Noise contributions from the three corners
+
+    // Skewing/Unskewing factors for 2D
+    static const float F2 = 0.366025403f;  // F2 = (sqrt(3) - 1) / 2
+    static const float G2 = 0.211324865f;  // G2 = (3 - sqrt(3)) / 6   = F2 / (1 + 2 * K)
+
+    // Skew the input space to determine which simplex cell we're in
+    const float s = (x + y) * F2;  // Hairy factor for 2D
+    const float xs = x + s;
+    const float ys = y + s;
+    int32_t i = fastfloor(xs);
+    int32_t j = fastfloor(ys);
+
+    // Unskew the cell origin back to (x,y) space
+    const float t = static_cast<float>(i + j) * G2;
+    const float X0 = i - t;
+    const float Y0 = j - t;
+    const float x0 = x - X0;  // The x,y distances from the cell origin
+    const float y0 = y - Y0;
+
+    // For the 2D case, the simplex shape is an equilateral triangle.
+    // Determine which simplex we are in.
+    int32_t i1, j1;  // Offsets for second (middle) corner of simplex in (i,j) coords
+    if (x0 > y0)
+	{   // lower triangle, XY order: (0,0)->(1,0)->(1,1)
+        i1 = 1;
+        j1 = 0;
+    }
+	else
+	{   // upper triangle, YX order: (0,0)->(0,1)->(1,1)
+        i1 = 0;
+        j1 = 1;
+    }
+
+    // A step of (1,0) in (i,j) means a step of (1-c,-c) in (x,y), and
+    // a step of (0,1) in (i,j) means a step of (-c,1-c) in (x,y), where
+    // c = (3-sqrt(3))/6
+
+    const float x1 = x0 - i1 + G2;            // Offsets for middle corner in (x,y) unskewed coords
+    const float y1 = y0 - j1 + G2;
+    const float x2 = x0 - 1.0f + 2.0f * G2;   // Offsets for last corner in (x,y) unskewed coords
+    const float y2 = y0 - 1.0f + 2.0f * G2;
+
+    // Work out the hashed gradient indices of the three simplex corners
+    /*const int gi0 = hash(i + hash(j));
+    const int gi1 = hash(i + i1 + hash(j + j1));
+    const int gi2 = hash(i + 1 + hash(j + 1));*/
+
+	i = i % 255;
+	j = j % 255;
+    // Calculate the contribution from the first corner
+	Vec3 g;
+    float t0 = 0.5f - x0*x0 - y0*y0;
+    if (t0 < 0.0f) {
+        n0 = 0.0f;
+    } else {
+        t0 *= t0;
+        //n0 = t0 * t0 * grad(gi0, x0, y0);
+        g = gradsP[tableId][i + permsP[tableId][j]];
+        n0 = t0 * t0 * (g.x * x0 + g.y * y0);
+    }
+
+    // Calculate the contribution from the second corner
+    float t1 = 0.5f - x1*x1 - y1*y1;
+    if (t1 < 0.0f) {
+        n1 = 0.0f;
+    } else {
+        t1 *= t1;
+        //n1 = t1 * t1 * grad(gi1, x1, y1);
+        g = gradsP[tableId][i + (int)i1 + permsP[tableId][j + (int)j1]];
+        n1 = t1 * t1 * (g.x * x1 + g.y * y1);
+    }
+
+    // Calculate the contribution from the third corner
+    float t2 = 0.5f - x2*x2 - y2*y2;
+    if (t2 < 0.0f) {
+        n2 = 0.0f;
+    } else {
+        t2 *= t2;
+        //n2 = t2 * t2 * grad(gi2, x2, y2);
+        g = gradsP[tableId][i + 1 + permsP[tableId][j + 1]];
+        n2 = t2 * t2 * (g.x * x2 + g.y * y2);
+    }
+
+    // Add contributions from each corner to get the final noise value.
+    // The result is scaled to return values in the interval [-1,1].
+    return 45.23065f * (n0 + n1 + n2);
 }
