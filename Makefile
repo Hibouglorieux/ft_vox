@@ -6,8 +6,14 @@ else
 endif
 
 NATH = nathan
+CAMPUS = clusters.42paris.fr
 
 ifeq ($(findstring $(NATH), $(shell hostname)), $(NATH))
+	Green=\033[32m
+	Cyan=\033[36m
+	Red=\033[31m
+	End=\033[0m
+else ifeq ($(findstring $(NATH), $(shell hostname)),)
 	Green=\033[32m
 	Cyan=\033[36m
 	Red=\033[31m
@@ -44,12 +50,6 @@ OBJ = $(addprefix obj/,$(FILES:.cpp=.o))
 #linkage
 LIBS = -lglfw -lX11 -lXrandr -lXinerama -lXi -lXxf86vm -lXcursor -lGL -lpthread -ldl `pkg-config --libs glew` -lm #-fsanitize=address
 
-UNAME = $(shell uname -s)
-ifneq (, $(findstring MINGW, $(UNAME)))
-	LIBS = -lglfw3 -lgdi32 -lglew32 -lopengl32
-	NAME = humangl.exe
-endif
-
 CXXFLAGS = -std=gnu++11 -Wall -Wextra -g #-fsanitize=address
 
 all: $(NAME)
@@ -60,7 +60,7 @@ $(NAME): $(OBJ)
 
 obj/%.o:src/%.cpp includes/*.h src/*.hpp
 	@mkdir -p obj
-	$(CXX) $(CXXFLAGS) -c $< -o $@ -Iincludes -Ilibft
+	$(CXX) $(CXXFLAGS) -c $< -o $@ -Iincludes -Ilibft -I$(HOME)/.brew/include
 	@$(ECHOc) "Compilation of $(Cyan)$@$(End) :    $(Green)Done$(End)"
 
 clean :

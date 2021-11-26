@@ -1,0 +1,16 @@
+# install brew as explained on slack
+
+brew install glew
+brew install glfw
+
+# perhaps you now need to do a brew cleanup because it apparently needs 4Gb
+
+# add this to your ~/.zshrc
+
+export LD_LIBRARY_PATH="$HOME/.brew/lib"
+export LIBRARY_PATH=$LD_LIBRARY_PATH
+export PKG_CONFIG_PATH="/usr/lib/x86_64-linux-gnu/pkgconfig/"
+
+# make => if error about libc++ not found at latest version, run :
+
+brew uninstall --ignore-dependencies mesa
