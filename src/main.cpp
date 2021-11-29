@@ -6,7 +6,7 @@
 /*   By: nathan <nallani@student.s19.be>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/05/24 01:52:59 by nathan            #+#    #+#             */
-/*   Updated: 2021/10/22 16:47:35 by nathan           ###   ########.fr       */
+/*   Updated: 2021/11/29 16:30:52 by nallani          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,15 +38,12 @@ int		main( int argc, char *argv[] )
 	glCullFace(GL_BACK);// renders only visible squares of cubes
 	glClearColor(0.2, 0.2, 0.2, 1.0f);
 
-	unsigned long	seed = DEFAULT_SEED;
+	unsigned long	seed = DEFAULT_SEED; //std::srand(std::time(nullptr));
 	if (argc > 1)
 	{
 		seed = stoi(argv[1]);
 	}
 
-	std::srand(std::time(nullptr));
-
-	//ResourceManager rm = ResourceManager();
 	ResourceManager::loadPack();
 
 	VoxelGenerator::initialize(seed);

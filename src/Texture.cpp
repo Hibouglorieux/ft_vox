@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/10/15 16:41:40 by nathan            #+#    #+#             */
-/*   Updated: 2021/10/22 11:33:25 by nathan           ###   ########.fr       */
+/*   Updated: 2021/11/29 17:49:50 by nallani          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,12 +20,12 @@ std::map<std::string, Texture::TextureCommonData> Texture::textureLoaded = {};
 
 Texture::Texture(std::string pathToFile)
 {
-	path = pathToFile;
-	if (textureLoaded.find(path) == textureLoaded.end())
-		textureLoaded.insert(std::pair<std::string, TextureCommonData>(path, {0, 1, 0}));
+	name = pathToFile;
+	if (textureLoaded.find(name) == textureLoaded.end())
+		textureLoaded.insert(std::pair<std::string, TextureCommonData>(name, {0, 1, 0}));
 	else
 	{
-		textureLoaded[path].nbOfInstance++;
+		textureLoaded[name].nbOfInstance++;
 		return;
 	}
 	int				height;
@@ -33,14 +33,15 @@ Texture::Texture(std::string pathToFile)
 	int				nr_channel;
 	unsigned char	*data;
 
+	std::cout << "added new texture: " << name << textureLoaded[name].ID << std::endl;
 	stbi_set_flip_vertically_on_load(true);
-	if (!(data = stbi_load(std::string("textures/" + path).c_str(), &width, &height, &nr_channel, 0)))
+	if (!(data = stbi_load(std::string("textures/" + name).c_str(), &width, &height, &nr_channel, 0)))
 	{
 		std::cerr << "Error: couldn't load image correctly with stbi_load" << std::endl;
 		exit(-1);
 	}
-	glGenTextures(1, &textureLoaded[path].ID);// getting the ID from OpenGL
-	glBindTexture(GL_TEXTURE_2D, textureLoaded[path].ID);
+	glGenTextures(1, &textureLoaded[name].ID);// getting the ID from OpenGL
+	glBindTexture(GL_TEXTURE_2D, textureLoaded[name].ID);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -50,14 +51,14 @@ Texture::Texture(std::string pathToFile)
 	stbi_image_free(data);
 }
 
-Texture::Texture(std::vector<std::string> paths)
+Texture::Texture(std::vector<std::string> paths, std::string textureName)
 {
-	path = paths[0];
-	if (textureLoaded.find(path) == textureLoaded.end())
-		textureLoaded.insert(std::pair<std::string, TextureCommonData>(path, {0, 1, 0}));
+	name = textureName;
+	if (textureLoaded.find(name) == textureLoaded.end())
+		textureLoaded.insert(std::pair<std::string, TextureCommonData>(name, {0, 1, 0}));
 	else
 	{
-		textureLoaded[path].nbOfInstance++;
+		textureLoaded[name].nbOfInstance++;
 		return;
 	}
 	int				height;
@@ -66,8 +67,9 @@ Texture::Texture(std::vector<std::string> paths)
 	unsigned char	*data;
 
 	stbi_set_flip_vertically_on_load(false);
-	glGenTextures(1, &textureLoaded[path].ID);// getting the ID from OpenGL
-	glBindTexture(GL_TEXTURE_CUBE_MAP, textureLoaded[path].ID);
+	glGenTextures(1, &textureLoaded[name].ID);// getting the ID from OpenGL
+	std::cout << "added new texture: " << name << textureLoaded[name].ID << std::endl;
+	glBindTexture(GL_TEXTURE_CUBE_MAP, textureLoaded[name].ID);
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
@@ -87,12 +89,12 @@ Texture::Texture(std::vector<std::string> paths)
 
 Texture::Texture(std::vector<std::string> paths, BigHeightMap& heightMap)
 {
-	path = paths[0];
-	if (textureLoaded.find(path) == textureLoaded.end())
-		textureLoaded.insert(std::pair<std::string, TextureCommonData>(path, {0, 1, 0}));
+	name = paths[0];
+	if (textureLoaded.find(name) == textureLoaded.end())
+		textureLoaded.insert(std::pair<std::string, TextureCommonData>(name, {0, 1, 0}));
 	else
 	{
-		textureLoaded[path].nbOfInstance++;
+		textureLoaded[name].nbOfInstance++;
 		return;
 	}
 	int				height;
@@ -101,13 +103,14 @@ Texture::Texture(std::vector<std::string> paths, BigHeightMap& heightMap)
 	unsigned char	*data;
 
 	stbi_set_flip_vertically_on_load(false);
-	glGenTextures(1, &textureLoaded[path].ID);// getting the ID from OpenGL
-	glBindTexture(GL_TEXTURE_CUBE_MAP, textureLoaded[path].ID);
+	glGenTextures(1, &textureLoaded[name].ID);// getting the ID from OpenGL
+	glBindTexture(GL_TEXTURE_CUBE_MAP, textureLoaded[name].ID);
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	std::cout << "added new texture: " << name << textureLoaded[name].ID << std::endl;
 	for (unsigned int i = 0; i < paths.size(); i++)
 	{
 		if (i < 10)
@@ -138,12 +141,12 @@ Texture::Texture(std::vector<std::string> paths, BigHeightMap& heightMap)
 Texture::Texture(std::vector<std::string> paths, HeightMap& heightMap, bool smoll)
 {
 	(void)smoll;
-	path = paths[0];
-	if (textureLoaded.find(path) == textureLoaded.end())
-		textureLoaded.insert(std::pair<std::string, TextureCommonData>(path, {0, 1, 0}));
+	name = paths[0];
+	if (textureLoaded.find(name) == textureLoaded.end())
+		textureLoaded.insert(std::pair<std::string, TextureCommonData>(name, {0, 1, 0}));
 	else
 	{
-		textureLoaded[path].nbOfInstance++;
+		textureLoaded[name].nbOfInstance++;
 		return;
 	}
 	int				height;
@@ -151,9 +154,10 @@ Texture::Texture(std::vector<std::string> paths, HeightMap& heightMap, bool smol
 	int				nr_channel;
 	unsigned char	*data;
 
+	std::cout << "added new texture: " << name << textureLoaded[name].ID << std::endl;
 	stbi_set_flip_vertically_on_load(false);
-	glGenTextures(1, &textureLoaded[path].ID);// getting the ID from OpenGL
-	glBindTexture(GL_TEXTURE_CUBE_MAP, textureLoaded[path].ID);
+	glGenTextures(1, &textureLoaded[name].ID);// getting the ID from OpenGL
+	glBindTexture(GL_TEXTURE_CUBE_MAP, textureLoaded[name].ID);
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
@@ -198,9 +202,10 @@ Texture::Texture(HeightMap& heightMap)
 	}
 
 	textureLoaded.insert(std::pair<std::string, TextureCommonData>("test", {0, 1, 0}));
-	path = "test";
-	glGenTextures(1, &textureLoaded[path].ID);
-	glBindTexture(GL_TEXTURE_2D, textureLoaded[path].ID);
+	name = "test";
+	std::cout << "added new texture: " << name << textureLoaded[name].ID << std::endl;
+	glGenTextures(1, &textureLoaded[name].ID);
+	glBindTexture(GL_TEXTURE_2D, textureLoaded[name].ID);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -211,19 +216,19 @@ Texture::Texture(HeightMap& heightMap)
 
 Texture::~Texture()
 {
-	textureLoaded[path].nbOfInstance--;
-	if (textureLoaded[path].nbOfInstance == 0)
+	textureLoaded[name].nbOfInstance--;
+	if (textureLoaded[name].nbOfInstance == 0)
 	{
-		glDeleteTextures(1, &textureLoaded[path].ID);
-		textureLoaded.erase(path);
+		glDeleteTextures(1, &textureLoaded[name].ID);
+		textureLoaded.erase(name);
 	}
 }
 
 unsigned int	Texture::getID() const
 {
 	// TODO : Rewrite texture to correctly get texture id ?
-	//std::cout << path << std::endl;
-	return textureLoaded[path].ID;
+	//std::cout << name << std::endl;
+	return textureLoaded[name].ID;
 }
 
 //	---------------------------------------------------------------------------------------------------------------------------------------------
@@ -237,103 +242,92 @@ unsigned int	Texture::getID() const
 #include <fstream>
 
 std::array<Texture*, TEXTURECOUNT> ResourceManager::texturePack;
-bool ResourceManager::textureLoaded = false;
 
 void ResourceManager::loadPack(void)
 {
-	Texture *grass = new Texture({
+	texturePack[BLOCK_WATER] = new Texture({
+		{"packDefault/WATER.png"},
+		{"packDefault/WATER.png"},
+		{"packDefault/WATER.png"},
+		{"packDefault/WATER.png"},
+		{"packDefault/WATER.png"},
+		{"packDefault/WATER.png"}}, "BLOCK_WATER");
+
+	texturePack[BLOCK_SAND] = new Texture({
+		{"packDefault/SAND.jpg"},
+		{"packDefault/SAND.jpg"},
+		{"packDefault/SAND.jpg"},
+		{"packDefault/SAND.jpg"},
+		{"packDefault/SAND.jpg"},
+		{"packDefault/SAND.jpg"}}, "BLOCK_SAND");
+		
+	texturePack[BLOCK_DIRT] = new Texture({
+		{"packDefault/GRASS_BOTTOM.jpg"},
+		{"packDefault/GRASS_BOTTOM.jpg"},
+		{"packDefault/GRASS_BOTTOM.jpg"},
+		{"packDefault/GRASS_BOTTOM.jpg"},
+		{"packDefault/GRASS_BOTTOM.jpg"},
+		{"packDefault/GRASS_BOTTOM.jpg"}}, "BLOCK_DIRT");
+	
+	texturePack[BLOCK_GRASS] = new Texture({
 		{"packDefault/GRASS_SIDE.jpg"},
 		{"packDefault/GRASS_SIDE.jpg"},
 		{"packDefault/GRASS_TOP.jpg"},
 		{"packDefault/GRASS_BOTTOM.jpg"},
 		{"packDefault/GRASS_SIDE.jpg"},
-		{"packDefault/GRASS_SIDE.jpg"}});
+		{"packDefault/GRASS_SIDE.jpg"}}, "BLOCK_GRASS");
 
-	Texture *grass_snow = new Texture({
+	texturePack[BLOCK_GRASS_SNOW] = new Texture({
 		{"packDefault/GRASS_SIDE.jpg"},
 		{"packDefault/GRASS_SIDE.jpg"},
 		{"packDefault/SNOW.jpg"},
 		{"packDefault/GRASS_BOTTOM.jpg"},
 		{"packDefault/GRASS_SIDE.jpg"},
-		{"packDefault/GRASS_SIDE.jpg"}});
+		{"packDefault/GRASS_SIDE.jpg"}}, "BLOCK_GRASS_SNOW");
 
-	Texture *dirt = new Texture({
-		{"packDefault/GRASS_BOTTOM.jpg"},
-		{"packDefault/GRASS_BOTTOM.jpg"},
-		{"packDefault/GRASS_BOTTOM.jpg"},
-		{"packDefault/GRASS_BOTTOM.jpg"},
-		{"packDefault/GRASS_BOTTOM.jpg"},
-		{"packDefault/GRASS_BOTTOM.jpg"}});
-	
-	Texture *stone = new Texture({
+	texturePack[BLOCK_STONE] = new Texture({
 		{"packDefault/STONE.jpg"},
 		{"packDefault/STONE.jpg"},
 		{"packDefault/STONE.jpg"},
 		{"packDefault/STONE.jpg"},
 		{"packDefault/STONE.jpg"},
-		{"packDefault/STONE.jpg"}});
+		{"packDefault/STONE.jpg"}}, "BLOCK_STONE");
 
-	Texture *bedrock = new Texture({
-		{"packDefault/BEDROCK.jpg"},
-		{"packDefault/BEDROCK.jpg"},
-		{"packDefault/BEDROCK.jpg"},
-		{"packDefault/BEDROCK.jpg"},
-		{"packDefault/BEDROCK.jpg"},
-		{"packDefault/BEDROCK.jpg"}});
-
-	Texture *sand = new Texture({
-		{"packDefault/SAND.jpg"},
-		{"packDefault/SAND.jpg"},
-		{"packDefault/SAND.jpg"},
-		{"packDefault/SAND.jpg"},
-		{"packDefault/SAND.jpg"},
-		{"packDefault/SAND.jpg"}});
-
-	Texture *water = new Texture({
-		{"packDefault/WATER.png"},
-		{"packDefault/WATER.png"},
-		{"packDefault/WATER.png"},
-		{"packDefault/WATER.png"},
-		{"packDefault/WATER.png"},
-		{"packDefault/WATER.png"}});
-		
-	Texture *snow = new Texture({
+	texturePack[BLOCK_SNOW] = new Texture({
 		{"packDefault/SNOW.jpg"},
 		{"packDefault/SNOW.jpg"},
 		{"packDefault/SNOW.jpg"},
 		{"packDefault/SNOW.jpg"},
 		{"packDefault/SNOW.jpg"},
-		{"packDefault/SNOW.jpg"}});
+		{"packDefault/SNOW.jpg"}}, "BLOCK_SNOW");
 
-	texturePack[BLOCK_WATER] = water;
-	texturePack[BLOCK_SAND] = sand;
-	texturePack[BLOCK_DIRT] = dirt;
-	texturePack[BLOCK_GRASS] = grass;
-	texturePack[BLOCK_GRASS_SNOW] = grass_snow;
-	texturePack[BLOCK_STONE] = stone;
-	texturePack[BLOCK_SNOW] = snow;
-	texturePack[BLOCK_BEDROCK] = bedrock;
+	texturePack[BLOCK_BEDROCK] = new Texture({
+		{"packDefault/BEDROCK.jpg"},
+		{"packDefault/BEDROCK.jpg"},
+		{"packDefault/BEDROCK.jpg"},
+		{"packDefault/BEDROCK.jpg"},
+		{"packDefault/BEDROCK.jpg"},
+		{"packDefault/BEDROCK.jpg"}}, "BLOCK_BEDROCK");
 
-	ResourceManager::textureLoaded = true;
 }
 
 void ResourceManager::bindTextures(void)
 {
-	glActiveTexture(GL_TEXTURE0 + 10); // Texture unit 1
+	glActiveTexture(GL_TEXTURE0 + texturePack[BLOCK_WATER]->getID()); // Texture unit 0
 	glBindTexture(GL_TEXTURE_CUBE_MAP, texturePack[BLOCK_WATER]->getID());
-	glActiveTexture(GL_TEXTURE0 + 11); // Texture unit 2
+	glActiveTexture(GL_TEXTURE0 + texturePack[BLOCK_SAND]->getID()); // Texture unit 1
 	glBindTexture(GL_TEXTURE_CUBE_MAP, texturePack[BLOCK_SAND]->getID());
-	glActiveTexture(GL_TEXTURE0 + 12); // Texture unit 3
+	glActiveTexture(GL_TEXTURE0 + texturePack[BLOCK_DIRT]->getID()); // Texture unit 2
 	glBindTexture(GL_TEXTURE_CUBE_MAP, texturePack[BLOCK_DIRT]->getID());
-	glActiveTexture(GL_TEXTURE0 + 13); // Texture unit 4
+	glActiveTexture(GL_TEXTURE0 + texturePack[BLOCK_GRASS]->getID()); // Texture unit 3
 	glBindTexture(GL_TEXTURE_CUBE_MAP, texturePack[BLOCK_GRASS]->getID());
-	glActiveTexture(GL_TEXTURE0 + 14); // Texture unit 5
+	glActiveTexture(GL_TEXTURE0 + texturePack[BLOCK_GRASS_SNOW]->getID()); // Texture unit 4
 	glBindTexture(GL_TEXTURE_CUBE_MAP, texturePack[BLOCK_GRASS_SNOW]->getID());
-	glActiveTexture(GL_TEXTURE0 + 15); // Texture unit 6
+	glActiveTexture(GL_TEXTURE0 + texturePack[BLOCK_STONE]->getID()); // Texture unit 5
 	glBindTexture(GL_TEXTURE_CUBE_MAP, texturePack[BLOCK_STONE]->getID());
-	glActiveTexture(GL_TEXTURE0 + 16); // Texture unit 7
+	glActiveTexture(GL_TEXTURE0 + texturePack[BLOCK_SNOW]->getID()); // Texture unit 6
 	glBindTexture(GL_TEXTURE_CUBE_MAP, texturePack[BLOCK_SNOW]->getID());
-	glActiveTexture(GL_TEXTURE0 + 17); // Texture unit 8
+	glActiveTexture(GL_TEXTURE0 + texturePack[BLOCK_BEDROCK]->getID()); // Texture unit 7
 	glBindTexture(GL_TEXTURE_CUBE_MAP, texturePack[BLOCK_BEDROCK]->getID());
 }
 

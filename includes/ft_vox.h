@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/10/15 13:12:12 by nathan            #+#    #+#             */
-/*   Updated: 2021/10/22 16:03:28 by nathan           ###   ########.fr       */
+/*   Updated: 2021/11/29 16:15:10 by nallani          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,7 +17,7 @@
 #define EMPTY 0
 #define HAS 1
 
-#define HEIGHT 256
+#define HEIGHT 64
 #define WIDTH  16384
 #define LENGTH WIDTH
 

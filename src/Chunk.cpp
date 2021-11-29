@@ -24,6 +24,7 @@ Chunk::Chunk(int x, int z)
 	hardBlocVisible = 0;
 	init = false;
 	threadUseCount = 1;
+	/*
 	texture = new Texture({
 		{"packDefault/GRASS_SIDE.jpg"},
 		{"packDefault/GRASS_SIDE.jpg"},
@@ -31,6 +32,7 @@ Chunk::Chunk(int x, int z)
 		{"packDefault/GRASS_BOTTOM.jpg"},
 		{"packDefault/GRASS_SIDE.jpg"},
 		{"packDefault/GRASS_SIDE.jpg"}});
+		*/
 	myNeighbours = {};
 }
 
@@ -493,7 +495,6 @@ void Chunk::draw(Shader* shader)
 	}
 	GLfloat	*positionOffset = Chunk::generatePosOffsets();
 
-	ResourceManager::bindTextures();
 	//glBindTexture(GL_TEXTURE_CUBE_MAP, texture->getID());	// TODO : Modify in order to use more than one texture at once and those texture should not be loaded here but
 															// in ResourceManager.
 	RectangularCuboid::drawInstance(shader, blocsType, positionOffset, hardBlocVisible);

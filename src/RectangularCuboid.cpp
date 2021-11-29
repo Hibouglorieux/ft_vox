@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/08/08 17:52:01 by nathan            #+#    #+#             */
-/*   Updated: 2021/11/05 19:27:16 by nathan           ###   ########.fr       */
+/*   Updated: 2021/11/29 21:37:39 by nallani          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -75,7 +75,8 @@ void RectangularCuboid::initialize()
     -0.5f,  0.5f, -0.5f,  0.0f, 1.0f, // top-left
     -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,  // bottom-left        
 
-	//tmp
+	// 3d texture coordinates
+	//Back face
     -1.f, -1.f, -1.f, 
      1.f,  1.f, -1.f, 
      1.f, -1.f, -1.f,          
@@ -142,6 +143,7 @@ void RectangularCuboid::clear()
 	initialized = false;
 }
 
+/*  unused, drawInstance is called instead
 void RectangularCuboid::draw(Vec3& pos, Shader* shader, Texture* texture)
 {
 	initialize();
@@ -154,6 +156,7 @@ void RectangularCuboid::draw(Vec3& pos, Shader* shader, Texture* texture)
     glBindVertexArray(VAO);
     glDrawArrays(GL_TRIANGLES, 0, 36);
 }
+*/
 
 void RectangularCuboid::drawInstance(Shader* shader, GLint *instanceTypes,
 		GLfloat *instanceTransforms, unsigned int count)
@@ -164,28 +167,24 @@ void RectangularCuboid::drawInstance(Shader* shader, GLint *instanceTypes,
 	glBindBuffer(GL_ARRAY_BUFFER, transformBuffer);
 	glBufferData(GL_ARRAY_BUFFER, count * 3 * sizeof(float),
 			instanceTransforms, GL_STATIC_DRAW);
-	/*glBindBuffer(GL_ARRAY_BUFFER, typeBuffer);
-	glBufferData(GL_ARRAY_BUFFER, count * sizeof(int),
-			instanceTypes, GL_STATIC_DRAW);*/
-
     glEnableVertexAttribArray(2);	
     glVertexAttribPointer(2, 3, GL_FLOAT, GL_TRUE, 3 * sizeof(float), (void*)(0));
-    /*glEnableVertexAttribArray(5);	
-    glVertexAttribPointer(5, 1, GL_INT, GL_TRUE, sizeof(int), (void*)(0));*/
 
 	glVertexAttribDivisor(2, 1);
 
-	glUniform1i(glGetUniformLocation(shader->getID(), "instanced"), 1);
-	glUniform1i(glGetUniformLocation(shader->getID(), "color"), GL_TRUE);
+	glBindBuffer(GL_ARRAY_BUFFER, typeBuffer);
+	glBufferData(GL_ARRAY_BUFFER, count * sizeof(int),
+			instanceTypes, GL_STATIC_DRAW);
+	for (GLint i = 0; i < count; i++)
+	{
+		if (instanceTypes[i] != 3)
+			std::cout << instanceTypes[i] << std::endl;
+	}
 
-	/*glUniform1i(glGetUniformLocation(shader->getID(), "water"), 10 + BLOCK_WATER);
-	glUniform1i(glGetUniformLocation(shader->getID(), "sand"), 10 + BLOCK_SAND);
-	glUniform1i(glGetUniformLocation(shader->getID(), "dirt"), 10 + BLOCK_DIRT);
-	glUniform1i(glGetUniformLocation(shader->getID(), "grass"), 10 + BLOCK_GRASS);
-	glUniform1i(glGetUniformLocation(shader->getID(), "grass_snow"), 10 + BLOCK_GRASS_SNOW);
-	glUniform1i(glGetUniformLocation(shader->getID(), "stone"), 10 + BLOCK_STONE);
-	glUniform1i(glGetUniformLocation(shader->getID(), "snow"), 10 + BLOCK_SNOW);
-	glUniform1i(glGetUniformLocation(shader->getID(), "bedrock"), 10 + BLOCK_BEDROCK);*/
+    glEnableVertexAttribArray(5);
+    glVertexAttribPointer(5, 1, GL_INT, GL_TRUE, sizeof(int), (void*)(0));
+
+	glUniform1i(glGetUniformLocation(shader->getID(), "color"), GL_FALSE);
 
     glBindVertexArray(VAO);
     glDrawArraysInstanced(GL_TRIANGLES, 0, 36, count);

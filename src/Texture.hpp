@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/10/15 16:41:42 by nathan            #+#    #+#             */
-/*   Updated: 2021/10/21 14:54:52 by nathan           ###   ########.fr       */
+/*   Updated: 2021/11/29 19:59:27 by nallani          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,7 +26,7 @@
 class Texture {
 public:
 	Texture(std::string pathToFile = "cat.png");
-	Texture(std::vector<std::string> paths);
+	Texture(std::vector<std::string> paths, std::string textureName);
 	Texture(std::vector<std::string> paths, BigHeightMap& heightMap);
 	Texture(std::vector<std::string> paths, HeightMap& heightMap, bool smoll);
 	Texture(HeightMap& heightMap);
@@ -40,7 +40,7 @@ private:
 		unsigned int blockType;
 	};
 	static std::map<std::string, TextureCommonData> textureLoaded;
-	std::string path;
+	std::string name;
 };
 
 class ResourceManager {
@@ -51,6 +51,5 @@ public:
 	static Texture *getBlockTexture(int blockType);
 private:
 	static std::array<Texture*, TEXTURECOUNT> texturePack;
-	static bool textureLoaded;
 };
 #endif

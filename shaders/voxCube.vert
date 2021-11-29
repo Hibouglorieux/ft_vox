@@ -14,23 +14,14 @@ out vec3 vertexPosFromCamera;
 uniform mat4 projection;
 uniform mat4 view;
 uniform mat4 precalcMat;
-uniform mat4 model; // Should be useless from now on
-
-uniform bool instanced;
 
 void main()
 {
 	texCoord = texturePos3d;
 	texId = textureId;
 
-	if (instanced)
-	{
-		gl_Position = precalcMat * vec4(vec3(pos + posOffset), 1.0);
-	}
-	else
-	{
-		gl_Position = projection * view * model * vec4(pos, 1.0);
-	}
+	gl_Position = precalcMat * vec4(vec3(pos + posOffset), 1.0);
+
 	vertexPos = vec3(pos + posOffset);
 	vertexPosFromCamera = vec3(gl_Position);
 }

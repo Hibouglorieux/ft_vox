@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/07/21 18:11:30 by nathan            #+#    #+#             */
-/*   Updated: 2021/10/23 17:13:17 by nathan           ###   ########.fr       */
+/*   Updated: 2021/11/29 20:08:39 by nallani          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -131,6 +131,17 @@ void World::render()
 	glEnable(GL_DEPTH_TEST);
 	glUniformMatrix4fv(glGetUniformLocation(shader->getID(), "precalcMat"), 1, GL_TRUE, precalculatedMat.exportForGL());
 	glUniformMatrix4fv(glGetUniformLocation(shader->getID(), "view"), 1, GL_TRUE, camera.getMatrix().exportForGL());
+
+	glUniform1i(glGetUniformLocation(shader->getID(), "water"), BLOCK_WATER);
+	glUniform1i(glGetUniformLocation(shader->getID(), "sand"), BLOCK_SAND);
+	glUniform1i(glGetUniformLocation(shader->getID(), "dirt"), BLOCK_DIRT);
+	glUniform1i(glGetUniformLocation(shader->getID(), "grass"), BLOCK_GRASS);
+	glUniform1i(glGetUniformLocation(shader->getID(), "grass_snow"), BLOCK_GRASS_SNOW);
+	glUniform1i(glGetUniformLocation(shader->getID(), "stone"), BLOCK_STONE);
+	glUniform1i(glGetUniformLocation(shader->getID(), "snow"), BLOCK_SNOW);
+	glUniform1i(glGetUniformLocation(shader->getID(), "bedrock"), BLOCK_BEDROCK);
+
+	ResourceManager::bindTextures();
 	for (auto it : visibleChunks)
 	{
 		Chunk*& chnk = it.second;

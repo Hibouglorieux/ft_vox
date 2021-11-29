@@ -28,12 +28,13 @@ float interpolate(float value, float minimum, float maximum)
 
 void main()
 {
+	int tmp = texId; // TODO wtf this is incorrect
 	// Texture
 
 	// Gradient color
 	if (color)
 	{
-		float w = ceil(vertexPos.y) / 256.0;
+		float w = ceil(vertexPos.y) / 512.0 + 0.5;
 		if (w >= 0.0 && w <= 1.0)
 		{
 			//w *= interpolate(vertexPosFromCamera.z, 70.f, 140.f);
@@ -46,21 +47,21 @@ void main()
 	}
 	else
 	{
-		if (texId == 0)
+		if (tmp == 0)
 			FragColor = texture(water, texCoord);
-		else if (texId == 1)
+		else if (tmp == 1)
 			FragColor = texture(sand, texCoord);
-		else if (texId == 2)
+		else if (tmp == 2)
 			FragColor = texture(dirt, texCoord);
-		else if (texId == 3)
+		else if (tmp == 3)
 			FragColor = texture(grass, texCoord);
-		else if (texId == 4)
+		else if (tmp == 4)
 			FragColor = texture(grass_snow, texCoord);
-		else if (texId == 5)
+		else if (tmp == 5)
 			FragColor = texture(stone, texCoord);
-		else if (texId == 6)
+		else if (tmp == 6)
 			FragColor = texture(snow, texCoord);
-		else if (texId == 7)
+		else if (tmp == 7)
 			FragColor = texture(bedrock, texCoord);
 		else
 			FragColor = vec4(1, 0, 0, 1.0); // show in red to debug
