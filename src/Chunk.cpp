@@ -15,8 +15,6 @@ Chunk::Chunk(int x, int z)
 	//std::cout << "Chunk : " << x << ",0," << z << std::endl;
 	// Not necessary ?
 
-	blocsPosition = {};
-	blocsType = {};
 	// Should we recompute the chunk's blocs positions
 	updateChunk = false;
 	// How many solid bloc in chunk
@@ -34,6 +32,9 @@ Chunk::Chunk(int x, int z)
 		{"packDefault/GRASS_SIDE.jpg"}});
 		*/
 	myNeighbours = {};
+	glGenBuffers(1, &typeVBO);
+	glGenBuffers(1, &positionVBO);
+
 }
 
 Chunk::Chunk(int x, int z, std::vector<std::pair<Vec2, Chunk*>> neighbours) : Chunk(x, z)
@@ -368,8 +369,11 @@ void Chunk::updateVisibilityWithNeighbour(Vec2 NeighbourPos, const BlocData& nei
 
 Chunk::~Chunk(void)
 {
-	delete [] blocsPosition;
 	//delete texture;
+	glBindBuffer(GL_ARRAY_BUFFER, typeVBO);
+	glDeleteBuffers(1, &typeVBO);
+	glBindBuffer(GL_ARRAY_BUFFER, positionVBO);
+	glDeleteBuffers(1, &positionVBO);
 	delete heightMap;
 	totalChunks--;
 }
@@ -435,8 +439,7 @@ void Chunk::setVisibilityByNeighbors(int x, int y, int z) // Activates visibilit
 		//bloc->visible = false;
 }
 
-
-GLfloat *Chunk::generatePosOffsets(void)
+bool Chunk::generatePosOffsets(void)
 {
 	// TODO : Implement way of knowing which bloc should be shown to avoid loading
 	//		too much data.
@@ -476,13 +479,21 @@ GLfloat *Chunk::generatePosOffsets(void)
 				}
 			}
 		}
+		glBindBuffer(GL_ARRAY_BUFFER, positionVBO);
+		glBufferData(GL_ARRAY_BUFFER, hardBlocVisible * 3 * sizeof(float),
+			WIP_transform, GL_STATIC_DRAW);
+		delete [] WIP_transform;
+
+		glBindBuffer(GL_ARRAY_BUFFER, typeVBO);
+		glBufferData(GL_ARRAY_BUFFER, hardBlocVisible * sizeof(GLint),
+				WIP_type, GL_STATIC_DRAW);
+		delete [] WIP_type;
+
+
 		updateChunk = false;
-		delete [] blocsPosition;
-		blocsPosition = WIP_transform;
-		delete [] blocsType;
-		blocsType = WIP_type;
+		return true;
 	}
-	return blocsPosition;
+	return false;
 }
 
 void Chunk::draw(Shader* shader)
@@ -493,11 +504,12 @@ void Chunk::draw(Shader* shader)
 		draw_safe.unlock();
 		return;
 	}
-	GLfloat	*positionOffset = Chunk::generatePosOffsets();
+	bool isThereNewData = Chunk::generatePosOffsets();
+	(void)isThereNewData; // might be usefull if we use multiple VAO
 
 	//glBindTexture(GL_TEXTURE_CUBE_MAP, texture->getID());	// TODO : Modify in order to use more than one texture at once and those texture should not be loaded here but
 															// in ResourceManager.
-	RectangularCuboid::drawInstance(shader, blocsType, positionOffset, hardBlocVisible);
+	RectangularCuboid::drawInstance(shader, positionVBO, typeVBO, hardBlocVisible);
 	draw_safe.unlock();
 }
 

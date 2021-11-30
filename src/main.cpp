@@ -6,7 +6,7 @@
 /*   By: nathan <nallani@student.s19.be>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/05/24 01:52:59 by nathan            #+#    #+#             */
-/*   Updated: 2021/11/29 16:30:52 by nallani          ###   ########.fr       */
+/*   Updated: 2021/11/30 18:06:29 by nallani          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,20 +23,30 @@
 
 using namespace std;
 
-int		main( int argc, char *argv[] )
+int	initialize()
 {
 	if (!appWindow::init())
 		return (0);
-
 	if (glewInit() != GLEW_OK)
 	{
 		std::cerr <<  "Failed to initialize GLEW\n" << std::endl;
-		return 0;
+		return (0);
 	}
+	RectangularCuboid::initialize();
+
+	// openGL parameters
 	glEnable(GL_CULL_FACE);
 	glEnable(GL_DEPTH_TEST);
-	glCullFace(GL_BACK);// renders only visible squares of cubes
 	glClearColor(0.2, 0.2, 0.2, 1.0f);
+	//glCullFace(GL_BACK);// renders only visible squares of cubes
+
+	return (1);
+}
+
+int		main( int argc, char *argv[] )
+{
+	if (!initialize())
+		return (0);
 
 	unsigned long	seed = DEFAULT_SEED; //std::srand(std::time(nullptr));
 	if (argc > 1)
@@ -49,17 +59,13 @@ int		main( int argc, char *argv[] )
 	VoxelGenerator::initialize(seed);
 	VoxelGenerator::initialize(seed, true);
 	World* world = new World();
-	//RectangularCuboid* floor = new RectangularCuboid(1000, 0.1, 1000);
-	//floor->setID("floor");
-	//floor->setColor({0.6, 0.7, 0.6});
-	//floor->setShader(new Shader("floor.vert", "floor.frag"));
 
-	//world->addObject(floor);
 	Loop::setWorld(world);
 	
 	Loop::loop();
 	delete world;
 	VoxelGenerator::clear();
+	RectangularCuboid::clear();
 
 	return 1;
 }

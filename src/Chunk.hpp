@@ -44,7 +44,7 @@ public:
 private:
 	struct bloc
 	{
-		int type;
+		GLint type;
 		bool visible;
 	};
 	typedef std::array<std::array<std::array<struct bloc, CHUNK_WIDTH>, CHUNK_DEPTH>, CHUNK_HEIGHT> BlocData;
@@ -58,14 +58,12 @@ private:
 	void	caveTest();
 	void	destroyIlots();
 	bool 	destroyIlotsSearchAndDestroy(struct bloc *block, Vec3 pos, std::vector<struct bloc*> *blockGroup);
-	GLfloat	*generatePosOffsets();
+	bool	generatePosOffsets();
 
 	Vec3	position;
 	BlocData blocs;
 	BlocSearchData blocsTests;
 	//struct bloc	blocs[CHUNK_HEIGHT][CHUNK_DEPTH][CHUNK_WIDTH];
-	GLfloat	*blocsPosition;
-	GLint	*blocsType;
 	bool	updateChunk;
 	bool	init;
 	unsigned char	threadUseCount;
@@ -75,6 +73,8 @@ private:
 	unsigned int hardBlocVisible;
 	std::mutex	draw_safe;
 	Texture* texture;
+
+	GLuint typeVBO, positionVBO;
 
 	std::vector<std::pair<Vec2, Chunk*>> myNeighbours;
 

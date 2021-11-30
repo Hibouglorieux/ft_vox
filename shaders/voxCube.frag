@@ -47,6 +47,7 @@ void main()
 	}
 	else
 	{
+		//tmp = tex;
 		if (tmp == 0)
 			FragColor = texture(water, texCoord);
 		else if (tmp == 1)
@@ -63,7 +64,7 @@ void main()
 			FragColor = texture(snow, texCoord);
 		else if (tmp == 7)
 			FragColor = texture(bedrock, texCoord);
-		else
-			FragColor = vec4(1, 0, 0, 1.0); // show in red to debug
+		else 
+			FragColor = vec4(1., 0, 0, 1.0); // show in red to debug
 	}
 }

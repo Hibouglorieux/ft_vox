@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/10/15 16:41:40 by nathan            #+#    #+#             */
-/*   Updated: 2021/11/29 17:49:50 by nallani          ###   ########.fr       */
+/*   Updated: 2021/11/30 16:33:49 by nallani          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -313,21 +313,21 @@ void ResourceManager::loadPack(void)
 
 void ResourceManager::bindTextures(void)
 {
-	glActiveTexture(GL_TEXTURE0 + texturePack[BLOCK_WATER]->getID()); // Texture unit 0
+	glActiveTexture(GL_TEXTURE0 + BLOCK_WATER); // Texture unit 0
 	glBindTexture(GL_TEXTURE_CUBE_MAP, texturePack[BLOCK_WATER]->getID());
-	glActiveTexture(GL_TEXTURE0 + texturePack[BLOCK_SAND]->getID()); // Texture unit 1
+	glActiveTexture(GL_TEXTURE0 + BLOCK_SAND); // Texture unit 1
 	glBindTexture(GL_TEXTURE_CUBE_MAP, texturePack[BLOCK_SAND]->getID());
-	glActiveTexture(GL_TEXTURE0 + texturePack[BLOCK_DIRT]->getID()); // Texture unit 2
+	glActiveTexture(GL_TEXTURE0 + BLOCK_DIRT); // Texture unit 2
 	glBindTexture(GL_TEXTURE_CUBE_MAP, texturePack[BLOCK_DIRT]->getID());
-	glActiveTexture(GL_TEXTURE0 + texturePack[BLOCK_GRASS]->getID()); // Texture unit 3
+	glActiveTexture(GL_TEXTURE0 + BLOCK_GRASS); // Texture unit 3
 	glBindTexture(GL_TEXTURE_CUBE_MAP, texturePack[BLOCK_GRASS]->getID());
-	glActiveTexture(GL_TEXTURE0 + texturePack[BLOCK_GRASS_SNOW]->getID()); // Texture unit 4
+	glActiveTexture(GL_TEXTURE0 + BLOCK_GRASS_SNOW); // Texture unit 4
 	glBindTexture(GL_TEXTURE_CUBE_MAP, texturePack[BLOCK_GRASS_SNOW]->getID());
-	glActiveTexture(GL_TEXTURE0 + texturePack[BLOCK_STONE]->getID()); // Texture unit 5
+	glActiveTexture(GL_TEXTURE0 + BLOCK_STONE); // Texture unit 5
 	glBindTexture(GL_TEXTURE_CUBE_MAP, texturePack[BLOCK_STONE]->getID());
-	glActiveTexture(GL_TEXTURE0 + texturePack[BLOCK_SNOW]->getID()); // Texture unit 6
+	glActiveTexture(GL_TEXTURE0 + BLOCK_SNOW); // Texture unit 6
 	glBindTexture(GL_TEXTURE_CUBE_MAP, texturePack[BLOCK_SNOW]->getID());
-	glActiveTexture(GL_TEXTURE0 + texturePack[BLOCK_BEDROCK]->getID()); // Texture unit 7
+	glActiveTexture(GL_TEXTURE0 + BLOCK_BEDROCK); // Texture unit 7
 	glBindTexture(GL_TEXTURE_CUBE_MAP, texturePack[BLOCK_BEDROCK]->getID());
 }
 
