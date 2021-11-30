@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/07/21 18:11:54 by nathan            #+#    #+#             */
-/*   Updated: 2021/10/23 14:01:48 by nathan           ###   ########.fr       */
+/*   Updated: 2021/11/30 19:20:29 by nallani          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,8 +38,9 @@ public:
 
 	void	update();
 	// Chunk Manager
-	void testUpdateChunks(Vec2 newPos);
+	void updateChunkBuffers(Vec2 newPos);
 private:
+	bool shouldBeRendered(Vec2 chunkPos, Chunk* chnk, Matrix& matrix);
 	std::vector<Vec2> getPosInRange(Vec2 center, float minDistance, float maxDistance);
 	std::vector<std::pair<Vec2, Chunk*>> getAllocatedNeighbours(Vec2 chunkPos);
 	Camera camera;

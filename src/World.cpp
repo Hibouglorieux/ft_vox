@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/07/21 18:11:30 by nathan            #+#    #+#             */
-/*   Updated: 2021/11/29 20:08:39 by nallani          ###   ########.fr       */
+/*   Updated: 2021/11/30 19:30:25 by nallani          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -142,11 +142,17 @@ void World::render()
 	glUniform1i(glGetUniformLocation(shader->getID(), "bedrock"), BLOCK_BEDROCK);
 
 	ResourceManager::bindTextures();
+	int renderCount = 0;
 	for (auto it : visibleChunks)
 	{
 		Chunk*& chnk = it.second;
-		chnk->draw(shader);
+		if (shouldBeRendered(it.first, chnk, precalculatedMat))
+		{
+			chnk->draw(shader);
+			renderCount++;
+		}
 	}
+	//std::cout << "rendered: " << renderCount << "on total visible chunk: " << visibleChunks.size() << std::endl;
 }
 
 void World::update()
@@ -155,11 +161,11 @@ void World::update()
 	if (curPos != newChunkPos)
 	{
 		curPos = newChunkPos;
-		testUpdateChunks(curPos);
+		updateChunkBuffers(curPos);
 	}
 }
 
-void World::testUpdateChunks(Vec2 newPos)
+void World::updateChunkBuffers(Vec2 newPos)
 {
 	std::vector<Vec2> posBuffer = {};
 
@@ -282,6 +288,27 @@ std::vector<std::pair<Vec2, Chunk*>>	World::getAllocatedNeighbours(Vec2 chunkPos
 			}
 		}
 	return neighbours;
+}
+
+bool	World::shouldBeRendered(Vec2 chunkPos, Chunk* chnk, Matrix& matrix)
+{
+	if (chunkPos == curPos)
+		return true;
+	Vec3 topLeft = chnk->getPos();
+	Vec3 botRight = topLeft + Vec3(CHUNK_WIDTH, 0, CHUNK_DEPTH);
+	Vec3 tmp = matrix * topLeft;
+	if (tmp.x < 1 && tmp.y < 1 && tmp.z > 0)
+		return true;
+	tmp = matrix * botRight;
+	if (tmp.x < 1 && tmp.y < 1 && tmp.z > 0)
+		return true;
+	tmp = matrix * Vec3(topLeft.x, 0, botRight.z);
+	if (tmp.x < 1 && tmp.y < 1 && tmp.z > 0)
+		return true;
+	tmp = matrix * Vec3(botRight.x, 0, topLeft.z);
+	if (tmp.x < 1 && tmp.y < 1 && tmp.z > 0)
+		return true;
+	return false;
 }
 
 void World::setCamera(Camera newCamera)
