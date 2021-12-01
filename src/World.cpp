@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/07/21 18:11:30 by nathan            #+#    #+#             */
-/*   Updated: 2021/11/30 19:30:25 by nallani          ###   ########.fr       */
+/*   Updated: 2021/12/01 16:50:22 by nallani          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -146,7 +146,7 @@ void World::render()
 	for (auto it : visibleChunks)
 	{
 		Chunk*& chnk = it.second;
-		if (shouldBeRendered(it.first, chnk, precalculatedMat))
+		if (shouldBeRendered(it.first, chnk, precalculatedMat))// TODO not working properly in case you go too low or to high with certain angle (at heigh 0 looking in the air for example)
 		{
 			chnk->draw(shader);
 			renderCount++;
@@ -297,16 +297,16 @@ bool	World::shouldBeRendered(Vec2 chunkPos, Chunk* chnk, Matrix& matrix)
 	Vec3 topLeft = chnk->getPos();
 	Vec3 botRight = topLeft + Vec3(CHUNK_WIDTH, 0, CHUNK_DEPTH);
 	Vec3 tmp = matrix * topLeft;
-	if (tmp.x < 1 && tmp.y < 1 && tmp.z > 0)
+	if (tmp.x <= 1 && tmp.y <= 1 && tmp.z > 0)
 		return true;
 	tmp = matrix * botRight;
-	if (tmp.x < 1 && tmp.y < 1 && tmp.z > 0)
+	if (tmp.x <= 1 && tmp.y <= 1 && tmp.z > 0)
 		return true;
 	tmp = matrix * Vec3(topLeft.x, 0, botRight.z);
-	if (tmp.x < 1 && tmp.y < 1 && tmp.z > 0)
+	if (tmp.x <= 1 && tmp.y <= 1 && tmp.z > 0)
 		return true;
 	tmp = matrix * Vec3(botRight.x, 0, topLeft.z);
-	if (tmp.x < 1 && tmp.y < 1 && tmp.z > 0)
+	if (tmp.x <= 1 && tmp.y <= 1 && tmp.z > 0)
 		return true;
 	return false;
 }

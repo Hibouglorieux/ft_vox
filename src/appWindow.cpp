@@ -6,7 +6,7 @@
 /*   By: nathan <nallani@student.s19.be>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/05/24 01:55:16 by nathan            #+#    #+#             */
-/*   Updated: 2021/10/20 16:39:56 by nathan           ###   ########.fr       */
+/*   Updated: 2021/12/01 17:01:22 by nallani          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,7 +37,7 @@ int appWindow::init()
 		glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // To make MacOS happy; should not be needed
 		glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); // no support from old openGL
 		// Open a window and create its OpenGL context
-		window = glfwCreateWindow( mode->width, mode->height, PROJECT_NAME, NULL, NULL);
+		window = glfwCreateWindow(1920, 1080, PROJECT_NAME, NULL, NULL);
 
 		if( window == nullptr )
 		{

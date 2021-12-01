@@ -466,16 +466,14 @@ bool Chunk::generatePosOffsets(void)
 						indexZ = i * 3 + 2;
 						WIP_type[i] = blocs[y][z][x].type;
 						i += 1;
+						//std::cout << indexX << " ; " << indexY << " ; " << indexZ << "\n\n";
+						WIP_transform[indexX] = position.x + x;
+						WIP_transform[indexY] = position.y + y;
+						WIP_transform[indexZ] = position.z + z;
+						/*std::cout << WIP_transform[indexX] << ";";
+						  std::cout << WIP_transform[indexY] << ";";
+						  std::cout << WIP_transform[indexZ] << "\n";*/
 					}
-					else
-						continue;
-					//std::cout << indexX << " ; " << indexY << " ; " << indexZ << "\n\n";
-					WIP_transform[indexX] = position.x + x;
-					WIP_transform[indexY] = position.y + y;
-					WIP_transform[indexZ] = position.z + z;
-					/*std::cout << WIP_transform[indexX] << ";";
-					  std::cout << WIP_transform[indexY] << ";";
-					  std::cout << WIP_transform[indexZ] << "\n";*/
 				}
 			}
 		}
