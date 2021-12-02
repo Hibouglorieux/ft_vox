@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/05/24 15:40:25 by nathan            #+#    #+#             */
-/*   Updated: 2021/10/22 16:02:41 by nathan           ###   ########.fr       */
+/*   Updated: 2021/12/02 17:04:52 by nallani          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,8 +47,11 @@ void Loop::loop()
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 
-		world->update();
-		world->render();
+		if (world)
+		{
+			world->update();
+			world->render();
+		}
 		glFinish();
 
 		glfwSwapBuffers(appWindow::getWindow());
@@ -87,18 +90,28 @@ void Loop::processInput()
 	if (glfwGetKey(appWindow::getWindow(), GLFW_KEY_A) == GLFW_PRESS)
 		left = true;
 	bool shift = glfwGetKey(appWindow::getWindow(), GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS ? true : false;
-	world->getCamera().move(forward, backward, left, right, (shift == true ? 10 : 1)* CAMERA_MOUVEMENT_SPEED);
-	if (glfwGetKey(appWindow::getWindow(), GLFW_KEY_SPACE) == GLFW_PRESS)
-		world->getCamera().moveUp();
-	if (glfwGetKey(appWindow::getWindow(), GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
-		world->getCamera().moveDown();
+	if (world)
+	{
+		world->getCamera().move(forward, backward, left, right, (shift == true ? 10 : 1)* CAMERA_MOUVEMENT_SPEED);
+		if (glfwGetKey(appWindow::getWindow(), GLFW_KEY_SPACE) == GLFW_PRESS)
+			world->getCamera().moveUp();
+		if (glfwGetKey(appWindow::getWindow(), GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
+			world->getCamera().moveDown();
+	}
 
-	double oldMouseX = mouseX;
-	double oldMouseY = mouseY;
-	glfwGetCursorPos(appWindow::getWindow(), &mouseX, &mouseY);
-	world->getCamera().rotate(mouseX - oldMouseX, mouseY - oldMouseY);
-	glfwSetCursorPos(appWindow::getWindow(), appWindow::getWindowWidth() * 0.5f, appWindow::getWindowHeight() * 0.5f);
-	glfwGetCursorPos(appWindow::getWindow(), &mouseX, &mouseY);
+	if (glfwGetWindowAttrib(appWindow::getWindow(), GLFW_FOCUSED))
+	{
+		double oldMouseX = mouseX;
+		double oldMouseY = mouseY;
+		glfwGetCursorPos(appWindow::getWindow(), &mouseX, &mouseY);
+		if (world)
+			world->getCamera().rotate(mouseX - oldMouseX, mouseY - oldMouseY);
+		glfwSetCursorPos(appWindow::getWindow(), appWindow::getWindowWidth() * 0.5f, appWindow::getWindowHeight() * 0.5f);
+		glfwGetCursorPos(appWindow::getWindow(), &mouseX, &mouseY);
+		glfwSetInputMode(appWindow::getWindow(), GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+	}
+	else
+		glfwSetInputMode(appWindow::getWindow(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 }
 
 void Loop::keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
@@ -108,6 +121,6 @@ void Loop::keyCallback(GLFWwindow* window, int key, int scancode, int action, in
 
 	if (window != appWindow::getWindow())
 		return;
-	if (key == GLFW_KEY_R && action == GLFW_PRESS)
+	if (key == GLFW_KEY_R && action == GLFW_PRESS && world)
 		world->getCamera().reset();
 }
