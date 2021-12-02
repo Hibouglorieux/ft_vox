@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/07/21 18:11:54 by nathan            #+#    #+#             */
-/*   Updated: 2021/11/30 19:20:29 by nallani          ###   ########.fr       */
+/*   Updated: 2021/12/02 18:10:55 by nallani          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,6 +25,7 @@
 # define VIEW_DISTANCE 160
 # define ROW_OF_CHUNK 8
 # define CHUNK_VIEW_DISTANCE (VIEW_DISTANCE / CHUNK_WIDTH + 1)
+//# define CHUNK_VIEW_DISTANCE 1
 # define MAX_PRELOAD_DISTANCE ((float)CHUNK_VIEW_DISTANCE + 2)
 # define PRELOAD_DISTANCE_DEL ((float)CHUNK_VIEW_DISTANCE + 4)
 
@@ -40,7 +41,7 @@ public:
 	// Chunk Manager
 	void updateChunkBuffers(Vec2 newPos);
 private:
-	bool shouldBeRendered(Vec2 chunkPos, Chunk* chnk, Matrix& matrix);
+	bool shouldBeRendered(Vec2 chunkPos, const Chunk* chnk, Matrix& matrix);
 	std::vector<Vec2> getPosInRange(Vec2 center, float minDistance, float maxDistance);
 	std::vector<std::pair<Vec2, Chunk*>> getAllocatedNeighbours(Vec2 chunkPos);
 	Camera camera;

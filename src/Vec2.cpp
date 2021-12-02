@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/10/22 12:33:53 by nathan            #+#    #+#             */
-/*   Updated: 2021/10/22 15:27:13 by nathan           ###   ########.fr       */
+/*   Updated: 2021/12/02 18:25:28 by nallani          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -130,7 +130,7 @@ Vec2& Vec2::operator=(const Vec2& rhs)
 	return *this;
 }
 
-bool Vec2::operator<(const Vec2& rhs) const
+bool Vec2::operator<(const Vec2& rhs) const// this is only for map
 {
 	if (y > rhs.y)
 		return false;
@@ -141,7 +141,12 @@ bool Vec2::operator<(const Vec2& rhs) const
 	return true;
 }
 
+bool Vec2::isSmaller(const Vec2& rhs) const
+{
+	return ((abs(x) + abs(y)) < (abs(rhs.x) + abs(rhs.y)));
+}
+
 bool Vec2::operator>(const Vec2& rhs) const
 {
-	return !(*this < rhs);
+	return !(*this < rhs) && !(*this == rhs);
 }

@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/10/22 12:33:49 by nathan            #+#    #+#             */
-/*   Updated: 2021/10/22 15:26:34 by nathan           ###   ########.fr       */
+/*   Updated: 2021/12/02 18:03:07 by nallani          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,7 +38,8 @@ public:
 	bool operator!=( const Vec2& rhs ) const;
 	Vec2& operator=( const Vec2& rhs );
 	Vec2 operator-() const;
-	bool operator<(const Vec2& rhs) const;
+	bool operator<(const Vec2& rhs) const;//only here for map, not maths
+	bool isSmaller(const Vec2& rhs) const;
 	bool operator>(const Vec2& rhs) const;
 	int at(const int i) const;
 	int& operator[]( const int i );

@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/07/21 18:11:30 by nathan            #+#    #+#             */
-/*   Updated: 2021/12/01 16:50:22 by nallani          ###   ########.fr       */
+/*   Updated: 2021/12/02 19:14:00 by nallani          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,7 @@
 #include "RectangularCuboid.hpp"
 #include <chrono>
 #include <unistd.h>
+#include <algorithm>
 
 #define WAITING_THREAD_TIME (0.1 * SEC_TO_MICROSEC)
 
@@ -124,7 +125,7 @@ void World::render()
 
 
 	// draw skybox
-	Skybox::draw(precalculatedMat);
+	//Skybox::draw(precalculatedMat);
 
 	// draw chunks
 	shader->use();
@@ -142,17 +143,30 @@ void World::render()
 	glUniform1i(glGetUniformLocation(shader->getID(), "bedrock"), BLOCK_BEDROCK);
 
 	ResourceManager::bindTextures();
-	int renderCount = 0;
+	//Vec3 tmpToDel;
+	//RectangularCuboid::draw(tmpToDel, shader, nullptr);// One cube for test
+	std::vector<std::pair<Vec2, Chunk*>> chunksToRender;
 	for (auto it : visibleChunks)
 	{
-		Chunk*& chnk = it.second;
-		if (shouldBeRendered(it.first, chnk, precalculatedMat))// TODO not working properly in case you go too low or to high with certain angle (at heigh 0 looking in the air for example)
+		Chunk* chnk = it.second;
+		const Vec2& pos = it.first;
+		if (shouldBeRendered(pos, chnk, precalculatedMat))// TODO not working properly because it only takes 4 points on the same Y axis, either complexify it or keep it only for Z < 1
 		{
-			chnk->draw(shader);
-			renderCount++;
+			std::pair<Vec2, Chunk*> tmpPair(pos - curPos, chnk);
+			chunksToRender.push_back(tmpPair);
+			//chunksToRender.push_back(std::make_pair<Vec2, Chunk*>(pos - curPos, chnk));
+			//chunksToRender[it.first - curPos] = chnk;
+			//chnk->draw(shader);
 		}
 	}
-	//std::cout << "rendered: " << renderCount << "on total visible chunk: " << visibleChunks.size() << std::endl;
+	std::sort(chunksToRender.begin(), chunksToRender.end(), [](std::pair<Vec2, Chunk*>& a, std::pair<Vec2, Chunk*>& b) {
+			return a.first.isSmaller(b.first);
+			});
+	for (auto it : chunksToRender)
+	{
+		it.second->draw(shader);
+	}
+	//std::cout << "rendered: " << chunksToRender.size() << "on total visible chunk: " << visibleChunks.size() << std::endl;
 }
 
 void World::update()
@@ -198,7 +212,7 @@ void World::updateChunkBuffers(Vec2 newPos)
 		{
 			if (preLoadedChunks.find(pos) != preLoadedChunks.end())
 			{
-				std::cout << "yooo wtf" << std::endl;
+				std::cout << "problem : chunk must go to visible but is already there in " << std::endl;
 				pos.print();
 			}
 			preLoadedChunks.insert(std::pair<Vec2, Chunk*>(pos, chunk));
@@ -290,23 +304,23 @@ std::vector<std::pair<Vec2, Chunk*>>	World::getAllocatedNeighbours(Vec2 chunkPos
 	return neighbours;
 }
 
-bool	World::shouldBeRendered(Vec2 chunkPos, Chunk* chnk, Matrix& matrix)
+bool	World::shouldBeRendered(Vec2 chunkPos, const Chunk* chnk, Matrix& matrix)
 {
 	if (chunkPos == curPos)
 		return true;
 	Vec3 topLeft = chnk->getPos();
 	Vec3 botRight = topLeft + Vec3(CHUNK_WIDTH, 0, CHUNK_DEPTH);
 	Vec3 tmp = matrix * topLeft;
-	if (tmp.x <= 1 && tmp.y <= 1 && tmp.z > 0)
+	if (tmp.x <= 1 && tmp.x >= -1 && tmp.z <= 1)
 		return true;
 	tmp = matrix * botRight;
-	if (tmp.x <= 1 && tmp.y <= 1 && tmp.z > 0)
+	if (tmp.x <= 1 && tmp.x >= -1 && tmp.z <= 1)
 		return true;
 	tmp = matrix * Vec3(topLeft.x, 0, botRight.z);
-	if (tmp.x <= 1 && tmp.y <= 1 && tmp.z > 0)
+	if (tmp.x <= 1 && tmp.x >= -1 && tmp.z <= 1)
 		return true;
 	tmp = matrix * Vec3(botRight.x, 0, topLeft.z);
-	if (tmp.x <= 1 && tmp.y <= 1 && tmp.z > 0)
+	if (tmp.x <= 1 && tmp.x >= -1 && tmp.z <= 1)
 		return true;
 	return false;
 }
