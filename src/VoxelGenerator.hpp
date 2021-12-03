@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/10/15 13:08:43 by nathan            #+#    #+#             */
-/*   Updated: 2021/11/05 15:02:41 by nathan           ###   ########.fr       */
+/*   Updated: 2021/12/03 19:34:00 by nallani          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,10 +35,12 @@ enum blockType {
 #define HEIGHTMAP_SIZE BLOC_WIDTH_PER_CHUNK
 
 #define BIG_HEIGHT_MAP_SIZE 1024
+#define WORLEY_SIZE 32
 
 typedef std::array<std::array<std::array<unsigned char, WIDTH>, LENGTH>, HEIGHT> VoxelMap;
 typedef std::array<std::array<float, HEIGHTMAP_SIZE>, HEIGHTMAP_SIZE> HeightMap;
 typedef std::array<std::array<std::array<float, HEIGHTMAP_SIZE>, HEIGHTMAP_SIZE>, 64> CaveMap;
+typedef std::array<std::array<std::array<Vec3, WORLEY_SIZE>, WORLEY_SIZE>, WORLEY_SIZE> WorleyGradient;
 typedef std::array<std::array<float, BIG_HEIGHT_MAP_SIZE>, BIG_HEIGHT_MAP_SIZE> BigHeightMap;
 typedef std::array<std::array<std::array<float, 2>, GRADIENT_SIZE>, GRADIENT_SIZE> Gradients;
 //typedef std::array<std::array<std::array<float, HEIGHTMAP_SIZE>, HEIGHTMAP_SIZE>, HEIGHTMAP_SIZE> 3DHeightMap;
@@ -53,6 +55,7 @@ typedef std::array<std::array<Vec3, 512>, 3> gradTable;
 class VoxelGenerator {
 public:
 	static void				initialize(unsigned int seed);
+	static void				initializeWorley(unsigned int seed);
 	static void				clear();
 	static BigHeightMap*	createBigMap(int octaves, float lacunarity, float gain);
 	static HeightMap*		createMap(float ox, float oz, int octaves, float lacunarity, float gain);
@@ -64,8 +67,10 @@ public:
 	static void				initialize(int seed, bool ok);
 	static float			Noise2D(float x, float z, float output, float frequency, float amplitude, int octaves, int tableId, float lacunarity = 2.0f, float gain = 0.5f);
 	static float			Noise3D(float x, float y, float z, float output, float frequency, float amplitude, int octaves, int tableId, float lacunarity = 2.0f, float gain = 0.5f);
+	static float			getWorleyValueAt(float x, float y, float z);
 private:
 	static Gradients*	createPerlinGradient(unsigned int seed);
+	static WorleyGradient* createWorleyGradient(unsigned int seed);
 	static float dotGridGradient(int ix, int iy, float x, float y, Gradients* grad);
 	static float dotGridGradient(int ix, int iy, int iz, float x, float y, float z, Gradients* grad);
 	static float getValue(float x, float y, Gradients* grad);
@@ -82,6 +87,7 @@ private:
 
 	static Gradients* gradients;
 	static Gradients* gradients2;
+	static WorleyGradient* worleyGradient;
 	static Gradient* grad;
 	static unsigned* permutationTable;
 

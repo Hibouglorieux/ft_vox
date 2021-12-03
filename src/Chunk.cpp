@@ -79,7 +79,7 @@ float Chunk::getBlockBiome(int x, int z)
 		// Create a little mountain biome ? Or canyon or i don't know what
 	}	
 	
-	float deleteNoise = VoxelGenerator::Noise2D(position.x + x, position.z + z, 0.2, 0.0045, 0.065, 2, 3, 2, 0.5); // Noise used to create hole / entrance to caves in the ground
+	//float deleteNoise = VoxelGenerator::Noise2D(position.x + x, position.z + z, 0.2, 0.0045, 0.065, 2, 3, 2, 0.5); // Noise used to create hole / entrance to caves in the ground
 	//std::cout << deleteNoise << std::endl;
 
 	//std::cout << heightValue << std::endl;
@@ -129,10 +129,11 @@ void Chunk::initChunk(void)
 			//std::cout << blockValue << std::endl;
 			//int ty = ((int)(blockValue * (HEIGHT / 2.0f) + (HEIGHT / 3.))) % HEIGHT;
 			/*int ty = (int)(blockValue * (HEIGHT * 2 / 3 - 1));*/
+			/*
 			for (int y = blockValue - 1; y > blockValue - 3; y--)
 			{
 				bloc = &(blocs[y][z][x]);
-				/*float cavernValue = VoxelGenerator::Noise3D(position.x - x, y, position.z - z, 0.25f, 0.04, 0.45, 2, 0);
+				float cavernValue = VoxelGenerator::Noise3D(position.x - x, y, position.z - z, 0.25f, 0.04, 0.45, 2, 0);
 				//std::cout << cavernValue << std::endl;
 				if (cavernValue < 0.5)
 				{
@@ -140,13 +141,14 @@ void Chunk::initChunk(void)
 					bloc->visible = 0;
 				}
 				else
-				{*/
+				{
 					bloc->type = BLOCK_GRASS;
 					bloc->visible = 1;
 					hardBloc += 1;
 					hardBlocVisible++;
 				//}
 			}
+			*/
 		}
 	}
 	/*caveTest();

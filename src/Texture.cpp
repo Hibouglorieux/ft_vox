@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/10/15 16:41:40 by nathan            #+#    #+#             */
-/*   Updated: 2021/11/30 16:33:49 by nallani          ###   ########.fr       */
+/*   Updated: 2021/12/03 22:28:31 by nallani          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,7 @@
 #include "stb_image.h"
 #include <iostream>
 #include <GL/glew.h>
+#include <functional>// tmp
 
 std::map<std::string, Texture::TextureCommonData> Texture::textureLoaded = {};
 
@@ -135,6 +136,64 @@ Texture::Texture(std::vector<std::string> paths, BigHeightMap& heightMap)
 			stbi_image_free(data);
 		}
 	}
+	//glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
+}
+
+Texture::Texture(float noiseTest)
+{
+	(void)noiseTest;
+	name = "caveMap";
+	if (textureLoaded.find(name) == textureLoaded.end())
+		textureLoaded.insert(std::pair<std::string, TextureCommonData>(name, {0, 1, 0}));
+	else
+	{
+		textureLoaded[name].nbOfInstance++;
+		return;
+	}
+	glGenTextures(1, &textureLoaded[name].ID);// getting the ID from OpenGL
+	glBindTexture(GL_TEXTURE_CUBE_MAP, textureLoaded[name].ID);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	std::cout << "added new texture: " << name << textureLoaded[name].ID << std::endl; 
+	int caveMapDepth = 16;
+	/*
+#define NOISE_TEXTURE_WIDTH 16
+	float frequency = 20;
+	float amplitude = 100;
+	int octaves = 10;
+	int tableId = 1;
+	float lacunarity = 1.5;
+	float gain = -5;
+	std::function<float(float x, float z)> f = [=](float x, float z){
+		x = x / (32);
+		z = z / (32);
+		return VoxelGenerator::Noise3D(x, caveMapDepth, z, 0, frequency, amplitude, octaves, tableId, lacunarity, gain);};
+		*/
+#define NOISE_TEXTURE_WIDTH 512
+	std::function<float(float x, float z)> f = [=](float x, float z)
+	{
+		x = x / (NOISE_TEXTURE_WIDTH  / WORLEY_SIZE);
+		z = z / (NOISE_TEXTURE_WIDTH / WORLEY_SIZE);
+		float tmp = VoxelGenerator::getWorleyValueAt(x, 0, z);
+		//printf("for x:%f. z:%f i get:%f\n", x, z, tmp);
+		return tmp;
+	};
+	float* array = new float[NOISE_TEXTURE_WIDTH * NOISE_TEXTURE_WIDTH];
+	for (unsigned int i = 0; i < 6; i++)
+	{
+		for (unsigned int y = 0; y < NOISE_TEXTURE_WIDTH; y++)
+		{
+			for (unsigned int x = 0; x < NOISE_TEXTURE_WIDTH; x++)
+			{
+				array[y * NOISE_TEXTURE_WIDTH + x] = f(x, y);
+			}
+		}
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, NOISE_TEXTURE_WIDTH, NOISE_TEXTURE_WIDTH, 0, GL_RED, GL_FLOAT, array);
+	}
+	delete [] array;
 	//glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
 }
 

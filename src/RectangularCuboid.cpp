@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/08/08 17:52:01 by nathan            #+#    #+#             */
-/*   Updated: 2021/11/30 18:05:05 by nallani          ###   ########.fr       */
+/*   Updated: 2021/12/03 16:58:00 by nallani          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -142,7 +142,7 @@ void RectangularCuboid::clear()
 	initialized = false;
 }
 
-/*  unused, drawInstance is called instead
+//  unused, drawInstance is called instead
 void RectangularCuboid::draw(Vec3& pos, Shader* shader, Texture* texture)
 {
 	initialize();
@@ -150,12 +150,11 @@ void RectangularCuboid::draw(Vec3& pos, Shader* shader, Texture* texture)
 	glUniform1i(glGetUniformLocation(shader->getID(), "instanced"), 0);
 	Matrix modelMat = Matrix::createTranslationMatrix(pos);
     glUniformMatrix4fv(glGetUniformLocation(shader->getID(), "model"), 1, GL_TRUE, modelMat.exportForGL());
-	glBindTexture(GL_TEXTURE_2D, texture->getID());
+	//glBindTexture(GL_TEXTURE_2D, texture->getID());
 	//glUniform1i(glGetUniformLocation(shader->getID(), "texture0"), 0);
     glBindVertexArray(VAO);
-    glDrawArrays(GL_TRIANGLES, 0, 36);
+    glDrawArrays(GL_TRIANGLES, 0, 3);
 }
-*/
 
 void RectangularCuboid::drawInstance(Shader* shader, GLuint positionVBO, GLuint typeVBO, unsigned int count)
 {

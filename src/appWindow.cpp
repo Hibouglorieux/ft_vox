@@ -6,7 +6,7 @@
 /*   By: nathan <nallani@student.s19.be>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/05/24 01:55:16 by nathan            #+#    #+#             */
-/*   Updated: 2021/12/02 17:03:45 by nallani          ###   ########.fr       */
+/*   Updated: 2021/12/03 16:49:51 by nallani          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,13 +31,13 @@ int appWindow::init()
 		}
 		int count;
 		mode = glfwGetVideoMode(*glfwGetMonitors(&count));
-		glfwWindowHint(GLFW_SAMPLES, 4); // antilia4ing x4
+		//glfwWindowHint(GLFW_SAMPLES, 4); // antilia4ing x4
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4); // openGL 4.5
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5); // "
 		glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // To make MacOS happy; should not be needed
 		glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); // no support from old openGL
 		// Open a window and create its OpenGL context
-//		window = glfwCreateWindow(1920, 1080, PROJECT_NAME, NULL, NULL); // FHD RES (to avoid 4k at school)
+		//window = glfwCreateWindow(1920, 1080, PROJECT_NAME, NULL, NULL); // FHD RES (to avoid 4k at school)
 		window = glfwCreateWindow(mode->width, mode->height, PROJECT_NAME, NULL, NULL); // fullscreen
 
 		if( window == nullptr )

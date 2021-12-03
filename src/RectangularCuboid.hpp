@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/08/08 17:52:07 by nathan            #+#    #+#             */
-/*   Updated: 2021/11/30 18:07:21 by nallani          ###   ########.fr       */
+/*   Updated: 2021/12/03 15:55:35 by nallani          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,7 +19,7 @@
 class RectangularCuboid : public Object {
 public:
 	static void initialize();
-//	static void draw(Vec3& pos, Shader* shader, Texture* texture); unusued, drawInstance is called instead
+	static void draw(Vec3& pos, Shader* shader, Texture* texture);// unusued, drawInstance is called instead
 	static void drawInstance(Shader* shader, GLuint positionVBO, GLuint typeVBO, unsigned int count);
 	static void	clear();
 

@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/10/15 13:08:40 by nathan            #+#    #+#             */
-/*   Updated: 2021/11/05 18:28:23 by nathan           ###   ########.fr       */
+/*   Updated: 2021/12/03 22:27:10 by nallani          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,6 +23,7 @@ Gradients* VoxelGenerator::gradients = nullptr;
 Gradients* VoxelGenerator::gradients2 = nullptr;
 unsigned* VoxelGenerator::permutationTable = nullptr;
 Gradient* VoxelGenerator::grad = nullptr;
+WorleyGradient* VoxelGenerator::worleyGradient = nullptr;
 
 static const uint8_t perm[256] = {
     151, 160, 137, 91, 90, 15,
@@ -92,6 +93,7 @@ void 	VoxelGenerator::initialize(int seed, bool toDelete)
 	VoxelGenerator::initializePermutations(seed, 0);
 	VoxelGenerator::initializePermutations(seed * 1.62, 1);
 	VoxelGenerator::initializePermutations(seed * 3.24, 2);
+
 	
 	VoxelGenerator::shuffleTables(seed * 1.62, 0);
 	VoxelGenerator::shuffleTables(seed * 3.24, 1);
@@ -112,6 +114,59 @@ void	VoxelGenerator::initialize(unsigned int seed)
 		gradients = createPerlinGradient(seed);
 	if (gradients2 == nullptr)
 		gradients2 = createPerlinGradient(0xFFFFFFFF - seed);
+	if (worleyGradient == nullptr)
+		worleyGradient = createWorleyGradient(seed);
+}
+
+WorleyGradient* VoxelGenerator::createWorleyGradient(unsigned int seed)
+{
+	std::mt19937 generator(seed);
+	std::uniform_real_distribution<> distribution(0.f, 1.f);
+	auto dice = [&generator, &distribution](){return distribution(generator);};
+	WorleyGradient* worley = new WorleyGradient;
+	for (int i = 0; i < WORLEY_SIZE; i++)
+		for (int j = 0; j < WORLEY_SIZE; j++)
+			for (int k = 0; k < WORLEY_SIZE; k++)
+			{
+				float& x = (*worley)[k][i][j][0];
+				float& y = (*worley)[k][i][j][1];
+				float& z = (*worley)[k][i][j][2];
+				x = dice() - 0.5f;
+				y = dice() - 0.5f;
+				z = dice() - 0.5f;
+			}
+	for (int i = 0; i < 3; i++)
+		for (int j = 0; j < 3; j++)
+			for (int k = 0; k < 3; k++)
+			{
+				(*worley)[i][j][k].print();
+			}
+	return worley;
+}
+
+float	VoxelGenerator::getWorleyValueAt(float x, float y, float z)
+{
+	x = fmod((fmod(x, WORLEY_SIZE) + WORLEY_SIZE), WORLEY_SIZE);
+	y = fmod((fmod(y, WORLEY_SIZE) + WORLEY_SIZE), WORLEY_SIZE);
+	z = fmod((fmod(z, WORLEY_SIZE) + WORLEY_SIZE), WORLEY_SIZE);
+	float	unused;
+	Vec3 curPos(std::modf(x - 0.5, &unused), std::modf(y - 0.5, &unused), std::modf(z - 0.5, &unused));
+	//std::cout << x << std::endl;
+	//curPos.print();
+	float min = 100.f;
+	for (int yy = y -1; yy < y + 2; yy++)
+		for (int zz = z -1; zz < z + 2; zz++)
+			for (int xx = x -1; xx < x + 2; xx++)
+			{
+				if (xx != (int)x || zz != (int)z || yy != (int)y)// any of the 8 cube neighbours
+				{
+					Vec3 worleyPos((*worleyGradient)[yy][zz][xx] + (Vec3(xx - x, yy - y, zz - z)));
+					float distance = (worleyPos - curPos).getLength();
+					if (min > distance)
+						min = distance;
+				}
+			}
+	return min;
 }
 
 void	VoxelGenerator::clear()
@@ -263,6 +318,7 @@ CaveMap*	VoxelGenerator::createCaveMap(float ox, float oz, int octaves = 1, floa
 					frequency *= lacunarity;
 				}
 				*tmp = fabsf(sum);
+				std::cout << " " << *tmp << std::endl;
 			}
 	return cavemap;
 }
@@ -272,7 +328,7 @@ CaveMap*	VoxelGenerator::createCaveMap(float ox, float oz, int octaves = 1, floa
 
 float	VoxelGenerator::lerp(float a0, float a1, float w)
 {
-	return (1.0 - w) * a0 + w * a1;
+	return std::fma((1.0 - w), a0, w * a1);
 }
 
 float	VoxelGenerator::smoothstep(float t)

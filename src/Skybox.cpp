@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/10/20 18:53:42 by nathan            #+#    #+#             */
-/*   Updated: 2021/11/30 16:42:27 by nallani          ###   ########.fr       */
+/*   Updated: 2021/12/03 17:55:18 by nallani          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,10 +28,12 @@ void Skybox::initialize()
 	{"skybox/back.jpg"}};
 	
 	// heightmap call
-	BigHeightMap *bigHeightMap = VoxelGenerator::createBigMap(6, 2, 0.5);
+	//BigHeightMap *bigHeightMap = VoxelGenerator::createBigMap(6, 2, 0.5);
 	//HeightMap *heightmap = VoxelGenerator::createMap(1, 1);
-	//HeightMap* heightmap = VoxelGenerator::createMap(1, 1);
-	texture = new Texture(names, *bigHeightMap);
+	//texture = new Texture(names, *bigHeightMap);
+
+	//texture = new Texture(names, *caveMap);
+	texture = new Texture(42);// noiseTest
 	 
 	glActiveTexture(GL_TEXTURE0 + TEXTURECOUNT);// TODO this is a shortcut and is simply added as the last array of textures using, should be included in the enum or have a better variable name
 	glBindTexture(GL_TEXTURE_CUBE_MAP, texture->getID());
@@ -96,7 +98,6 @@ void Skybox::initialize()
 
 void Skybox::draw(Matrix& precalculatedMat)
 {
-	glDisable(GL_DEPTH_TEST);
 	shader->use();
 	glUniformMatrix4fv(glGetUniformLocation(shader->getID(), "precalcMat"), 1, GL_TRUE, precalculatedMat.exportForGL());
 	glUniform1i(glGetUniformLocation(shader->getID(), "skyboxTexture"), TEXTURECOUNT);

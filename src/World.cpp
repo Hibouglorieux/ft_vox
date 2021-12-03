@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/07/21 18:11:30 by nathan            #+#    #+#             */
-/*   Updated: 2021/12/02 19:14:00 by nallani          ###   ########.fr       */
+/*   Updated: 2021/12/03 17:09:49 by nallani          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -125,11 +125,15 @@ void World::render()
 
 
 	// draw skybox
-	//Skybox::draw(precalculatedMat);
+	glDisable(GL_DEPTH_TEST);
+	glDisable(GL_CULL_FACE);
+	Skybox::draw(precalculatedMat);
 
 	// draw chunks
-	shader->use();
 	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_BACK);// renders only visible squares of cubes
+	shader->use();
 	glUniformMatrix4fv(glGetUniformLocation(shader->getID(), "precalcMat"), 1, GL_TRUE, precalculatedMat.exportForGL());
 	glUniformMatrix4fv(glGetUniformLocation(shader->getID(), "view"), 1, GL_TRUE, camera.getMatrix().exportForGL());
 
@@ -143,8 +147,10 @@ void World::render()
 	glUniform1i(glGetUniformLocation(shader->getID(), "bedrock"), BLOCK_BEDROCK);
 
 	ResourceManager::bindTextures();
-	//Vec3 tmpToDel;
-	//RectangularCuboid::draw(tmpToDel, shader, nullptr);// One cube for test
+	/*
+	Vec3 tmpToDel;
+	RectangularCuboid::draw(tmpToDel, shader, nullptr);// One cube for test
+	*/
 	std::vector<std::pair<Vec2, Chunk*>> chunksToRender;
 	for (auto it : visibleChunks)
 	{

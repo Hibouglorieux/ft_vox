@@ -6,7 +6,7 @@
 /*   By: nathan <nallani@student.s19.be>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/05/24 01:52:59 by nathan            #+#    #+#             */
-/*   Updated: 2021/11/30 18:06:29 by nallani          ###   ########.fr       */
+/*   Updated: 2021/12/03 20:15:45 by nallani          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,24 +35,29 @@ int	initialize()
 	RectangularCuboid::initialize();
 
 	// openGL parameters
-	glEnable(GL_CULL_FACE);
-	glEnable(GL_DEPTH_TEST);
 	glClearColor(0.2, 0.2, 0.2, 1.0f);
-	//glCullFace(GL_BACK);// renders only visible squares of cubes
 
 	return (1);
 }
 
 int		main( int argc, char *argv[] )
 {
-	if (!initialize())
-		return (0);
-
 	unsigned long	seed = DEFAULT_SEED; //std::srand(std::time(nullptr));
 	if (argc > 1)
 	{
-		seed = stoi(argv[1]);
+		try
+		{
+			seed = stoi(argv[1]);
+		}
+		catch(...)
+		{
+			std::cout << "usage: ft_vox [seed]" << std::endl;
+			return (0);
+		}
 	}
+
+	if (!initialize())
+		return (0);
 
 	ResourceManager::loadPack();
 
@@ -63,6 +68,7 @@ int		main( int argc, char *argv[] )
 	Loop::setWorld(world);
 	
 	Loop::loop();
+	std::cout << glGetError() << std::endl;
 	delete world;
 	VoxelGenerator::clear();
 	RectangularCuboid::clear();

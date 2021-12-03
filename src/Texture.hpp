@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/10/15 16:41:42 by nathan            #+#    #+#             */
-/*   Updated: 2021/11/29 19:59:27 by nallani          ###   ########.fr       */
+/*   Updated: 2021/12/03 17:54:45 by nallani          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,6 +29,7 @@ public:
 	Texture(std::vector<std::string> paths, std::string textureName);
 	Texture(std::vector<std::string> paths, BigHeightMap& heightMap);
 	Texture(std::vector<std::string> paths, HeightMap& heightMap, bool smoll);
+	Texture(float NoiseTest = 42);
 	Texture(HeightMap& heightMap);
 	~Texture(void);
 	unsigned int getID() const;
