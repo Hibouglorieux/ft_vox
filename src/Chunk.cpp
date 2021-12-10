@@ -5,6 +5,8 @@
 #define MAX(x, y) (x)//(x > y ? x : y)
 #define TMP_SLEEP_VALUE 0.05 * SEC_TO_MICROSEC
 
+#define NO_TYPE 99
+
 
 int Chunk::totalChunks = 0;
 
@@ -101,24 +103,41 @@ void Chunk::initChunk(void)
 	//heightMap = VoxelGenerator::createMap(position.x / CHUNK_WIDTH, position.z / CHUNK_DEPTH);
 	/*heightMap = VoxelGenerator::createMap(position.x / CHUNK_WIDTH,
 	  position.z / CHUNK_DEPTH, 7, 2.51525f, 0.7567f);*/
-	/*heightMap = VoxelGenerator::createMap(position.x / CHUNK_WIDTH,
-			position.z / CHUNK_DEPTH, 8, 2, 0.5);*/
+	heightMap = VoxelGenerator::createMap(position.x / CHUNK_WIDTH,
+			position.z / CHUNK_DEPTH, 1, 1, 1);
 	/*caveMap = VoxelGenerator::createCaveMap(position.x / CHUNK_WIDTH,
 			position.z / CHUNK_DEPTH, 5, 3, 0.5);*/
-	heightMap = nullptr;
+	//heightMap = nullptr;
 	caveMap = nullptr;
 	// Set bloc type
 	for(unsigned int z = 0; z < CHUNK_DEPTH; z++)
 	{
 		for(unsigned int x = 0; x < CHUNK_WIDTH; x++)
 		{
+			/*
 			bloc = &(blocs[0][z][x]);
-			bloc->type = 99;
+			bloc->type = NO_TYPE;
 			bloc->visible = 0; // will be updated after with updateVisibility
 
 			float blockValue = this->getBlockBiome(x, z);
 			(void)blockValue;
+			*/
 
+			float blockValue = (*heightMap)[z][x] * CHUNK_HEIGHT - 1;
+			for (int y = 0; y < CHUNK_HEIGHT; y++)
+			{
+				bloc = &(blocs[y][z][x]);
+				if (y < blockValue || y <= WATER_LEVEL)
+				{
+					bloc->type = BLOCK_GRASS;
+					hardBloc += 1;
+				}
+				else
+				{
+					bloc->type = NO_TYPE;
+					bloc->visible = 0;
+				}
+			}
 			//float blockValue = SimplexNoise::getBlockBiome(position.x - x, position.z - z, x, z);
 			//float blockValue = (*heightMap)[z][x];
 			//float blockValue = VoxelGenerator::Noise2D(position.x + x, position.z + z, 0.5f, 0.0006f, 0.55f, 8, 0);
@@ -137,7 +156,7 @@ void Chunk::initChunk(void)
 				//std::cout << cavernValue << std::endl;
 				if (cavernValue < 0.5)
 				{
-					bloc->type = 99;
+					bloc->type = NO_TYPE;
 					bloc->visible = 0;
 				}
 				else
@@ -151,11 +170,12 @@ void Chunk::initChunk(void)
 			*/
 		}
 	}
+	worleyCaveTest();
 	/*caveTest();
 	if (CHUNK_HEIGHT <= 64) // TODO : Make better function, this one crash with HEIGHT > 64
 		destroyIlots();*/
 
-	//updateVisibility();
+	updateVisibility();
 	//if (position.x == 0 && position.z == 0)
 		//std::cout << hardBlocVisible << std::endl;;
 	init = true;
@@ -185,22 +205,53 @@ void Chunk::initChunk(void)
 void	Chunk::caveTest() // destroying blocks following a 3d map to generate caves
 {
 	struct bloc	*bloc;
-	for(unsigned int y = 3; y < CHUNK_HEIGHT; y++)// random number, can dig lower than 3
+	for(unsigned int y = 1; y < CHUNK_HEIGHT; y++)// random number, can't dig lower than 3
 		for(unsigned int x = 0; x < CHUNK_WIDTH; x++)
 			for(unsigned int z = 0; z < CHUNK_DEPTH; z++)
 			{
 				if (y >= 64.0f)
 					continue;
 				bloc = &(blocs[y][z][x]);
-				if (bloc->type != 99) // block exists
+				if (bloc->type != NO_TYPE) // block exists
 					if ((*caveMap)[y][z][x] >= 0.4f) // random value
 					{			
 						texture = ResourceManager::getBlockTexture(BLOCK_STONE);
 
 						// destroy the block
-						bloc->type = 99;
+						bloc->type = NO_TYPE;
+						bloc->visible = 0;
 						hardBloc--;
+						hardBlocVisible--;
 					}
+			}
+}
+
+void	Chunk::worleyCaveTest() // destroying blocks following a 3d worley noise to generate caves
+{
+	struct bloc	*bloc;
+	for(unsigned int y = 3; y < CHUNK_HEIGHT; y++)// random number, can't dig lower than 3, cant dig higher than floor
+		for(unsigned int x = 0; x < CHUNK_WIDTH; x++)
+			for(unsigned int z = 0; z < CHUNK_DEPTH; z++)
+			{
+				//if (y >= )// TODO add condition here to make it not being able to make a hole through a mountain (keep it below floor/water level ?). Also needs coherent noise that doesnt start at 0.6f of CHUNK_HEIGHT as minimum result
+					//continue;
+				bloc = &(blocs[y][z][x]);
+				if (bloc->type != NO_TYPE) // block exists // broken with type because lol
+				{
+					float xScaled = x / (float)CHUNK_WIDTH + position.x / CHUNK_WIDTH;
+					float yScaled = y / (float)CHUNK_HEIGHT;
+					float zScaled = z / (float)CHUNK_DEPTH + position.z / CHUNK_DEPTH;
+					if (VoxelGenerator::getWorleyValueAt(xScaled, yScaled, zScaled) >= 0.8f) // random value
+					{			
+
+						//texture = ResourceManager::getBlockTexture(BLOCK_STONE);
+						// destroy the block
+						bloc->type = NO_TYPE;
+						bloc->visible = 0;
+						hardBloc--;
+						hardBlocVisible--;
+					}
+				}
 			}
 }
 
@@ -229,9 +280,9 @@ void Chunk::destroyIlots()
 				if (blocsTests[y - 1][z][x] == 1)
 					continue;
 				block = &(blocs[y - 1][z][x]);
-				if (block->type == 99)
+				if (block->type == NO_TYPE)
 					continue;
-				else if (block->type != 99)
+				else if (block->type != NO_TYPE)
 				{
 					blockGroup.clear();
 					pos = Vec3(x, y - 1, z);
@@ -240,7 +291,7 @@ void Chunk::destroyIlots()
 					{
 						for (auto it = blockGroup.begin(); it != blockGroup.end(); it++)
 						{
-							(*it)->type = 99;
+							(*it)->type = NO_TYPE;
 						}
 					}
 					blockGroup.clear();
@@ -262,7 +313,7 @@ bool Chunk::destroyIlotsSearchAndDestroy(struct bloc *block, Vec3 pos, std::vect
 	(blocsTests[y][z][x]) = 1;
 	blockGroup->push_back(block);
 
-	if (pos.y == 0 && block->type != 99)	// Block is the floor, group is valid, we only keep visited block in memory, clear blockGroup
+	if (pos.y == 0 && block->type != NO_TYPE)	// Block is the floor, group is valid, we only keep visited block in memory, clear blockGroup
 	{
 		blockGroup->clear();
 		return true;
@@ -271,32 +322,32 @@ bool Chunk::destroyIlotsSearchAndDestroy(struct bloc *block, Vec3 pos, std::vect
 	//	First we retrieve the neighbors, avoid the one we already visited
 	std::vector<struct bloc*>	neighbors = {};
 	std::vector<Vec3>			neighborsPos = {};
-	if (y > 0 && (blocs[y - 1][z][x]).type != 99)
+	if (y > 0 && (blocs[y - 1][z][x]).type != NO_TYPE)
 	{
 		neighbors.push_back(&(blocs[y - 1][z][x]));
 		neighborsPos.push_back(Vec3(x, y - 1, z));
 	}
-	if (y < CHUNK_HEIGHT - 1 && (blocs[y + 1][z][x]).type != 99)
+	if (y < CHUNK_HEIGHT - 1 && (blocs[y + 1][z][x]).type != NO_TYPE)
 	{
 		neighbors.push_back(&(blocs[y + 1][z][x]));
 		neighborsPos.push_back(Vec3(x, y + 1, z));
 	}
-	if (x > 0 && (blocs[y][z][x - 1]).type != 99)
+	if (x > 0 && (blocs[y][z][x - 1]).type != NO_TYPE)
 	{
 		neighbors.push_back(&(blocs[y][z][x - 1]));
 		neighborsPos.push_back(Vec3(x - 1, y, z));
 	}
-	if (x < CHUNK_WIDTH - 1 && (blocs[y][z][x + 1]).type != 99)
+	if (x < CHUNK_WIDTH - 1 && (blocs[y][z][x + 1]).type != NO_TYPE)
 	{
 		neighbors.push_back(&(blocs[y][z][x + 1]));
 		neighborsPos.push_back(Vec3(x + 1, y, z));
 	}
-	if (z > 0 && (blocs[y][z - 1][x]).type != 99)
+	if (z > 0 && (blocs[y][z - 1][x]).type != NO_TYPE)
 	{
 		neighbors.push_back(&(blocs[y][z - 1][x]));
 		neighborsPos.push_back(Vec3(x, y, z - 1));
 	}
-	if (z < CHUNK_DEPTH - 1 && (blocs[y][z + 1][x]).type != 99)
+	if (z < CHUNK_DEPTH - 1 && (blocs[y][z + 1][x]).type != NO_TYPE)
 	{
 		neighbors.push_back(&(blocs[y][z + 1][x]));
 		neighborsPos.push_back(Vec3(x, y, z + 1));
@@ -339,7 +390,7 @@ void Chunk::updateVisibilityWithNeighbour(Vec2 NeighbourPos, const BlocData& nei
 			for (int z = 0; z < CHUNK_DEPTH; z++)
 			{
 				struct bloc& bloc = blocs[y][z][x];
-				if (bloc.type != 99 && !bloc.visible && neighbourBlocs[y][z][neighbourX].type == 99)
+				if (bloc.type != NO_TYPE && !bloc.visible && neighbourBlocs[y][z][neighbourX].type == NO_TYPE)
 				{
 					hardBlocVisible++;
 					bloc.visible = true;
@@ -355,7 +406,7 @@ void Chunk::updateVisibilityWithNeighbour(Vec2 NeighbourPos, const BlocData& nei
 			for (int x = 0; x < CHUNK_WIDTH; x++)
 			{
 				struct bloc& bloc = blocs[y][z][x];
-				if (bloc.type != 99 && !bloc.visible && neighbourBlocs[y][neighbourZ][x].type == 99)
+				if (bloc.type != NO_TYPE && !bloc.visible && neighbourBlocs[y][neighbourZ][x].type == NO_TYPE)
 				{
 					hardBlocVisible++;
 					bloc.visible = true;
@@ -391,7 +442,7 @@ void Chunk::updateVisibility(void)
 			for(int x = CHUNK_WIDTH; x > 0; x--)
 			{
 				bloc = &(blocs[y - 1][z - 1][x - 1]);
-				if (bloc->type != 99)
+				if (bloc->type != NO_TYPE)
 				{
 					setVisibilityByNeighbors(x - 1, y - 1, z - 1);
 					if (bloc->visible == true)
@@ -426,14 +477,14 @@ void Chunk::setVisibilityByNeighbors(int x, int y, int z) // Activates visibilit
 		neighbors.push_back(&(blocs[y][z + 1][x]));
 	for (struct bloc *nei: neighbors)
 	{
-		if (nei->type == 99)
+		if (nei->type == NO_TYPE)
 		{
 			bloc->visible = true;
 			//set = true;
 			//break;
 		}
-		//hardNei += nei->type != 99 ? 1 : 0;
-		//invisibleNei += nei->type == 99 || bloc->visible == false ? 1 : 0;
+		//hardNei += nei->type != NO_TYPE ? 1 : 0;
+		//invisibleNei += nei->type == NO_TYPE || bloc->visible == false ? 1 : 0;
 	}
 	//if (hardNei == neighbors.size())
 		//bloc->visible = false;

@@ -56,6 +56,7 @@ private:
 	void	updateVisibility(void);
 	void	setVisibilityByNeighbors(int x, int y, int z);
 	void	caveTest();
+	void	worleyCaveTest();
 	void	destroyIlots();
 	bool 	destroyIlotsSearchAndDestroy(struct bloc *block, Vec3 pos, std::vector<struct bloc*> *blockGroup);
 	bool	generatePosOffsets();
