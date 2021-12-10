@@ -22,7 +22,7 @@
 # include "Vec2.hpp"
 # include <map>
 
-# define VIEW_DISTANCE 240
+# define VIEW_DISTANCE 320
 # define ROW_OF_CHUNK 8
 # define CHUNK_VIEW_DISTANCE (VIEW_DISTANCE / CHUNK_WIDTH + 1)
 //# define CHUNK_VIEW_DISTANCE 1

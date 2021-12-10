@@ -49,7 +49,10 @@ void main()
 	{
 		//tmp = tex;
 		if (tmp == 0)
-			FragColor = texture(water, texCoord);
+		{
+			FragColor = vec4(0, 177.0 / 255.0, 254.0 / 255.0, 1.0); // show in red to debug
+			//FragColor = texture(water, texCoord);
+		}
 		else if (tmp == 1)
 			FragColor = texture(sand, texCoord);
 		else if (tmp == 2)

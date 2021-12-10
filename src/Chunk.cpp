@@ -47,23 +47,23 @@ float Chunk::getBlockBiome(int x, int z)
 	float flatTerrain = VoxelGenerator::Noise2D(position.x + x, position.z + z, 0.2f, 0.00033f, 0.45f, 4, 0, 2, 0.65); // Kind of flat
 	flatTerrain = pow(flatTerrain * 0.75, 2);
 	
-	//float heightValue = VoxelGenerator::Noise2D(position.x + x, position.z + z, 0.0f, 0.00025f, 2.66f, 2, 1, 2.45, 0.55); // Big hills or mountains ?
-	//float heightValue = VoxelGenerator::Noise2D(position.x + x, position.z + z, 0.0f, 0.005f, 0.66f, 1, 1, 2, 1); // Initial form of mountains
-	float moutainBiomeValue = VoxelGenerator::Noise2D(position.x + x, position.z + z, 0.2f, 0.000125f, 0.75f, 2, 1, 4, 1); // Nice moutains ? (flat with 2 octaves instead of 1)
-	//float heightValue = VoxelGenerator::Noise2D(position.x + x, position.z + z, 0.0f, 0.0025f, 1.2f, 1, 1); // Nice moutains ?
+	//float moutainBiomeValue = VoxelGenerator::Noise2D(position.x + x, position.z + z, 0.0f, 0.00025f, 2.66f, 2, 1, 2.45, 0.55); // Big hills or mountains ?
+	//float moutainBiomeValue = VoxelGenerator::Noise2D(position.x + x, position.z + z, 0.0f, 0.005f, 0.66f, 1, 1, 2, 1); // Initial form of mountains
+	float moutainBiomeValue = VoxelGenerator::Noise2D(position.x + x, position.z + z, 0.2f, 0.00006125f, 0.75f, 2, 1, 4, 1); // Nice moutains ? (flat with 2 octaves instead of 1)
 
-	float desertBiomeValue = VoxelGenerator::Noise2D(position.x + x, position.z + z, 0.0f, 0.00023f, 0.645f, 4, 0, 2, 0.75); //
+	float desertBiomeValue = VoxelGenerator::Noise2D(position.x + x, position.z + z, 0.0f, 0.00023f, 0.545f, 4, 0, 2, 0.75); // Nice desert, kinda flat with lots of hills
 
 	float heightValue = (flatTerrain * (HEIGHT - 1) * 0.66);
 
 	blockType btype = BLOCK_GRASS;
+	//blockType btype = BLOCK_SAND;
 
-	if (moutainBiomeValue > 0.65) // TODO : Set textures (stone/snow) and add decoration (trees ?)
+	if (moutainBiomeValue > 0.65) // TODO : Add decoration (trees ?)
 	{
 		//std::cout << moutainBiomeValue << std::endl;
 		if (moutainBiomeValue < 0.75) // If value is inferior to 0.70, we smooth the passage from mountain to other biome
 		{
-			float moutainTerrain = VoxelGenerator::Noise2D(position.x + x, position.z + z, 0.15f, 0.00225f, 1.5f, 1, 0, 3, 0.65); // Nice moutains!
+			float moutainTerrain = VoxelGenerator::Noise2D(position.x + x, position.z + z, 0.15f, 0.00225f, 1.25f, 1, 0, 3, 0.65); // Nice moutains!
 			moutainTerrain = pow(moutainTerrain, 1.66);
 			float biomeRange = (0.75 - 0.65);
 			float surfaceRange = (moutainTerrain - flatTerrain);
@@ -74,7 +74,7 @@ float Chunk::getBlockBiome(int x, int z)
 		}
 		else	// Biome is fully mountain
 		{
-			float moutainTerrain = VoxelGenerator::Noise2D(position.x + x, position.z + z, 0.15f, 0.00225f, 1.5f, 1, 0, 3, 1.65); // Nice moutains!
+			float moutainTerrain = VoxelGenerator::Noise2D(position.x + x, position.z + z, 0.15f, 0.00225f, 1.25f, 1, 0, 1, 1.65); // Nice moutains!
 			moutainTerrain = pow(moutainTerrain, 1.66);// * 0.65;
 			heightValue = (moutainTerrain * (HEIGHT - 1) * 0.66);
 			btype = BLOCK_STONE;
@@ -86,36 +86,11 @@ float Chunk::getBlockBiome(int x, int z)
 	{
 		// Create a little mountain biome ? Or canyon or i don't know what
 	}
-	else if (desertBiomeValue < 0.2)
+	else if (desertBiomeValue > 0.5f)
 	{
-		btype = BLOCK_SAND;
-		if (desertBiomeValue > 0.175)
-		{
-			btype = BLOCK_SAND;
-			if (heightValue <= 32)
-				btype = BLOCK_WATER;
-			else
-			{
-				// Complexify terrain or generate props
-			}
-		}
-		else
-		{
-			btype = BLOCK_SAND;
-			if (heightValue <= 32)
-				btype = BLOCK_WATER;
-			else
-			{
-				// Complexify terrain or generate props
-			}
-		}
+
 	}
-	else if (desertBiomeValue > 0.72)
-	{
-		btype = BLOCK_SAND;
-		if (heightValue <= 32)
-			btype = BLOCK_WATER;
-	}
+	// Add desert biome
 	
 	//float deleteNoise = VoxelGenerator::Noise2D(position.x + x, position.z + z, 0.2, 0.0045, 0.065, 2, 3, 2, 0.5); // Noise used to create hole / entrance to caves in the ground
 	//std::cout << deleteNoise << std::endl;
@@ -185,7 +160,7 @@ void Chunk::initChunk(void)
 				}
 				else
 				{*/
-					bloc->type = BLOCK_GRASS;
+					bloc->type = blocs[blockValue][z][x].type;
 					bloc->visible = 1;
 					hardBloc += 1;
 					hardBlocVisible++;

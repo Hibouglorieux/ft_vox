@@ -70,7 +70,7 @@ void Camera::move(bool forward, bool backward, bool right, bool left, float spee
 		realMovement += Matrix::createRotationMatrix(Matrix::RotationDirection::Y, -90) * moveDir;
 	}
 	pos += realMovement.getNormalized() * speedFactor;
-	std::cout << pos.x << " | " << pos.z << std::endl;
+	//std::cout << pos.x << " | " << pos.z << std::endl;
 }
 
 Vec3 Camera::getDirection() const

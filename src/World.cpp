@@ -127,7 +127,7 @@ void World::render()
 	// draw skybox
 	glDisable(GL_DEPTH_TEST);
 	glDisable(GL_CULL_FACE);
-	Skybox::draw(precalculatedMat);
+	//Skybox::draw(precalculatedMat);
 
 	// draw chunks
 	glEnable(GL_DEPTH_TEST);
