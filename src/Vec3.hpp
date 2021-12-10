@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/05/26 16:12:34 by nathan            #+#    #+#             */
-/*   Updated: 2021/10/18 12:25:46 by nathan           ###   ########.fr       */
+/*   Updated: 2021/12/10 16:49:23 by nallani          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,6 +49,7 @@ public:
 	Vec3 operator-() const;
 	float at(const int i) const;
 	float& operator[]( const int i );
+	friend std::ostream& operator<<(std::ostream& os, const Vec3& vec);
 
 	float x, y, z;
 private:

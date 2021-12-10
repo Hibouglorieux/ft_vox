@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/10/15 13:08:43 by nathan            #+#    #+#             */
-/*   Updated: 2021/12/03 19:34:00 by nallani          ###   ########.fr       */
+/*   Updated: 2021/12/10 16:55:23 by nallani          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -102,7 +102,6 @@ private:
 	static void shuffleTables(int seed, int tableId);
 
 	static float simplexNoise2D(float x, float y, int tableId);
-
 };
 
 #endif

@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/10/15 13:08:40 by nathan            #+#    #+#             */
-/*   Updated: 2021/12/10 14:21:00 by nallani          ###   ########.fr       */
+/*   Updated: 2021/12/10 16:56:03 by nallani          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -135,12 +135,14 @@ WorleyGradient* VoxelGenerator::createWorleyGradient(unsigned int seed)
 				y = dice() - 0.5f;
 				z = dice() - 0.5f;
 			}
+	/*
 	for (int i = 0; i < 3; i++)
 		for (int j = 0; j < 3; j++)
 			for (int k = 0; k < 3; k++)
 			{
 				(*worley)[i][j][k].print();
 			}
+			*/
 	return worley;
 }
 
@@ -150,24 +152,19 @@ float	VoxelGenerator::getWorleyValueAt(float x, float y, float z)
 	y = fmod((fmod(y, WORLEY_SIZE) + WORLEY_SIZE), WORLEY_SIZE);
 	z = fmod((fmod(z, WORLEY_SIZE) + WORLEY_SIZE), WORLEY_SIZE);
 	float	unused;
-	Vec3 curPos(std::modf(x - 0.5, &unused), std::modf(y - 0.5, &unused), std::modf(z - 0.5, &unused));
-	//std::cout << x << std::endl;
-	//curPos.print();
+	Vec3 curPos(std::modf(x, &unused) - 0.5, std::modf(y, &unused) - 0.5, std::modf(z, &unused) - 0.5);// where is that point in the cube
 	float min = 100.f;
 	for (int yy = y -1; yy < y + 2; yy++)
 		for (int zz = z -1; zz < z + 2; zz++)
 			for (int xx = x -1; xx < x + 2; xx++)
 			{
-				if (xx != (int)x || zz != (int)z || yy != (int)y)// any of the 8 cube neighbours
-				{
-					int xClamp = (xx % WORLEY_SIZE + WORLEY_SIZE) % WORLEY_SIZE;
-					int yClamp = (xx % WORLEY_SIZE + WORLEY_SIZE) % WORLEY_SIZE;
-					int zClamp = (xx % WORLEY_SIZE + WORLEY_SIZE) % WORLEY_SIZE;
-					Vec3 worleyPos((*worleyGradient)[yClamp][zClamp][xClamp] + (Vec3(xx - x, yy - y, zz - z)));
-					float distance = (worleyPos - curPos).getLength();
-					if (min > distance)
-						min = distance;
-				}
+				int xClamp = (xx % WORLEY_SIZE + WORLEY_SIZE) % WORLEY_SIZE;
+				int yClamp = (yy % WORLEY_SIZE + WORLEY_SIZE) % WORLEY_SIZE;
+				int zClamp = (zz % WORLEY_SIZE + WORLEY_SIZE) % WORLEY_SIZE;
+				Vec3 worleyPos((*worleyGradient)[xClamp][yClamp][zClamp] + (Vec3(xx - (int)x, yy - (int)y, zz - (int)z))); //
+				float distance = (worleyPos - curPos).getLength();
+				if (min > distance)
+					min = distance;
 			}
 	return min;
 }

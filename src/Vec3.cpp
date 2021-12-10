@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/05/26 16:12:31 by nathan            #+#    #+#             */
-/*   Updated: 2021/10/18 12:26:56 by nathan           ###   ########.fr       */
+/*   Updated: 2021/12/10 16:49:44 by nallani          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -175,6 +175,12 @@ Vec3& Vec3::operator=(const Vec3& rhs)
 	this->z = rhs.z;
 	return *this;
 
+}
+
+std::ostream& operator<<(std::ostream& os, const Vec3& vec)
+{
+	os << vec.toString();
+	return os;
 }
 
 const Vec3 Vec3::ZERO(0, 0 ,0);

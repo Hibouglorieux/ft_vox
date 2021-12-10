@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/10/15 16:41:40 by nathan            #+#    #+#             */
-/*   Updated: 2021/12/10 14:25:24 by nallani          ###   ########.fr       */
+/*   Updated: 2021/12/10 16:23:21 by nallani          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -177,20 +177,20 @@ Texture::Texture(float noiseTest)
 	{
 		x = x * ((float)WORLEY_SIZE / (float)NOISE_TEXTURE_WIDTH);
 		z = z * ((float)WORLEY_SIZE / (float)NOISE_TEXTURE_WIDTH);
-		float tmp = VoxelGenerator::getWorleyValueAt(x, z, caveMapDepth);
+		float tmp = VoxelGenerator::getWorleyValueAt(x, caveMapDepth, z);
 		//printf("for x:%f. z:%f i get:%f\n", x, z, tmp);
 		return tmp;
 	};
 	float* array = new float[NOISE_TEXTURE_WIDTH * NOISE_TEXTURE_WIDTH];
+	for (unsigned int y = 0; y < NOISE_TEXTURE_WIDTH; y++)
+	{
+		for (unsigned int x = 0; x < NOISE_TEXTURE_WIDTH; x++)
+		{
+			array[y * NOISE_TEXTURE_WIDTH + x] = f(x, y);
+		}
+	}
 	for (unsigned int i = 0; i < 6; i++)
 	{
-		for (unsigned int y = 0; y < NOISE_TEXTURE_WIDTH; y++)
-		{
-			for (unsigned int x = 0; x < NOISE_TEXTURE_WIDTH; x++)
-			{
-				array[y * NOISE_TEXTURE_WIDTH + x] = f(x, y);
-			}
-		}
 		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, NOISE_TEXTURE_WIDTH, NOISE_TEXTURE_WIDTH, 0, GL_RED, GL_FLOAT, array);
 	}
 	delete [] array;
