@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/10/15 16:41:40 by nathan            #+#    #+#             */
-/*   Updated: 2021/12/03 22:28:31 by nallani          ###   ########.fr       */
+/*   Updated: 2021/12/10 14:25:24 by nallani          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -175,9 +175,9 @@ Texture::Texture(float noiseTest)
 #define NOISE_TEXTURE_WIDTH 512
 	std::function<float(float x, float z)> f = [=](float x, float z)
 	{
-		x = x / (NOISE_TEXTURE_WIDTH  / WORLEY_SIZE);
-		z = z / (NOISE_TEXTURE_WIDTH / WORLEY_SIZE);
-		float tmp = VoxelGenerator::getWorleyValueAt(x, 0, z);
+		x = x * ((float)WORLEY_SIZE / (float)NOISE_TEXTURE_WIDTH);
+		z = z * ((float)WORLEY_SIZE / (float)NOISE_TEXTURE_WIDTH);
+		float tmp = VoxelGenerator::getWorleyValueAt(x, z, caveMapDepth);
 		//printf("for x:%f. z:%f i get:%f\n", x, z, tmp);
 		return tmp;
 	};

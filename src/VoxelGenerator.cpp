@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/10/15 13:08:40 by nathan            #+#    #+#             */
-/*   Updated: 2021/12/03 22:27:10 by nallani          ###   ########.fr       */
+/*   Updated: 2021/12/10 14:21:00 by nallani          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -75,7 +75,7 @@ void	VoxelGenerator::shuffleTables(int seed, int tableId) // Fisher-Yates
 	std::uniform_real_distribution<> distribution(0.f, 1.f);
 	auto dice = [&generator, &distribution](){return distribution(generator);};
 
-	for (int i = permsP[tableId].size(); i > 0; i--)
+	for (int i = permsP[tableId].size() - 1; i > 0; i--)
 	{
 		int j = (int)dice() * (i - 0.0001);
 		int a = permsP[tableId][i];
@@ -160,7 +160,10 @@ float	VoxelGenerator::getWorleyValueAt(float x, float y, float z)
 			{
 				if (xx != (int)x || zz != (int)z || yy != (int)y)// any of the 8 cube neighbours
 				{
-					Vec3 worleyPos((*worleyGradient)[yy][zz][xx] + (Vec3(xx - x, yy - y, zz - z)));
+					int xClamp = (xx % WORLEY_SIZE + WORLEY_SIZE) % WORLEY_SIZE;
+					int yClamp = (xx % WORLEY_SIZE + WORLEY_SIZE) % WORLEY_SIZE;
+					int zClamp = (xx % WORLEY_SIZE + WORLEY_SIZE) % WORLEY_SIZE;
+					Vec3 worleyPos((*worleyGradient)[yClamp][zClamp][xClamp] + (Vec3(xx - x, yy - y, zz - z)));
 					float distance = (worleyPos - curPos).getLength();
 					if (min > distance)
 						min = distance;
