@@ -44,14 +44,19 @@ Chunk::Chunk(int x, int z, std::vector<std::pair<Vec2, Chunk*>> neighbours) : Ch
 
 float Chunk::getBlockBiome(int x, int z)
 {
-	float flatTerrain = VoxelGenerator::Noise2D(position.x + x, position.z + z, 0.0f, 0.00033f, 0.45f, 4, 0, 2, 0.65); // Kind of flat
+	float flatTerrain = VoxelGenerator::Noise2D(position.x + x, position.z + z, 0.2f, 0.00033f, 0.45f, 4, 0, 2, 0.65); // Kind of flat
 	flatTerrain = pow(flatTerrain * 0.75, 2);
+	
 	//float heightValue = VoxelGenerator::Noise2D(position.x + x, position.z + z, 0.0f, 0.00025f, 2.66f, 2, 1, 2.45, 0.55); // Big hills or mountains ?
 	//float heightValue = VoxelGenerator::Noise2D(position.x + x, position.z + z, 0.0f, 0.005f, 0.66f, 1, 1, 2, 1); // Initial form of mountains
-	float moutainBiomeValue = VoxelGenerator::Noise2D(position.x + x, position.z + z, 0.0f, 0.000125f, 0.75f, 2, 1, 4, 1); // Nice moutains ? (flat with 2 octaves instead of 1)
+	float moutainBiomeValue = VoxelGenerator::Noise2D(position.x + x, position.z + z, 0.2f, 0.000125f, 0.75f, 2, 1, 4, 1); // Nice moutains ? (flat with 2 octaves instead of 1)
 	//float heightValue = VoxelGenerator::Noise2D(position.x + x, position.z + z, 0.0f, 0.0025f, 1.2f, 1, 1); // Nice moutains ?
 
+	float desertBiomeValue = VoxelGenerator::Noise2D(position.x + x, position.z + z, 0.0f, 0.00023f, 0.645f, 4, 0, 2, 0.75); //
+
 	float heightValue = (flatTerrain * (HEIGHT - 1) * 0.66);
+
+	blockType btype = BLOCK_GRASS;
 
 	if (moutainBiomeValue > 0.65) // TODO : Set textures (stone/snow) and add decoration (trees ?)
 	{
@@ -72,19 +77,57 @@ float Chunk::getBlockBiome(int x, int z)
 			float moutainTerrain = VoxelGenerator::Noise2D(position.x + x, position.z + z, 0.15f, 0.00225f, 1.5f, 1, 0, 3, 1.65); // Nice moutains!
 			moutainTerrain = pow(moutainTerrain, 1.66);// * 0.65;
 			heightValue = (moutainTerrain * (HEIGHT - 1) * 0.66);
+			btype = BLOCK_STONE;
+			if (heightValue > 130)
+				btype = BLOCK_SNOW;
 		}
 	}
 	else if (moutainBiomeValue < 0.55)
 	{
 		// Create a little mountain biome ? Or canyon or i don't know what
-	}	
+	}
+	else if (desertBiomeValue < 0.2)
+	{
+		btype = BLOCK_SAND;
+		if (desertBiomeValue > 0.175)
+		{
+			btype = BLOCK_SAND;
+			if (heightValue <= 32)
+				btype = BLOCK_WATER;
+			else
+			{
+				// Complexify terrain or generate props
+			}
+		}
+		else
+		{
+			btype = BLOCK_SAND;
+			if (heightValue <= 32)
+				btype = BLOCK_WATER;
+			else
+			{
+				// Complexify terrain or generate props
+			}
+		}
+	}
+	else if (desertBiomeValue > 0.72)
+	{
+		btype = BLOCK_SAND;
+		if (heightValue <= 32)
+			btype = BLOCK_WATER;
+	}
 	
 	//float deleteNoise = VoxelGenerator::Noise2D(position.x + x, position.z + z, 0.2, 0.0045, 0.065, 2, 3, 2, 0.5); // Noise used to create hole / entrance to caves in the ground
 	//std::cout << deleteNoise << std::endl;
 
+	if (heightValue > HEIGHT - 1)
+	{
+		heightValue = HEIGHT - 1;
+	}
+
 	//std::cout << heightValue << std::endl;
 	struct bloc	*bloc = &(blocs[(int)heightValue][z][x]);
-	bloc->type = BLOCK_GRASS;
+	bloc->type = btype;
 	bloc->visible = 1;
 	hardBloc += 1;
 	hardBlocVisible++;
@@ -129,11 +172,11 @@ void Chunk::initChunk(void)
 			//std::cout << blockValue << std::endl;
 			//int ty = ((int)(blockValue * (HEIGHT / 2.0f) + (HEIGHT / 3.))) % HEIGHT;
 			/*int ty = (int)(blockValue * (HEIGHT * 2 / 3 - 1));*/
-			/*
-			for (int y = blockValue - 1; y > blockValue - 3; y--)
+			
+			for (int y = blockValue - 1; y > blockValue - 1; y--)
 			{
 				bloc = &(blocs[y][z][x]);
-				float cavernValue = VoxelGenerator::Noise3D(position.x - x, y, position.z - z, 0.25f, 0.04, 0.45, 2, 0);
+				/*float cavernValue = VoxelGenerator::Noise3D(position.x - x, y, position.z - z, 0.25f, 0.04, 0.45, 2, 0);
 				//std::cout << cavernValue << std::endl;
 				if (cavernValue < 0.5)
 				{
@@ -141,14 +184,14 @@ void Chunk::initChunk(void)
 					bloc->visible = 0;
 				}
 				else
-				{
+				{*/
 					bloc->type = BLOCK_GRASS;
 					bloc->visible = 1;
 					hardBloc += 1;
 					hardBlocVisible++;
 				//}
 			}
-			*/
+			
 		}
 	}
 	/*caveTest();

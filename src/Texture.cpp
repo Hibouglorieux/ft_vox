@@ -188,7 +188,8 @@ Texture::Texture(float noiseTest)
 		{
 			for (unsigned int x = 0; x < NOISE_TEXTURE_WIDTH; x++)
 			{
-				array[y * NOISE_TEXTURE_WIDTH + x] = f(x, y);
+				array[y * NOISE_TEXTURE_WIDTH + x] = 0.0f;
+				//array[y * NOISE_TEXTURE_WIDTH + x] = f(x, y);
 			}
 		}
 		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, NOISE_TEXTURE_WIDTH, NOISE_TEXTURE_WIDTH, 0, GL_RED, GL_FLOAT, array);
