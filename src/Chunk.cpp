@@ -10,7 +10,7 @@
 
 int Chunk::totalChunks = 0;
 
-Chunk::Chunk(int x, int z)
+Chunk::Chunk(int x, int z, Camera* camera)
 {
 	totalChunks++;
 	position = Vec3(x * CHUNK_WIDTH, 0, z * CHUNK_DEPTH);
@@ -34,19 +34,20 @@ Chunk::Chunk(int x, int z)
 		{"packDefault/GRASS_SIDE.jpg"}});
 		*/
 	myNeighbours = {};
+	playerCamera = camera;
 	glGenBuffers(1, &typeVBO);
 	glGenBuffers(1, &positionVBO);
 
 }
 
-Chunk::Chunk(int x, int z, std::vector<std::pair<Vec2, Chunk*>> neighbours) : Chunk(x, z)
+Chunk::Chunk(int x, int z, Camera* camera, std::vector<std::pair<Vec2, Chunk*>> neighbours) : Chunk(x, z, camera)
 {
 	myNeighbours = neighbours;
 }
 
 float Chunk::getBlockBiome(int x, int z)
 {
-	float flatTerrain = VoxelGenerator::Noise2D(position.x + x, position.z + z, 0.0f, 0.00033f, 0.45f, 4, 0, 2, 0.65); // Kind of flat
+	float flatTerrain = VoxelGenerator::Noise2D(position.x + x, position.z + z, 0.4f, 0.00033f, 0.45f, 4, 0, 2, 0.65); // Kind of flat
 	flatTerrain = pow(flatTerrain * 0.75, 2);
 	//float heightValue = VoxelGenerator::Noise2D(position.x + x, position.z + z, 0.0f, 0.00025f, 2.66f, 2, 1, 2.45, 0.55); // Big hills or mountains ?
 	//float heightValue = VoxelGenerator::Noise2D(position.x + x, position.z + z, 0.0f, 0.005f, 0.66f, 1, 1, 2, 1); // Initial form of mountains
@@ -97,87 +98,69 @@ float Chunk::getBlockBiome(int x, int z)
 void Chunk::initChunk(void)
 {
 	struct bloc	*bloc;
+
 	// Get height map for chunk
 	blocs = BlocData();// memset equivalent (needed)
-	blocsTests = BlocSearchData();// memset equivalent (needed)
-	//heightMap = VoxelGenerator::createMap(position.x / CHUNK_WIDTH, position.z / CHUNK_DEPTH);
-	/*heightMap = VoxelGenerator::createMap(position.x / CHUNK_WIDTH,
-	  position.z / CHUNK_DEPTH, 7, 2.51525f, 0.7567f);*/
-	heightMap = VoxelGenerator::createMap(position.x / CHUNK_WIDTH,
-			position.z / CHUNK_DEPTH, 1, 1, 1);
-	/*caveMap = VoxelGenerator::createCaveMap(position.x / CHUNK_WIDTH,
-			position.z / CHUNK_DEPTH, 5, 3, 0.5);*/
-	//heightMap = nullptr;
-	caveMap = nullptr;
+	blocs = {NO_TYPE, 0}; // TODO : Check if correct
+
+	int min, max;
+	min = CHUNK_HEIGHT + 1;
+	max = -1;
 	// Set bloc type
 	for(unsigned int z = 0; z < CHUNK_DEPTH; z++)
 	{
 		for(unsigned int x = 0; x < CHUNK_WIDTH; x++)
 		{
-			/*
 			bloc = &(blocs[0][z][x]);
-			bloc->type = NO_TYPE;
-			bloc->visible = 0; // will be updated after with updateVisibility
+			bloc->type = BLOCK_BEDROCK;
+			bloc->visible = true; // will be updated after with updateVisibility
+			hardBloc++;
 
 			float blockValue = this->getBlockBiome(x, z);
 			(void)blockValue;
-			*/
+			if (blockValue < min)
+				min = blockValue;
+			if (blockValue > max)
+				max = blockValue;
 
-			float blockValue = (*heightMap)[z][x] * CHUNK_HEIGHT - 1;
-			for (int y = 0; y < CHUNK_HEIGHT; y++)
+			bloc = &(blocs[(int)blockValue][z][x]);
+			
+			for (int y = (int)blockValue - 1; y > 0; y--)
 			{
 				bloc = &(blocs[y][z][x]);
-				if (y < blockValue || y <= WATER_LEVEL)
+
+				int bloc_type = bloc->type;
+				bloc->type = BLOCK_DIRT;
+				bloc->visible = 0;
+				hardBloc++;
+				if (bloc_type != NO_TYPE) // block exists // broken with type because lol
 				{
-					bloc->type = BLOCK_GRASS;
-					hardBloc += 1;
-				}
-				else
-				{
-					bloc->type = NO_TYPE;
-					bloc->visible = 0;
+					float xScaled = x / (float)CHUNK_WIDTH + position.x / CHUNK_WIDTH;
+					float yScaled = y / (float)CHUNK_HEIGHT;
+					float zScaled = z / (float)CHUNK_DEPTH + position.z / CHUNK_DEPTH;
+					if (VoxelGenerator::getWorleyValueAt(xScaled, yScaled, zScaled) >= 0.5f) // random value
+					{
+						bloc->type = NO_TYPE;
+						hardBloc--;
+						if (bloc->visible)
+						{
+							hardBlocVisible--;
+							bloc->visible = 0;
+						}
+					}
+					else
+					{
+						bloc->visible = true;
+						hardBlocVisible++;
+					}
 				}
 			}
-			//float blockValue = SimplexNoise::getBlockBiome(position.x - x, position.z - z, x, z);
-			//float blockValue = (*heightMap)[z][x];
-			//float blockValue = VoxelGenerator::Noise2D(position.x + x, position.z + z, 0.5f, 0.0006f, 0.55f, 8, 0);
-			//blockValue = pow(blockValue * 0.5, 2);
-			//float blockValue = VoxelGenerator::Noise2D(position.x + x, position.z + z, 0.0f, 0.00025, 0.75f, 1, 0);
-			/*float blockValue = VoxelGenerator::Noise2D(position.x + x, position.z + z, 0.0f, 0.00125, 0.5, 3, 0);
-			blockValue = pow(blockValue * 1.75, 2);*/
-			//std::cout << blockValue << std::endl;
-			//int ty = ((int)(blockValue * (HEIGHT / 2.0f) + (HEIGHT / 3.))) % HEIGHT;
-			/*int ty = (int)(blockValue * (HEIGHT * 2 / 3 - 1));*/
-			/*
-			for (int y = blockValue - 1; y > blockValue - 3; y--)
-			{
-				bloc = &(blocs[y][z][x]);
-				float cavernValue = VoxelGenerator::Noise3D(position.x - x, y, position.z - z, 0.25f, 0.04, 0.45, 2, 0);
-				//std::cout << cavernValue << std::endl;
-				if (cavernValue < 0.5)
-				{
-					bloc->type = NO_TYPE;
-					bloc->visible = 0;
-				}
-				else
-				{
-					bloc->type = BLOCK_GRASS;
-					bloc->visible = 1;
-					hardBloc += 1;
-					hardBlocVisible++;
-				//}
-			}
-			*/
 		}
 	}
-	worleyCaveTest();
-	/*caveTest();
-	if (CHUNK_HEIGHT <= 64) // TODO : Make better function, this one crash with HEIGHT > 64
-		destroyIlots();*/
 
 	updateVisibility();
-	//if (position.x == 0 && position.z == 0)
-		//std::cout << hardBlocVisible << std::endl;;
+	updateVisibilityByCamera();
+
 	init = true;
 	updateChunk = true;
 
@@ -200,30 +183,6 @@ void Chunk::initChunk(void)
 		worker.join();
 	}
 	threadUseCount--;
-}
-
-void	Chunk::caveTest() // destroying blocks following a 3d map to generate caves
-{
-	struct bloc	*bloc;
-	for(unsigned int y = 1; y < CHUNK_HEIGHT; y++)// random number, can't dig lower than 3
-		for(unsigned int x = 0; x < CHUNK_WIDTH; x++)
-			for(unsigned int z = 0; z < CHUNK_DEPTH; z++)
-			{
-				if (y >= 64.0f)
-					continue;
-				bloc = &(blocs[y][z][x]);
-				if (bloc->type != NO_TYPE) // block exists
-					if ((*caveMap)[y][z][x] >= 0.4f) // random value
-					{			
-						texture = ResourceManager::getBlockTexture(BLOCK_STONE);
-
-						// destroy the block
-						bloc->type = NO_TYPE;
-						bloc->visible = 0;
-						hardBloc--;
-						hardBlocVisible--;
-					}
-			}
 }
 
 void	Chunk::worleyCaveTest() // destroying blocks following a 3d worley noise to generate caves
@@ -253,124 +212,6 @@ void	Chunk::worleyCaveTest() // destroying blocks following a 3d worley noise to
 					}
 				}
 			}
-}
-
-void Chunk::destroyIlots()
-{
-	// 	This function goal is to delete floating block at initilization, not after player removed some and created a floating block.
-	// 	So this function should only be used at init of chunk
-	//
-	//	To delete floating block(s), the function must be able to check if the bloc is connected to the ground.
-	//	To check if a block is connected to the ground we need to be able to find its neighbors, we will try the worst way first which is
-	//	to look for each neighbor recursively till we get a block at y=0.
-	// 
-	//	If that function return False, then we delete the block group, else it stays
-
-	//	1-st Step : Find blocks that do not have solid neighbors
-	struct bloc					*block;
-	std::vector<struct bloc*>	blockGroup = {};
-	//BlocSearchData				visitedGroup = BlocSearchData();
-	Vec3						pos;
-	bool						floating = false;
-	blocsTests = BlocSearchData();
-	for(unsigned int y = CHUNK_HEIGHT; y > 0; y--)
-		for(unsigned int x = 0; x < CHUNK_WIDTH; x++)
-			for(unsigned int z = 0; z < CHUNK_DEPTH; z++)
-			{
-				if (blocsTests[y - 1][z][x] == 1)
-					continue;
-				block = &(blocs[y - 1][z][x]);
-				if (block->type == NO_TYPE)
-					continue;
-				else if (block->type != NO_TYPE)
-				{
-					blockGroup.clear();
-					pos = Vec3(x, y - 1, z);
-					floating = !destroyIlotsSearchAndDestroy(block, pos, &blockGroup);
-					if (floating) // Floating groups detected, will now replace each block in blockGroup by air
-					{
-						for (auto it = blockGroup.begin(); it != blockGroup.end(); it++)
-						{
-							(*it)->type = NO_TYPE;
-						}
-					}
-					blockGroup.clear();
-				}
-			}
-	blockGroup.clear();
-}
-
-bool Chunk::destroyIlotsSearchAndDestroy(struct bloc *block, Vec3 pos, std::vector<struct bloc*> *blockGroup) // Return true if block isn't connected to ground, false if connected to a block at y=0
-{
-	bool	anchored = false;
-	bool	anchored_tmp = false;
-	
-	int x, y, z;
-	x = (int)(pos.x);
-	y = (int)(pos.y);
-	z = (int)(pos.z);
-
-	(blocsTests[y][z][x]) = 1;
-	blockGroup->push_back(block);
-
-	if (pos.y == 0 && block->type != NO_TYPE)	// Block is the floor, group is valid, we only keep visited block in memory, clear blockGroup
-	{
-		blockGroup->clear();
-		return true;
-	}
-
-	//	First we retrieve the neighbors, avoid the one we already visited
-	std::vector<struct bloc*>	neighbors = {};
-	std::vector<Vec3>			neighborsPos = {};
-	if (y > 0 && (blocs[y - 1][z][x]).type != NO_TYPE)
-	{
-		neighbors.push_back(&(blocs[y - 1][z][x]));
-		neighborsPos.push_back(Vec3(x, y - 1, z));
-	}
-	if (y < CHUNK_HEIGHT - 1 && (blocs[y + 1][z][x]).type != NO_TYPE)
-	{
-		neighbors.push_back(&(blocs[y + 1][z][x]));
-		neighborsPos.push_back(Vec3(x, y + 1, z));
-	}
-	if (x > 0 && (blocs[y][z][x - 1]).type != NO_TYPE)
-	{
-		neighbors.push_back(&(blocs[y][z][x - 1]));
-		neighborsPos.push_back(Vec3(x - 1, y, z));
-	}
-	if (x < CHUNK_WIDTH - 1 && (blocs[y][z][x + 1]).type != NO_TYPE)
-	{
-		neighbors.push_back(&(blocs[y][z][x + 1]));
-		neighborsPos.push_back(Vec3(x + 1, y, z));
-	}
-	if (z > 0 && (blocs[y][z - 1][x]).type != NO_TYPE)
-	{
-		neighbors.push_back(&(blocs[y][z - 1][x]));
-		neighborsPos.push_back(Vec3(x, y, z - 1));
-	}
-	if (z < CHUNK_DEPTH - 1 && (blocs[y][z + 1][x]).type != NO_TYPE)
-	{
-		neighbors.push_back(&(blocs[y][z + 1][x]));
-		neighborsPos.push_back(Vec3(x, y, z + 1));
-	}
-
-	// Second, we iterate through the neighbors and seek their neighbor is they haven't already been visited
-	for(int nei = 0; (unsigned int)nei < neighbors.size(); ++nei) {
-		Vec3 npos = neighborsPos[nei];
-		if (blocsTests[(int)npos.y][(int)npos.z][(int)npos.x] == 1)
-			continue;
-		anchored_tmp = destroyIlotsSearchAndDestroy(neighbors[nei], neighborsPos[nei], blockGroup);
-		if (anchored_tmp && !anchored) 		// Meaning a block rattached to the current block is the floor so the group is valid
-		{
-			anchored = true;	// We let the function continue to mark all connected blocks
-		}
-	}
-	if (anchored)
-	{
-		if (blockGroup->size() != 0)
-			blockGroup->clear();
-		return true;
-	}
-	return false; // Meaning no block rattached to the current block is touching the floor, group is invalid and must be deleted (replaced by air)
 }
 
 void Chunk::updateVisibilityWithNeighbour(Vec2 NeighbourPos, const BlocData& neighbourBlocs, std::function<void(const BlocData&)> callBack)
@@ -431,6 +272,17 @@ Chunk::~Chunk(void)
 	totalChunks--;
 }
 
+void Chunk::updateVisibilityByCamera(void)
+{
+	/*struct bloc	*bloc;
+	//hardBlocVisible = 0;
+
+	Vec3 dir = playerCamera->getDirection();
+	dir.print();
+	playerCamera->getPos().print();
+	position.print();*/
+}
+
 void Chunk::updateVisibility(void)
 {
 	struct bloc	*bloc;
@@ -456,7 +308,6 @@ void Chunk::updateVisibility(void)
 
 void Chunk::setVisibilityByNeighbors(int x, int y, int z) // Activates visibility if one neighbour is transparent
 {
-	// TODO : Check coordinate to avoid overflow
 	struct bloc			*bloc = &(blocs[y][z][x]);
 	std::vector<struct bloc*>	neighbors = {};
 	//long unsigned int			hardNei = 0;

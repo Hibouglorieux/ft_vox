@@ -11,6 +11,7 @@
 /* ************************************************************************** */
 
 #include "Camera.hpp"
+#include "ft_vox.h"
 #include "Utilities.h"
 #include <utility>
 
@@ -31,6 +32,23 @@ Camera::Camera(Vec3 position)
 {
 	pos = position;
 	dir = DEFAULT_CAMERA_ROT;// TODO tmp to view map generation from ahead
+
+	WorldUp = Vec3(0, 1, 0);
+
+	const float halfVSide = FAR * tanf(FOV * .5f);
+    const float halfHSide = halfVSide * (WIDTH / HEIGHT);
+    const Vec3	frontMultFar = getDirection() * FAR;
+
+	Vec3 farCenter = pos + pos * frontMultFar;
+	Vec3 nearCenter = pos + pos * getDirection() * NEAR;
+
+	float fovRadians = FOV * M_PI / 180.0f;
+	float viewRatio = WIDTH / HEIGHT;
+
+	float nearHeight = 2 * tan(fovRadians/ 2) * NEAR;
+    float farHeight = 2 * tan(fovRadians / 2) * FAR;
+    float nearWidth = nearHeight * viewRatio;
+    float farWidth = farHeight * viewRatio;
 }
 
 Vec3 Camera::getPos() const

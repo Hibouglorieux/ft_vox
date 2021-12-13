@@ -24,6 +24,7 @@
 #define NEAR 0.1f
 #define PROJECT_NAME "ft_vox"
 #define FAR 1500.0f
+#define FOV 60.0f
 
 #define SEC_TO_MICROSEC 1000000
 #define BLOC_WIDTH_PER_CHUNK 32

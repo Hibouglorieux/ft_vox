@@ -13,8 +13,6 @@
 #include "Object.hpp"
 #include "ft_vox.h"
 
-#define FOV 60.0f
-
 Matrix Object::projMat = Matrix::createProjMatrix(FOV, SCREEN_WIDTH / SCREEN_HEIGHT, NEAR, FAR);
 
 

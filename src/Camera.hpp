@@ -16,11 +16,37 @@
 #include "Matrix.hpp"
 #include "appWindow.hpp"
 #include "Vec3.hpp"
+#include <GL/glew.h>
 
 #define Y_MOVE_SPEED 5.0f
 
+class Plan {
+	// unit vector
+    Vec3	normal = Vec3(0.f, 1.f, 0.f);
+
+    // distance from origin to the nearest point in the plan
+    float	distance = 0.f;
+
+	Plan() = default;
+
+	Plan(const Vec3& p1, const Vec3& norm) : normal(norm.getNormalized()), distance(normal.dot(p1))
+	{}
+
+	float getSignedDistanceToPlan(const glm::vec3& point) const
+	{
+		return glm::dot(normal, point) - distance;
+	}
+
+};
+
 class Camera {
 public:
+
+    Vec3 Front;
+    Vec3 Up;
+    Vec3 Right;
+    Vec3 WorldUp;
+
 	Camera(void);
 	Camera(float x, float y, float z);
 	Camera(Vec3 translation);
@@ -34,13 +60,21 @@ public:
 	Matrix getMatrix();
 	std::pair<Vec3, Vec3> unProject(float mouseX, float mouseY, Matrix projMat);
 	Vec3 unProjectToOrigin(float mouseX, float mouseY, Matrix projMat);
+	Vec3 getDirection() const;// meant to convert degree to rad
 
 private:
-	Vec3 getDirection() const;// meant to convert degree to rad
 	void actualizeView();
 	Matrix view;
 	Vec3 dir;
 	Vec3 pos;
+
+
+	Plan topFace;
+    Plan bottomFace;
+    Plan rightFace;
+    Plan leftFace;
+    Plan farFace;
+    Plan nearFace;
 };
 
 #endif

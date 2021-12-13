@@ -1,6 +1,7 @@
 #ifndef CHUNK_CLASS_H
 # define CHUNK_CLASS_H
 
+# include "Camera.hpp"
 # include "Object.hpp"
 # include "Shader.hpp"
 # include "Texture.hpp"
@@ -24,8 +25,8 @@
 
 class Chunk : public Object{
 public:
-	Chunk(int x, int z);
-	Chunk(int x, int z, std::vector<std::pair<Vec2, Chunk*>> neighbours);
+	Chunk(int x, int z, Camera *camera);
+	Chunk(int x, int z, Camera *camera, std::vector<std::pair<Vec2, Chunk*>> neighbours);
 
 	void	initChunk(void);
 
@@ -53,6 +54,7 @@ private:
 	void	updateVisibilityWithNeighbour(Vec2 NeighbourPos,
 			const BlocData& neighbourBlocs,
 			std::function<void(const BlocData&)> callBack = nullptr);
+	void	updateVisibilityByCamera(void);
 	void	updateVisibility(void);
 	void	setVisibilityByNeighbors(int x, int y, int z);
 	void	caveTest();
@@ -80,6 +82,8 @@ private:
 	std::vector<std::pair<Vec2, Chunk*>> myNeighbours;
 
 	float	getBlockBiome(int x, int z);
+
+	Camera	*playerCamera;
 };
 
 #endif

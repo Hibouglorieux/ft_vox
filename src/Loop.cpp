@@ -59,7 +59,7 @@ void Loop::loop()
 		{
 			usleep((refreshingRate - frameTime) * SEC_TO_MICROSEC);
 		}
-		if (fpsRefreshTime + 0.5 > currentTimer)
+		if (fpsRefreshTime + 0.5 < currentTimer)
 		{
 			std::stringstream ss;
 			double fps = (float)frameCount / (currentTimer - fpsRefreshTime);

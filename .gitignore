@@ -23,6 +23,9 @@ tags
 # Coc configuration directory
 .vim
 
+# Vscode folder
+.vscode
+
 obj
 obj/*.o
 ft_vox

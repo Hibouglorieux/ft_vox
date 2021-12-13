@@ -35,7 +35,7 @@ World::World()
 			auto allocatedNeighbours = getAllocatedNeighbours(pos);
 			for (auto it: allocatedNeighbours)
 				it.second->increaseThreadCount();
-			Chunk* chnk = new Chunk(pos.x, pos.y, allocatedNeighbours);
+			Chunk* chnk = new Chunk(pos.x, pos.y, &camera, allocatedNeighbours);
 			visibleChunks.insert(std::pair<Vec2, Chunk*>(pos, chnk));
 
 			auto initNewChunk = [](Chunk *chnk) {
@@ -54,7 +54,7 @@ World::World()
 			auto allocatedNeighbours = getAllocatedNeighbours(pos);
 			for (auto it: allocatedNeighbours)
 				it.second->increaseThreadCount();
-			Chunk* chnk = new Chunk(pos.x, pos.y, allocatedNeighbours);
+			Chunk* chnk = new Chunk(pos.x, pos.y, &camera, allocatedNeighbours);
 			preLoadedChunks.insert(std::pair<Vec2, Chunk*>(pos, chnk));
 
 			auto initNewChunk = [](Chunk *chnk) {
@@ -243,7 +243,7 @@ void World::updateChunkBuffers(Vec2 newPos)
 			auto allocatedNeighbours = getAllocatedNeighbours(preloadedPositions);
 			for (auto it: allocatedNeighbours)
 				it.second->increaseThreadCount();
-			chunks.push_back(new Chunk(preloadedPositions.x, preloadedPositions.y, allocatedNeighbours));
+			chunks.push_back(new Chunk(preloadedPositions.x, preloadedPositions.y, &camera, allocatedNeighbours));
 			preLoadedChunks.insert(std::pair<Vec2, Chunk*>(preloadedPositions, chunks.back()));
 		}
 	}
@@ -310,7 +310,7 @@ std::vector<std::pair<Vec2, Chunk*>>	World::getAllocatedNeighbours(Vec2 chunkPos
 	return neighbours;
 }
 
-bool	World::shouldBeRendered(Vec2 chunkPos, const Chunk* chnk, Matrix& matrix)
+/*bool	World::shouldBeRendered(Vec2 chunkPos, const Chunk* chnk, Matrix& matrix)
 {
 	if (chunkPos == curPos)
 		return true;
@@ -329,6 +329,31 @@ bool	World::shouldBeRendered(Vec2 chunkPos, const Chunk* chnk, Matrix& matrix)
 	if (tmp.x <= 1 && tmp.x >= -1 && tmp.z <= 1)
 		return true;
 	return false;
+}*/
+
+bool	World::shouldBeRendered(Vec2 chunkPos, const Chunk* chnk, Matrix& matrix)
+{
+	if (chunkPos == curPos)
+		return true;
+	Vec3 chunkSize = Vec3(CHUNK_WIDTH, CHUNK_HEIGHT, CHUNK_DEPTH);
+	
+	float nearDist = NEAR;
+	float farDist = FAR;
+
+	Vec3 cameraDir = camera.getDirection();
+	Vec3 farPlane = cameraDir * farDist + camera.getPos();
+	Vec3 nearPlane = cameraDir * nearDist + camera.getPos();
+	camera.getPos().print();
+	cameraDir.print();
+	chunkPos.print();
+	chunkSize.print();
+	farPlane.print();
+	nearPlane.print();
+	std::cout << std::endl;
+
+	Vec3 chunkPos3 = Vec3(chunkPos.x, 0, chunkPos.y);
+
+	return true;
 }
 
 void World::setCamera(Camera newCamera)
