@@ -33,6 +33,7 @@ public:
 	Vec3 getAngle() const;
 	Vec3 getNormalized() const;
 	float dot(Vec3 rhs) const;
+	Vec3 cross(Vec3 rhs) const;
 	std::string toString() const;
 	void print() const;
 	

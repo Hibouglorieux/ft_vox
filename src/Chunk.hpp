@@ -13,6 +13,7 @@
 # include "Vec2.hpp"
 # include <functional>
 # include <mutex>
+# include <memory>
 
 # define CHUNK_HEIGHT HEIGHT
 
@@ -41,12 +42,17 @@ public:
 
 	static	Vec2 worldCoordToChunk(Vec3 worldPos);
 	static	int totalChunks;
-	//char	*getBlocs() const { return blocs; }
+	AABB	boundingVolume = AABB(Vec3(0, 0, 0), Vec3(CHUNK_WIDTH, CHUNK_HEIGHT, CHUNK_DEPTH));
+	AABB	cubeBoundingVolume = AABB(Vec3(0, 0, 0), Vec3(1, 1, 1));
+
+	void	updateVisibilityByCamera(bool freeze);
+
 private:
 	struct bloc
 	{
 		GLint type;
 		bool visible;
+		bool isOnFrustum;
 	};
 	typedef std::array<std::array<std::array<struct bloc, CHUNK_WIDTH>, CHUNK_DEPTH>, CHUNK_HEIGHT> BlocData;
 	typedef std::array<std::array<std::array<int, CHUNK_WIDTH>, CHUNK_DEPTH>, CHUNK_HEIGHT> BlocSearchData;
@@ -54,7 +60,7 @@ private:
 	void	updateVisibilityWithNeighbour(Vec2 NeighbourPos,
 			const BlocData& neighbourBlocs,
 			std::function<void(const BlocData&)> callBack = nullptr);
-	void	updateVisibilityByCamera(void);
+	bool 	updateVis = false;
 	void	updateVisibility(void);
 	void	setVisibilityByNeighbors(int x, int y, int z);
 	void	caveTest();
@@ -66,7 +72,7 @@ private:
 	Vec3	position;
 	BlocData blocs;
 	BlocSearchData blocsTests;
-	//struct bloc	blocs[CHUNK_HEIGHT][CHUNK_DEPTH][CHUNK_WIDTH];
+
 	bool	updateChunk;
 	bool	init;
 	unsigned char	threadUseCount;

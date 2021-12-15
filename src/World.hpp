@@ -25,7 +25,7 @@
 # define VIEW_DISTANCE 160
 # define ROW_OF_CHUNK 8
 //# define CHUNK_VIEW_DISTANCE (VIEW_DISTANCE / CHUNK_WIDTH + 1)
-# define CHUNK_VIEW_DISTANCE 2
+# define CHUNK_VIEW_DISTANCE 1
 # define MAX_PRELOAD_DISTANCE ((float)CHUNK_VIEW_DISTANCE + 2)
 # define PRELOAD_DISTANCE_DEL ((float)CHUNK_VIEW_DISTANCE + 4)
 
@@ -40,6 +40,11 @@ public:
 	void	update();
 	// Chunk Manager
 	void updateChunkBuffers(Vec2 newPos);
+
+	bool pause = false;
+	bool freeze = false;
+	std::vector<std::pair<Vec2, Chunk*>> chunksToRenderFix;
+
 private:
 	bool shouldBeRendered(Vec2 chunkPos, const Chunk* chnk, Matrix& matrix);
 	std::vector<Vec2> getPosInRange(Vec2 center, float minDistance, float maxDistance);

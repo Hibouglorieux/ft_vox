@@ -18,7 +18,7 @@
 #define X_ROTATION_SPEED 1
 #define Y_ROTATION_SPEED 1
 #define DEFAULT_CAMERA_POS Vec3(0.f, 250.f, 0.f)
-#define DEFAULT_CAMERA_ROT Vec3(90.f, 0.f, 0.f)
+#define DEFAULT_CAMERA_ROT Vec3(-90.f, 0.f, 0.f)
 
 Camera::Camera() : Camera(DEFAULT_CAMERA_POS)
 {
@@ -34,11 +34,11 @@ Camera::Camera(Vec3 position)
 	dir = DEFAULT_CAMERA_ROT;// TODO tmp to view map generation from ahead
 
 	WorldUp = Vec3(0, 1, 0);
+	Up = Vec3(1, 0, 0); // TODO : Update to use default cam rot
 
-	const float halfVSide = FAR * tanf(FOV * .5f);
-    const float halfHSide = halfVSide * (WIDTH / HEIGHT);
-    const Vec3	frontMultFar = getDirection() * FAR;
-
+	updateFrustum();
+	
+	/*
 	Vec3 farCenter = pos + pos * frontMultFar;
 	Vec3 nearCenter = pos + pos * getDirection() * NEAR;
 
@@ -49,6 +49,30 @@ Camera::Camera(Vec3 position)
     float farHeight = 2 * tan(fovRadians / 2) * FAR;
     float nearWidth = nearHeight * viewRatio;
     float farWidth = farHeight * viewRatio;
+	*/
+}
+
+void Camera::updateFrustum()
+{
+	Front = getDirection();
+	Right = Up.cross(Front); //Vec3(Up.y * Front.z - Up.z * Front.y, Up.z * Front.x - Up.x * Front.z, Up.x * Front.y - Up.y * Front.x);
+	Up = Front.cross(Right); //Vec3(Front.y * Right.z - Front.z * Right.y, Front.z * Right.x - Front.x * Right.z, Front.x * Right.y - Front.y * Right.x);
+
+	const float halfVSide = FAR * tanf(FOV * .5f);
+    const float halfHSide = halfVSide * (WIDTH / HEIGHT);
+    const Vec3	frontMultFar = getDirection() * FAR;
+
+	frustum.nearFace = { pos + Front * NEAR, Front };
+    frustum.farFace = { pos + frontMultFar, -Front };
+    frustum.rightFace = { pos, Up.cross(frontMultFar + Right * halfHSide) };
+    frustum.leftFace = { pos, (frontMultFar - Right * halfHSide).cross(Up) };
+    frustum.topFace = { pos, Right.cross(frontMultFar - Up * halfVSide) };
+    frustum.bottomFace = { pos, (frontMultFar + Up * halfVSide).cross(Right) };
+}
+
+Frustum Camera::getFrustum() const
+{
+	return frustum;
 }
 
 Vec3 Camera::getPos() const
@@ -88,6 +112,7 @@ void Camera::move(bool forward, bool backward, bool right, bool left, float spee
 		realMovement += Matrix::createRotationMatrix(Matrix::RotationDirection::Y, -90) * moveDir;
 	}
 	pos += realMovement.getNormalized() * speedFactor;
+	updateFrustum();
 }
 
 Vec3 Camera::getDirection() const
@@ -104,11 +129,13 @@ Vec3 Camera::getDirection() const
 void Camera::moveUp(float distance)
 {
 	pos.y += distance;
+	updateFrustum();
 }
 
 void Camera::moveDown(float distance)
 {
 	pos.y -= distance;
+	updateFrustum();
 }
 
 void Camera::rotate(double x, double y)
@@ -121,6 +148,8 @@ void Camera::rotate(double x, double y)
 		dir.x = 89;
 	if (dir.x < -89.0f)
 		dir.x = -89.0f;
+
+	updateFrustum();
 }
 
 void Camera::actualizeView()

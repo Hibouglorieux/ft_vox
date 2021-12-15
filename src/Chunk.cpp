@@ -14,6 +14,7 @@ Chunk::Chunk(int x, int z, Camera* camera)
 {
 	totalChunks++;
 	position = Vec3(x * CHUNK_WIDTH, 0, z * CHUNK_DEPTH);
+	//position.print();
 	//std::cout << "Chunk : " << x << ",0," << z << std::endl;
 	// Not necessary ?
 
@@ -37,7 +38,6 @@ Chunk::Chunk(int x, int z, Camera* camera)
 	playerCamera = camera;
 	glGenBuffers(1, &typeVBO);
 	glGenBuffers(1, &positionVBO);
-
 }
 
 Chunk::Chunk(int x, int z, Camera* camera, std::vector<std::pair<Vec2, Chunk*>> neighbours) : Chunk(x, z, camera)
@@ -101,7 +101,7 @@ void Chunk::initChunk(void)
 
 	// Get height map for chunk
 	blocs = BlocData();// memset equivalent (needed)
-	blocs = {NO_TYPE, 0}; // TODO : Check if correct
+	blocs = {NO_TYPE, 0, 0}; // TODO : Check if correct
 
 	int min, max;
 	min = CHUNK_HEIGHT + 1;
@@ -114,6 +114,7 @@ void Chunk::initChunk(void)
 			bloc = &(blocs[0][z][x]);
 			bloc->type = BLOCK_BEDROCK;
 			bloc->visible = true; // will be updated after with updateVisibility
+			bloc->isOnFrustum = false;
 			hardBloc++;
 
 			float blockValue = this->getBlockBiome(x, z);
@@ -125,7 +126,7 @@ void Chunk::initChunk(void)
 
 			bloc = &(blocs[(int)blockValue][z][x]);
 			
-			for (int y = (int)blockValue - 1; y > 0; y--)
+			/*for (int y = (int)blockValue - 1; y > 0; y--)
 			{
 				bloc = &(blocs[y][z][x]);
 
@@ -154,12 +155,17 @@ void Chunk::initChunk(void)
 						hardBlocVisible++;
 					}
 				}
-			}
+			}*/
 		}
 	}
+	//std::cout << max << std::endl;
+	if (max < CHUNK_HEIGHT)
+		max = max + 30;
+	boundingVolume = AABB(Vec3(0, 0, 0), Vec3(CHUNK_WIDTH, max, CHUNK_DEPTH));
+	//std::cout << "Is on frustum : " << boundingVolume.isOnFrustum(playerCamera->getFrustum()) << std::endl;
 
 	updateVisibility();
-	updateVisibilityByCamera();
+	//updateVisibilityByCamera();
 
 	init = true;
 	updateChunk = true;
@@ -272,15 +278,41 @@ Chunk::~Chunk(void)
 	totalChunks--;
 }
 
-void Chunk::updateVisibilityByCamera(void)
+void Chunk::updateVisibilityByCamera(bool freeze)
 {
-	/*struct bloc	*bloc;
-	//hardBlocVisible = 0;
-
-	Vec3 dir = playerCamera->getDirection();
-	dir.print();
-	playerCamera->getPos().print();
-	position.print();*/
+	struct bloc	*bloc;
+	hardBlocVisible = 0;
+	if (!freeze)
+		return;
+	for(int y = CHUNK_HEIGHT; y > 0; y--)
+	{
+		for(int z = CHUNK_DEPTH; z > 0; z--)
+		{
+			for(int x = CHUNK_WIDTH; x > 0; x--)
+			{
+				bloc = &(blocs[y - 1][z - 1][x - 1]);
+				if (bloc->type != NO_TYPE)
+				{
+					if (bloc->visible == true)
+					{
+						hardBlocVisible += 1;
+						bool isOnFrustum = AABB(Vec3(x - 1, y - 1, z - 1), Vec3(1, 1, 1)).isOnFrustum(playerCamera->getFrustum());
+						//printf("IsOnFrustum : %i\n", isOnFrustum);
+						if (AABB(Vec3(x - 1, y - 1, z - 1), Vec3(1, 1, 1)).isOnFrustum(playerCamera->getFrustum()))
+						{
+							bloc->type = BLOCK_SAND;
+							bloc->isOnFrustum = true;
+						}
+						else
+						{
+							bloc->isOnFrustum = false;
+							bloc->type = BLOCK_GRASS;
+						}
+					}
+				}
+			}
+		}
+	}
 }
 
 void Chunk::updateVisibility(void)
@@ -298,7 +330,21 @@ void Chunk::updateVisibility(void)
 				{
 					setVisibilityByNeighbors(x - 1, y - 1, z - 1);
 					if (bloc->visible == true)
+					{
 						hardBlocVisible += 1;
+						bool isOnFrustum = AABB(Vec3(x - 1, y - 1, z - 1), Vec3(1, 1, 1)).isOnFrustum(playerCamera->getFrustum());
+						//printf("IsOnFrustum : %i\n", isOnFrustum);
+						if (AABB(Vec3(x - 1, y - 1, z - 1), Vec3(1, 1, 1)).isOnFrustum(playerCamera->getFrustum()))
+						{
+							bloc->type = BLOCK_SAND;
+							bloc->isOnFrustum = true;
+						}
+						else
+						{
+							bloc->isOnFrustum = false;
+							bloc->type = BLOCK_GRASS;
+						}
+					}
 				}
 			}
 		}
@@ -406,6 +452,7 @@ void Chunk::draw(Shader* shader)
 		draw_safe.unlock();
 		return;
 	}
+	//updateVisibilityByCamera();
 	bool isThereNewData = Chunk::generatePosOffsets();
 	(void)isThereNewData; // might be usefull if we use multiple VAO
 

@@ -152,24 +152,34 @@ void World::render()
 	RectangularCuboid::draw(tmpToDel, shader, nullptr);// One cube for test
 	*/
 	std::vector<std::pair<Vec2, Chunk*>> chunksToRender;
-	for (auto it : visibleChunks)
+	if (!freeze)
 	{
-		Chunk* chnk = it.second;
-		const Vec2& pos = it.first;
-		if (shouldBeRendered(pos, chnk, precalculatedMat))// TODO not working properly because it only takes 4 points on the same Y axis, either complexify it or keep it only for Z < 1
+		for (auto it : visibleChunks)
 		{
-			std::pair<Vec2, Chunk*> tmpPair(pos - curPos, chnk);
-			chunksToRender.push_back(tmpPair);
-			//chunksToRender.push_back(std::make_pair<Vec2, Chunk*>(pos - curPos, chnk));
-			//chunksToRender[it.first - curPos] = chnk;
-			//chnk->draw(shader);
+			Chunk* chnk = it.second;
+			const Vec2& pos = it.first;
+			if (shouldBeRendered(pos, chnk, precalculatedMat))// TODO not working properly because it only takes 4 points on the same Y axis, either complexify it or keep it only for Z < 1
+			{
+				//printf("Rendering : (%i, %i)\n", pos.x, pos.y);
+				std::pair<Vec2, Chunk*> tmpPair(pos - curPos, chnk);
+				chunksToRender.push_back(tmpPair);
+				//chunksToRender.push_back(std::make_pair<Vec2, Chunk*>(pos - curPos, chnk));
+				//chunksToRender[it.first - curPos] = chnk;
+				//chnk->draw(shader);
+			}
+			printf("\n");
 		}
+		printf("\n\n\n");
+		std::sort(chunksToRender.begin(), chunksToRender.end(), [](std::pair<Vec2, Chunk*>& a, std::pair<Vec2, Chunk*>& b) {
+				return a.first.isSmaller(b.first);
+				});
+		chunksToRenderFix = chunksToRender;
 	}
-	std::sort(chunksToRender.begin(), chunksToRender.end(), [](std::pair<Vec2, Chunk*>& a, std::pair<Vec2, Chunk*>& b) {
-			return a.first.isSmaller(b.first);
-			});
+	else
+		chunksToRender = chunksToRenderFix;
 	for (auto it : chunksToRender)
 	{
+		it.second->updateVisibilityByCamera(freeze);
 		it.second->draw(shader);
 	}
 	//std::cout << "rendered: " << chunksToRender.size() << "on total visible chunk: " << visibleChunks.size() << std::endl;
@@ -178,7 +188,7 @@ void World::render()
 void World::update()
 {
 	Vec2 newChunkPos = Chunk::worldCoordToChunk(camera.getPos());
-	if (curPos != newChunkPos)
+	if (curPos != newChunkPos && !freeze)
 	{
 		curPos = newChunkPos;
 		updateChunkBuffers(curPos);
@@ -333,27 +343,9 @@ std::vector<std::pair<Vec2, Chunk*>>	World::getAllocatedNeighbours(Vec2 chunkPos
 
 bool	World::shouldBeRendered(Vec2 chunkPos, const Chunk* chnk, Matrix& matrix)
 {
-	if (chunkPos == curPos)
-		return true;
-	Vec3 chunkSize = Vec3(CHUNK_WIDTH, CHUNK_HEIGHT, CHUNK_DEPTH);
-	
-	float nearDist = NEAR;
-	float farDist = FAR;
-
-	Vec3 cameraDir = camera.getDirection();
-	Vec3 farPlane = cameraDir * farDist + camera.getPos();
-	Vec3 nearPlane = cameraDir * nearDist + camera.getPos();
-	camera.getPos().print();
-	cameraDir.print();
-	chunkPos.print();
-	chunkSize.print();
-	farPlane.print();
-	nearPlane.print();
-	std::cout << std::endl;
-
-	Vec3 chunkPos3 = Vec3(chunkPos.x, 0, chunkPos.y);
-
-	return true;
+	//if (chunkPos == curPos)
+	//	return true;
+	return (chnk->boundingVolume.isOnFrustum(camera.getFrustum()));
 }
 
 void World::setCamera(Camera newCamera)

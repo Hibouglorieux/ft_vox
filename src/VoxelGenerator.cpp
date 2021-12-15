@@ -318,7 +318,7 @@ CaveMap*	VoxelGenerator::createCaveMap(float ox, float oz, int octaves = 1, floa
 					frequency *= lacunarity;
 				}
 				*tmp = fabsf(sum);
-				std::cout << " " << *tmp << std::endl;
+				//std::cout << " " << *tmp << std::endl;
 			}
 	return cavemap;
 }

@@ -69,6 +69,11 @@ float Vec3::dot(Vec3 rhs) const
 	return (x * rhs.x + y * rhs.y + z * rhs.z);
 }
 
+Vec3 Vec3::cross(Vec3 rhs) const
+{
+	return Vec3(y * rhs.z - z * rhs.y, z * rhs.x - x * rhs.z, x * rhs.y - y * rhs.x);
+}
+
 std::string Vec3::toString() const
 {
 	std::stringstream ss;
