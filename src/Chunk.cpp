@@ -294,7 +294,7 @@ void Chunk::updateVisibilityByCamera(bool freeze)
 		return;
 	//draw_safe.lock();
 	//printf("Updating visibilty by camera of chunk !\n");
-	
+
 	playerCamera->updateFrustum(true);
 	Frustum playerFrustum = playerCamera->getFrustum();
 	Vec3 playerSight = playerCamera->getDirection();
@@ -310,7 +310,7 @@ void Chunk::updateVisibilityByCamera(bool freeze)
 			for(int x = CHUNK_WIDTH; x > 0; x--)
 			{
 				bloc = &(blocs[y - 1][z - 1][x - 1]);
-				
+
 				if (false && bloc->type != NO_TYPE)
 				{
 					bool isOnFrustum = AABB(Vec3(position.x + x - 1, position.y + y - 1, position.z + z - 1), Vec3(position.x + x, position.y + y, position.z + z)).isOnFrustum(playerFrustum);
@@ -349,12 +349,25 @@ void Chunk::updateVisibilityByCamera(bool freeze)
 				// Compute line of sight from block to player.
 				if (bloc->type != NO_TYPE)
 				{
+					// Block position
 					Vec3 blockPosition = Vec3(position + Vec3(x - 1, y - 1, z - 1));
+					// Direction vector from block to camera
 					Vec3 dirToCamera = Vec3(playerPos - blockPosition).getNormalized();
 
-					float value = dirToCamera.dot(playerSight) * 90.0f;
-					printf("Sight value : %f\n", value);
-					if (FOV >= value && value >= -FOV)
+					// Angle between the camera direction and the direction
+					// vector of the block to camera
+					float value = dirToCamera.dot(playerSight);
+					float cos = value / (dirToCamera.getLength() * playerSight.getLength());
+
+					Vec3 cross = dirToCamera.cross(playerSight);
+					float sin = cross.getLength() / (dirToCamera.getLength() * playerSight.getLength());
+
+					float angle = std::acos(cos) * 180.0 / M_PI;
+					angle = cos;
+					//if (sin < 0)
+					//	angle = -angle;
+					printf("Sight value : %f\n", angle);
+					if ((angle <= 0.5 && angle >= -0.5) || angle >= -0.9)
 					{
 						if (bloc->visible == false)
 						{
