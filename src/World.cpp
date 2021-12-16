@@ -154,6 +154,13 @@ void World::render()
 	std::vector<std::pair<Vec2, Chunk*>> chunksToRender;
 	if (!freeze)
 	{
+		std::vector<std::thread> threads;
+
+		auto chunkVisibilityUpdate = [](Chunk *chnk, bool freeze)
+		{
+			chnk->updateVisibilityByCamera(freeze);
+		};
+
 		for (auto it : visibleChunks)
 		{
 			Chunk* chnk = it.second;
@@ -163,13 +170,22 @@ void World::render()
 				//printf("Rendering : (%i, %i)\n", pos.x, pos.y);
 				std::pair<Vec2, Chunk*> tmpPair(pos - curPos, chnk);
 				chunksToRender.push_back(tmpPair);
+
+				threads.push_back(std::thread(chunkVisibilityUpdate, chnk, blocFreeze));
+
 				//chunksToRender.push_back(std::make_pair<Vec2, Chunk*>(pos - curPos, chnk));
 				//chunksToRender[it.first - curPos] = chnk;
 				//chnk->draw(shader);
 			}
-			printf("\n");
+			//printf("\n");
 		}
-		printf("\n\n\n");
+
+		for (std::thread& worker : threads)
+		{
+			worker.join();
+		}
+
+		//printf("\n\n\n");
 		std::sort(chunksToRender.begin(), chunksToRender.end(), [](std::pair<Vec2, Chunk*>& a, std::pair<Vec2, Chunk*>& b) {
 				return a.first.isSmaller(b.first);
 				});
@@ -177,11 +193,13 @@ void World::render()
 	}
 	else
 		chunksToRender = chunksToRenderFix;
+
 	for (auto it : chunksToRender)
 	{
-		it.second->updateVisibilityByCamera(freeze);
+		//it.second->updateVisibilityByCamera(blocFreeze);
 		it.second->draw(shader);
 	}
+
 	//std::cout << "rendered: " << chunksToRender.size() << "on total visible chunk: " << visibleChunks.size() << std::endl;
 }
 
@@ -343,8 +361,13 @@ std::vector<std::pair<Vec2, Chunk*>>	World::getAllocatedNeighbours(Vec2 chunkPos
 
 bool	World::shouldBeRendered(Vec2 chunkPos, const Chunk* chnk, Matrix& matrix)
 {
+	(void)chunkPos;
+	(void)matrix;
+	// Using direction and pos, we could elimate those behind us directly
+
 	//if (chunkPos == curPos)
 	//	return true;
+	//camera.getPos().print();
 	return (chnk->boundingVolume.isOnFrustum(camera.getFrustum()));
 }
 

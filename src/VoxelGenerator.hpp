@@ -18,6 +18,7 @@
 #include "Vec3.hpp"
 
 enum blockType {
+	NO_TYPE = 99,
 	BLOCK_WATER = 0,
 	BLOCK_SAND = 1,
 	BLOCK_DIRT = 2,

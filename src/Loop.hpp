@@ -23,6 +23,7 @@ public:
 	static void addObject(Object* newobj);
 	static void setWorld(World* newWorld) {world = newWorld;};
 private:
+	static void KeyCallbackProcess(bool keysPressed[389]);
 	static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
 	static void processInput();
 	static bool shouldStop;

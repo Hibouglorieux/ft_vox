@@ -77,6 +77,7 @@ void Loop::processInput()
 	glfwPollEvents();
 	bool forward, backward, left, right;
 	forward = backward = left = right = false;
+
 	if (glfwGetKey(appWindow::getWindow(), GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		glfwSetWindowShouldClose(appWindow::getWindow(), true);
 	// camera
@@ -88,19 +89,6 @@ void Loop::processInput()
 		right = true;
 	if (glfwGetKey(appWindow::getWindow(), GLFW_KEY_A) == GLFW_PRESS)
 		left = true;
-	if (glfwGetKey(appWindow::getWindow(), GLFW_KEY_O) == GLFW_PRESS)
-		world->freeze = !world->freeze;
-	if (glfwGetKey(appWindow::getWindow(), GLFW_KEY_P) == GLFW_PRESS)
-	{
-		world->pause = !world->pause;
-		if (world->pause)
-			glfwSetInputMode(appWindow::getWindow(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-		else
-		{
-			glfwSetCursorPos(appWindow::getWindow(), appWindow::getWindowWidth() * 0.5f, appWindow::getWindowHeight() * 0.5f);
-			glfwSetInputMode(appWindow::getWindow(), GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
-		}
-	}
 	bool shift = glfwGetKey(appWindow::getWindow(), GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS ? true : false;
 	if (world)
 	{
@@ -126,6 +114,42 @@ void Loop::processInput()
 		glfwSetInputMode(appWindow::getWindow(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 }
 
+void Loop::KeyCallbackProcess(bool keysPressed[389])
+{
+	for (int i = 0; i < 389; i++)
+	{
+		if (!keysPressed[i])
+			continue;
+		if (i == GLFW_KEY_P)
+		{
+			world->pause = !world->pause;
+			if (world->pause)
+				glfwSetInputMode(appWindow::getWindow(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+			else
+			{
+				glfwSetCursorPos(appWindow::getWindow(), appWindow::getWindowWidth() * 0.5f, appWindow::getWindowHeight() * 0.5f);
+				glfwSetInputMode(appWindow::getWindow(), GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+			}
+		}
+		if (i == GLFW_KEY_O)
+		{
+			world->freeze = !world->freeze;
+			if (world->freeze)
+				printf("World freezed\n");
+			else
+				printf("World resumed\n");
+		}
+		if (i == GLFW_KEY_I)
+		{
+			world->blocFreeze = !world->blocFreeze;
+			if (world->blocFreeze)
+				printf("World blocks freezed\n");
+			else
+				printf("World blocks resumed\n");
+		}
+	}
+}
+
 void Loop::keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
 	(void)scancode;
@@ -135,4 +159,10 @@ void Loop::keyCallback(GLFWwindow* window, int key, int scancode, int action, in
 		return;
 	if (key == GLFW_KEY_R && action == GLFW_PRESS && world)
 		world->getCamera().reset();
+
+	
+	static bool keysPressed[389] = {false};
+
+	keysPressed[key] = action;
+	KeyCallbackProcess(keysPressed);
 }

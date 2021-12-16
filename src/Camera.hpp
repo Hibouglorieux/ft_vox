@@ -75,10 +75,10 @@ public:
 	Vec3 unProjectToOrigin(float mouseX, float mouseY, Matrix projMat);
 	Vec3 getDirection() const;// meant to convert degree to rad
 	Frustum getFrustum() const;
+	void updateFrustum(bool blocFrustum);
 
 private:
 	void actualizeView();
-	void updateFrustum();
 	Matrix view;
 	Vec3 dir;
 	Vec3 pos;

@@ -43,7 +43,6 @@ public:
 	static	Vec2 worldCoordToChunk(Vec3 worldPos);
 	static	int totalChunks;
 	AABB	boundingVolume = AABB(Vec3(0, 0, 0), Vec3(CHUNK_WIDTH, CHUNK_HEIGHT, CHUNK_DEPTH));
-	AABB	cubeBoundingVolume = AABB(Vec3(0, 0, 0), Vec3(1, 1, 1));
 
 	void	updateVisibilityByCamera(bool freeze);
 

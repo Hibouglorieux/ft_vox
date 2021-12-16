@@ -36,7 +36,7 @@ Camera::Camera(Vec3 position)
 	WorldUp = Vec3(0, 1, 0);
 	Up = Vec3(1, 0, 0); // TODO : Update to use default cam rot
 
-	updateFrustum();
+	updateFrustum(false);
 	
 	/*
 	Vec3 farCenter = pos + pos * frontMultFar;
@@ -52,22 +52,61 @@ Camera::Camera(Vec3 position)
 	*/
 }
 
-void Camera::updateFrustum()
+void Camera::updateFrustum(bool blocFrustum)
 {
 	Front = getDirection();
-	Right = Up.cross(Front); //Vec3(Up.y * Front.z - Up.z * Front.y, Up.z * Front.x - Up.x * Front.z, Up.x * Front.y - Up.y * Front.x);
-	Up = Front.cross(Right); //Vec3(Front.y * Right.z - Front.z * Right.y, Front.z * Right.x - Front.x * Right.z, Front.x * Right.y - Front.y * Right.x);
+	Right = Up.cross(Front).getNormalized(); //Vec3(Up.y * Front.z - Up.z * Front.y, Up.z * Front.x - Up.x * Front.z, Up.x * Front.y - Up.y * Front.x);
+	Up = Front.cross(Right).getNormalized(); //Vec3(Front.y * Right.z - Front.z * Right.y, Front.z * Right.x - Front.x * Right.z, Front.x * Right.y - Front.y * Right.x);
 
-	const float halfVSide = FAR * tanf(FOV * .5f);
-    const float halfHSide = halfVSide * (WIDTH / HEIGHT);
-    const Vec3	frontMultFar = getDirection() * FAR;
+	/*Front.print();
+	Right.print();
+	Up.print();
+	printf("\n");*/
 
-	frustum.nearFace = { pos + Front * NEAR, Front };
-    frustum.farFace = { pos + frontMultFar, -Front };
-    frustum.rightFace = { pos, Up.cross(frontMultFar + Right * halfHSide) };
-    frustum.leftFace = { pos, (frontMultFar - Right * halfHSide).cross(Up) };
-    frustum.topFace = { pos, Right.cross(frontMultFar - Up * halfVSide) };
-    frustum.bottomFace = { pos, (frontMultFar + Up * halfVSide).cross(Right) };
+	float	halfVSide, halfHSide = 0;
+    Vec3	frontMultFar;
+	int		height, width;
+
+	appWindow::getWindowSize(&width, &height);
+	if (blocFrustum)
+		halfVSide = FAR * tanf(FOV * 0.5f);
+	else
+		halfVSide = FAR * tanf(FOV * 0.5f);
+
+	halfHSide = (halfVSide * ((float)width / (float)height));
+	frontMultFar = getDirection() * FAR;
+
+	/*printf("Half Vertical Side : %f\n", halfVSide);
+	printf("Half Horizontal Side : %f\n", halfHSide);
+	//printf("hor : %f\n", (halfVSide * (float)width / (float)height));
+	printf("Aspect : %f\n", ((float)width / (float)height));
+	frontMultFar.print();
+	printf("\n");*/
+
+	// Corner of viewPlane at Z = 1
+	Vec3 northWest = Vec3(-halfHSide, halfVSide, 1).getNormalized();
+	Vec3 northEast = Vec3(halfHSide, halfVSide, 1).getNormalized();
+	Vec3 southWest = Vec3(-halfHSide, -halfVSide, 1).getNormalized();
+	Vec3 southEast = Vec3(halfHSide, -halfVSide, 1).getNormalized();
+
+	if (!blocFrustum)
+	{
+		frustum.nearFace 	=	{ pos + Front * NEAR, Front 										};
+		frustum.farFace 	=	{ pos + frontMultFar, -Front 										};
+		frustum.rightFace 	=	{ pos				, Up.cross(frontMultFar + Right * halfHSide) 	};
+		frustum.leftFace 	=	{ pos				, (frontMultFar - Right * halfHSide).cross(Up) 	};
+		frustum.topFace 	=	{ pos				, Right.cross(frontMultFar - Up * halfVSide) 	};
+		frustum.bottomFace 	= 	{ pos				, (frontMultFar + Up * halfVSide).cross(Right) 	};
+	}
+	else
+	{
+		frustum.nearFace 	=	{ pos + Front * NEAR		, Front 										};
+		frustum.farFace 	=	{ pos + frontMultFar		, Front 										};
+		frustum.rightFace 	=	{ pos						, Up.cross(frontMultFar + Right * halfHSide) 	* 0.5};
+		frustum.leftFace 	=	{ pos						, (frontMultFar - Right * halfHSide).cross(Up) 	* 0.5};
+		frustum.topFace 	=	{ pos						, Right.cross(frontMultFar - Up * halfVSide) 	};
+		frustum.bottomFace 	= 	{ pos						, (frontMultFar + Up * halfVSide).cross(Right) 	};
+	}
 }
 
 Frustum Camera::getFrustum() const
@@ -89,6 +128,7 @@ void Camera::reset()
 Matrix Camera::getMatrix()
 {
 	actualizeView();
+	updateFrustum(false);
 	return view;
 }
 
@@ -112,7 +152,7 @@ void Camera::move(bool forward, bool backward, bool right, bool left, float spee
 		realMovement += Matrix::createRotationMatrix(Matrix::RotationDirection::Y, -90) * moveDir;
 	}
 	pos += realMovement.getNormalized() * speedFactor;
-	updateFrustum();
+	//updateFrustum(false);
 }
 
 Vec3 Camera::getDirection() const
@@ -129,13 +169,13 @@ Vec3 Camera::getDirection() const
 void Camera::moveUp(float distance)
 {
 	pos.y += distance;
-	updateFrustum();
+	//updateFrustum(false);
 }
 
 void Camera::moveDown(float distance)
 {
 	pos.y -= distance;
-	updateFrustum();
+	//updateFrustum(false);
 }
 
 void Camera::rotate(double x, double y)
@@ -149,7 +189,7 @@ void Camera::rotate(double x, double y)
 	if (dir.x < -89.0f)
 		dir.x = -89.0f;
 
-	updateFrustum();
+	//updateFrustum(false);
 }
 
 void Camera::actualizeView()

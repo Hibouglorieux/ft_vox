@@ -31,6 +31,8 @@ protected:
 	static Matrix projMat;
 };
 
+# define BB_VERBOSE false
+
 struct BoundingVolume
 {
 	//virtual bool isOnFrustum(const Frustum& camFrustum, const Transform& transform) const = 0;
@@ -52,13 +54,18 @@ struct AABB : public BoundingVolume
 {
 	Vec3 center{ 0.f, 0.f, 0.f };
 	Vec3 extents{ 0.f, 0.f, 0.f };
+	Vec3 worldPos{ 0.f, 0.f, 0.f};
 
 	AABB(const Vec3& min, const Vec3& max)
-		: BoundingVolume{}, center{(min)}, extents{ max.x - center.x, max.y - center.y, max.z - center.z }
-	{}
+		: BoundingVolume{}, center{(max - min) * 0.5f}, extents{(max - min) *  0.5f}, worldPos{(min + extents)}
+	{
+		/*min.print();
+		max.print();
+		center.print();*/
+	}
 
-	AABB(const Vec3& inCenter, float iI, float iJ, float iK)
-		: BoundingVolume{}, center{ inCenter }, extents{ iI, iJ, iK }
+	AABB(const Vec3& inCenter, float iI, float iJ, float iK, Vec3 worldPos)
+		: BoundingVolume{}, center{ inCenter }, extents{ iI, iJ, iK }, worldPos{worldPos}
 	{}
 
 	//see https://gdbooks.gitbooks.io/3dcollisions/content/Chapter2/static_aabb_plan.html
@@ -68,9 +75,16 @@ struct AABB : public BoundingVolume
 		const float r = extents.x * std::abs(plan.normal.x) + extents.y * std::abs(plan.normal.y) +
 			extents.z * std::abs(plan.normal.z);
 
-		/*printf("Center : ");
-		center.print();
-		printf("R : %f | Signed dist to plan : %f\n", -r, plan.getSignedDistanceToPlan(center));*/
+		if (BB_VERBOSE)
+		{
+			printf("WorldPos : ");
+			worldPos.print();
+			printf("Center : ");
+			center.print();
+			printf("Normal : ");
+			plan.normal.print();
+			printf("R : %f | Signed dist to plan : %f\n", -r, plan.getSignedDistanceToPlan(center));
+		}
 
 		return -r <= plan.getSignedDistanceToPlan(center);
 	}
@@ -80,12 +94,19 @@ struct AABB : public BoundingVolume
 		// TODO : Update scale correctly
 		//Get global scale thanks to our transform
 		//const Vec3 globalCenter{ transform.getModelMatrix() * glm::vec4(center, 1.f) };
-		const Vec3 globalCenter = Vec3(center);
+		const Vec3 globalCenter = worldPos;
 
 		// Scaled orientation
 		const Vec3 right = Vec3(1, 0, 0) * extents.x;//transform.getRight() * extents.x;
 		const Vec3 up = Vec3(0, 1, 0) * extents.y;//transform.getUp() * extents.y;
 		const Vec3 forward = Vec3(0, 0, 1) * extents.z;//transform.getForward() * extents.z;
+
+		/*printf("STUFF\n");
+		extents.print();
+		center.print();
+		right.print();
+		up.print();
+		forward.print();*/
 
 		const float newIi = std::abs(Vec3(1.f, 0.f, 0.f).dot(right)) +
 			std::abs(Vec3(1.f, 0.f, 0.f).dot(up)) +
@@ -98,15 +119,48 @@ struct AABB : public BoundingVolume
 		const float newIk = std::abs(Vec3(0.f, 0.f, 1.f).dot(right)) +
 			std::abs(Vec3(0.f, 0.f, 1.f).dot(up)) +
 			std::abs(Vec3(0.f, 0.f, 1.f).dot(forward));
+		/*const float newIi = extents.x;
+		const float newIj = extents.y;
+		const float newIk = extents.z;*/
 
-		const AABB globalAABB(globalCenter, newIi, newIj, newIk);
+		//printf("%f %f %f\n", newIi, newIj, newIk);
 
-		return ((globalAABB.isOnOrForwardPlan(camFrustum.leftFace) ||
-			globalAABB.isOnOrForwardPlan(camFrustum.rightFace) ||
-			globalAABB.isOnOrForwardPlan(camFrustum.topFace) ||
-			globalAABB.isOnOrForwardPlan(camFrustum.bottomFace)) && (
-			globalAABB.isOnOrForwardPlan(camFrustum.nearFace) ||
-			globalAABB.isOnOrForwardPlan(camFrustum.farFace)));
+		const AABB globalAABB(globalCenter, newIi, newIj, newIk, worldPos);
+
+		/*printf("Global AABB variables : \n");
+		globalAABB.center.print();
+		globalAABB.extents.print();
+		globalAABB.worldPos.print();
+		printf("\n");*/
+
+		bool bleft, bright, btop, bbottom, bnear, bfar = false;
+		if (BB_VERBOSE)
+		{
+			printf("Left  face  : ");
+			bleft = globalAABB.isOnOrForwardPlan(camFrustum.leftFace);
+			printf("Right face  : ");
+			bright = globalAABB.isOnOrForwardPlan(camFrustum.rightFace);
+			printf("Top face    : ");
+			btop = globalAABB.isOnOrForwardPlan(camFrustum.rightFace);
+			printf("Bottom face : ");
+			bbottom = globalAABB.isOnOrForwardPlan(camFrustum.rightFace);
+			printf("Near face   : ");
+			bnear = globalAABB.isOnOrForwardPlan(camFrustum.rightFace);
+			printf("Far face    : ");
+			bfar = globalAABB.isOnOrForwardPlan(camFrustum.rightFace);
+		}
+		else
+		{
+			bleft = globalAABB.isOnOrForwardPlan(camFrustum.leftFace);
+			bright = globalAABB.isOnOrForwardPlan(camFrustum.rightFace);
+			btop = globalAABB.isOnOrForwardPlan(camFrustum.rightFace);
+			bbottom = globalAABB.isOnOrForwardPlan(camFrustum.rightFace);
+			bnear = globalAABB.isOnOrForwardPlan(camFrustum.rightFace);
+			bfar = globalAABB.isOnOrForwardPlan(camFrustum.rightFace);
+		}
+		
+
+		return (bleft && bright && btop && bbottom && bnear && bfar);
 	};
 };
 

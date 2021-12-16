@@ -5,8 +5,7 @@
 #define MAX(x, y) (x)//(x > y ? x : y)
 #define TMP_SLEEP_VALUE 0.05 * SEC_TO_MICROSEC
 
-#define NO_TYPE 99
-
+//#define NO_TYPE 99
 
 int Chunk::totalChunks = 0;
 
@@ -111,6 +110,13 @@ void Chunk::initChunk(void)
 	{
 		for(unsigned int x = 0; x < CHUNK_WIDTH; x++)
 		{
+			for(unsigned int y = 0; y < CHUNK_HEIGHT; y++)
+			{
+				bloc = &(blocs[y][z][x]);
+				bloc->type = NO_TYPE;
+				bloc->visible = false;
+				bloc->isOnFrustum = false;
+			}
 			bloc = &(blocs[0][z][x]);
 			bloc->type = BLOCK_BEDROCK;
 			bloc->visible = true; // will be updated after with updateVisibility
@@ -161,7 +167,8 @@ void Chunk::initChunk(void)
 	//std::cout << max << std::endl;
 	if (max < CHUNK_HEIGHT)
 		max = max + 30;
-	boundingVolume = AABB(Vec3(0, 0, 0), Vec3(CHUNK_WIDTH, max, CHUNK_DEPTH));
+	boundingVolume = AABB(position, Vec3(position.x + CHUNK_WIDTH, max, position.z + CHUNK_DEPTH));
+	//boundingVolume = AABB(Vec3(0, 0, 0), Vec3(CHUNK_WIDTH, max, CHUNK_DEPTH));
 	//std::cout << "Is on frustum : " << boundingVolume.isOnFrustum(playerCamera->getFrustum()) << std::endl;
 
 	updateVisibility();
@@ -274,16 +281,28 @@ Chunk::~Chunk(void)
 	glDeleteBuffers(1, &typeVBO);
 	glBindBuffer(GL_ARRAY_BUFFER, positionVBO);
 	glDeleteBuffers(1, &positionVBO);
-	delete heightMap;
+	//delete heightMap;
 	totalChunks--;
 }
 
 void Chunk::updateVisibilityByCamera(bool freeze)
 {
+	// This functions does not seems like a good idea.
+	// It is not working as intended and destroying perf for the moment
 	struct bloc	*bloc;
-	hardBlocVisible = 0;
-	if (!freeze)
+	if (freeze || !init)
 		return;
+	//draw_safe.lock();
+	//printf("Updating visibilty by camera of chunk !\n");
+	
+	playerCamera->updateFrustum(true);
+	Frustum playerFrustum = playerCamera->getFrustum();
+	Vec3 playerSight = playerCamera->getDirection();
+	Vec3 playerPos = playerCamera->getPos();
+
+	int	Blocks[CHUNK_SIZE] = {0};
+
+	//hardBlocVisible = 0;
 	for(int y = CHUNK_HEIGHT; y > 0; y--)
 	{
 		for(int z = CHUNK_DEPTH; z > 0; z--)
@@ -291,14 +310,14 @@ void Chunk::updateVisibilityByCamera(bool freeze)
 			for(int x = CHUNK_WIDTH; x > 0; x--)
 			{
 				bloc = &(blocs[y - 1][z - 1][x - 1]);
-				if (bloc->type != NO_TYPE)
+				
+				if (false && bloc->type != NO_TYPE)
 				{
+					bool isOnFrustum = AABB(Vec3(position.x + x - 1, position.y + y - 1, position.z + z - 1), Vec3(position.x + x, position.y + y, position.z + z)).isOnFrustum(playerFrustum);
 					if (bloc->visible == true)
 					{
-						hardBlocVisible += 1;
-						bool isOnFrustum = AABB(Vec3(x - 1, y - 1, z - 1), Vec3(1, 1, 1)).isOnFrustum(playerCamera->getFrustum());
-						//printf("IsOnFrustum : %i\n", isOnFrustum);
-						if (AABB(Vec3(x - 1, y - 1, z - 1), Vec3(1, 1, 1)).isOnFrustum(playerCamera->getFrustum()))
+						hardBlocVisible++;
+						if (isOnFrustum)
 						{
 							bloc->type = BLOCK_SAND;
 							bloc->isOnFrustum = true;
@@ -306,13 +325,64 @@ void Chunk::updateVisibilityByCamera(bool freeze)
 						else
 						{
 							bloc->isOnFrustum = false;
+							bloc->visible = false;
+							hardBlocVisible--;
 							bloc->type = BLOCK_GRASS;
 						}
+					}
+					else
+					{
+						if (isOnFrustum)
+						{
+							bloc->type = BLOCK_SAND;
+							bloc->isOnFrustum = true;
+							bloc->visible = true;
+							hardBlocVisible++;
+						}
+						else
+						{
+							bloc->type = BLOCK_GRASS;
+							bloc->isOnFrustum = false;
+						}
+					}
+				}
+				// Compute line of sight from block to player.
+				if (bloc->type != NO_TYPE)
+				{
+					Vec3 blockPosition = Vec3(position + Vec3(x - 1, y - 1, z - 1));
+					Vec3 dirToCamera = Vec3(playerPos - blockPosition).getNormalized();
+
+					float value = dirToCamera.dot(playerSight) * 90.0f;
+					printf("Sight value : %f\n", value);
+					if (FOV >= value && value >= -FOV)
+					{
+						if (bloc->visible == false)
+						{
+							printf("Value : %f >= %f >= %f\n", FOV, value, -FOV);
+							printf("Showing block\n");
+							bloc->visible = true;
+							hardBlocVisible++;
+						}
+					}
+					else
+					{
+						if (bloc->visible)
+						{
+							printf("Value : %f >= %f >= %f\n", FOV, value, -FOV);
+							printf("Hiding block\n");
+							hardBlocVisible--;
+						}
+						bloc->visible = false;
 					}
 				}
 			}
 		}
 	}
+	printf("\n");
+	printf("Block visible : %i\n", hardBlocVisible);
+	//updateVisibility();
+	updateChunk = true;
+	//draw_safe.unlock();
 }
 
 void Chunk::updateVisibility(void)
@@ -332,18 +402,6 @@ void Chunk::updateVisibility(void)
 					if (bloc->visible == true)
 					{
 						hardBlocVisible += 1;
-						bool isOnFrustum = AABB(Vec3(x - 1, y - 1, z - 1), Vec3(1, 1, 1)).isOnFrustum(playerCamera->getFrustum());
-						//printf("IsOnFrustum : %i\n", isOnFrustum);
-						if (AABB(Vec3(x - 1, y - 1, z - 1), Vec3(1, 1, 1)).isOnFrustum(playerCamera->getFrustum()))
-						{
-							bloc->type = BLOCK_SAND;
-							bloc->isOnFrustum = true;
-						}
-						else
-						{
-							bloc->isOnFrustum = false;
-							bloc->type = BLOCK_GRASS;
-						}
 					}
 				}
 			}
