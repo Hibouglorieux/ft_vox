@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/07/21 18:11:30 by nathan            #+#    #+#             */
-/*   Updated: 2021/12/03 17:09:49 by nallani          ###   ########.fr       */
+/*   Updated: 2021/12/17 21:44:26 by nallani          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,8 +33,8 @@ World::World()
 	for (auto pos : positions)
 	{
 			auto allocatedNeighbours = getAllocatedNeighbours(pos);
-			for (auto it: allocatedNeighbours)
-				it.second->increaseThreadCount();
+			//for (auto it: allocatedNeighbours)
+				//it.second->increaseThreadCount();
 			Chunk* chnk = new Chunk(pos.x, pos.y, &camera, allocatedNeighbours);
 			visibleChunks.insert(std::pair<Vec2, Chunk*>(pos, chnk));
 
@@ -52,8 +52,8 @@ World::World()
 		if (visibleChunks.find(pos) == visibleChunks.end())
 		{
 			auto allocatedNeighbours = getAllocatedNeighbours(pos);
-			for (auto it: allocatedNeighbours)
-				it.second->increaseThreadCount();
+			//for (auto it: allocatedNeighbours)
+				//it.second->increaseThreadCount();
 			Chunk* chnk = new Chunk(pos.x, pos.y, &camera, allocatedNeighbours);
 			preLoadedChunks.insert(std::pair<Vec2, Chunk*>(pos, chnk));
 
@@ -154,7 +154,7 @@ void World::render()
 	std::vector<std::pair<Vec2, Chunk*>> chunksToRender;
 	if (!freeze)
 	{
-		std::vector<std::thread> threads;
+		//std::vector<std::thread> threads;
 
 		auto chunkVisibilityUpdate = [](Chunk *chnk, bool freeze)
 		{
@@ -171,19 +171,13 @@ void World::render()
 				std::pair<Vec2, Chunk*> tmpPair(pos - curPos, chnk);
 				chunksToRender.push_back(tmpPair);
 
-				threads.push_back(std::thread(chunkVisibilityUpdate, chnk, blocFreeze));
+				//threads.push_back(std::thread(chunkVisibilityUpdate, chnk, blocFreeze));
 
 				//chunksToRender.push_back(std::make_pair<Vec2, Chunk*>(pos - curPos, chnk));
 				//chunksToRender[it.first - curPos] = chnk;
 				//chnk->draw(shader);
 			}
 			//printf("\n");
-		}
-
-		for (std::thread& worker : threads)
-		{
-			//worker.detach();
-			worker.join();
 		}
 
 		//printf("\n\n\n");
@@ -270,8 +264,8 @@ void World::updateChunkBuffers(Vec2 newPos)
 		if (preLoadedChunks.find(preloadedPositions) == preLoadedChunks.end())
 		{
 			auto allocatedNeighbours = getAllocatedNeighbours(preloadedPositions);
-			for (auto it: allocatedNeighbours)
-				it.second->increaseThreadCount();
+			//for (auto it: allocatedNeighbours)
+				//it.second->increaseThreadCount();
 			chunks.push_back(new Chunk(preloadedPositions.x, preloadedPositions.y, &camera, allocatedNeighbours));
 			preLoadedChunks.insert(std::pair<Vec2, Chunk*>(preloadedPositions, chunks.back()));
 		}
@@ -366,8 +360,8 @@ bool	World::shouldBeRendered(Vec2 chunkPos, const Chunk* chnk, Matrix& matrix)
 	(void)matrix;
 	// Using direction and pos, we could elimate those behind us directly
 
-	//if (chunkPos == curPos)
-	//	return true;
+	if (chunkPos == curPos)
+		return true;
 	//camera.getPos().print();
 	return (chnk->boundingVolume.isOnFrustum(camera.getFrustum()));
 }

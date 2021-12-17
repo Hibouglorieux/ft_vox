@@ -37,11 +37,12 @@ Chunk::Chunk(int x, int z, Camera* camera)
 	playerCamera = camera;
 	glGenBuffers(1, &typeVBO);
 	glGenBuffers(1, &positionVBO);
+	glGenBuffers(1, &facesVBO);
 }
 
 Chunk::Chunk(int x, int z, Camera* camera, std::vector<std::pair<Vec2, Chunk*>> neighbours) : Chunk(x, z, camera)
 {
-	myNeighbours = neighbours;
+	//myNeighbours = neighbours;
 }
 
 float Chunk::getBlockBiome(int x, int z)
@@ -377,10 +378,11 @@ void Chunk::updateVisibility(void)
 				bloc = &(blocs[y - 1][z - 1][x - 1]);
 				if (bloc->type != NO_TYPE)
 				{
-					setVisibilityByNeighbors(x - 1, y - 1, z - 1);
+					GLuint visibleFaces = setVisibilityByNeighbors(x - 1, y - 1, z - 1);
 					if (bloc->visible == true)
 					{
 						hardBlocVisible += 1;
+						facesToRender.push_back(visibleFaces);
 					}
 				}
 			}
@@ -388,42 +390,35 @@ void Chunk::updateVisibility(void)
 	}
 }
 
-
-void Chunk::setVisibilityByNeighbors(int x, int y, int z) // Activates visibility if one neighbour is transparent
+GLuint Chunk::setVisibilityByNeighbors(int x, int y, int z) // Activates visibility if one neighbour is transparent
 {
 	struct bloc			*bloc = &(blocs[y][z][x]);
-	std::vector<struct bloc*>	neighbors = {};
-	//long unsigned int			hardNei = 0;
-	//long unsigned int			invisibleNei = 0;
-	//bool						set = false;
+	std::vector<std::pair<struct bloc*, GLuint>>	neighbors = {};
+	GLuint visibleFaces = 0;
 
 	if (y > 0)
-		neighbors.push_back(&(blocs[y - 1][z][x]));
+		neighbors.push_back({&(blocs[y - 1][z][x]), BOTTOM_NEIGHBOUR});
 	if (y < CHUNK_HEIGHT - 1)
-		neighbors.push_back(&(blocs[y + 1][z][x]));
+		neighbors.push_back({&(blocs[y + 1][z][x]), UP_NEIGHBOUR});
 	if (x > 0)
-		neighbors.push_back(&(blocs[y][z][x - 1]));
+		neighbors.push_back({&(blocs[y][z][x - 1]), LEFT_NEIGHBOUR});
 	if (x < CHUNK_WIDTH - 1)
-		neighbors.push_back(&(blocs[y][z][x + 1]));
+		neighbors.push_back({&(blocs[y][z][x + 1]), RIGHT_NEIGHBOUR});
 	if (z > 0)
-		neighbors.push_back(&(blocs[y][z - 1][x]));
+		neighbors.push_back({&(blocs[y][z - 1][x]), BACK_NEIGHBOUR});
 	if (z < CHUNK_DEPTH - 1)
-		neighbors.push_back(&(blocs[y][z + 1][x]));
-	for (struct bloc *nei: neighbors)
+		neighbors.push_back({&(blocs[y][z + 1][x]), FRONT_NEIGHBOUR});
+	for (auto it : neighbors)
 	{
+		struct bloc *nei = it.first;
+		GLuint currentFace = it.second;
 		if (nei->type == NO_TYPE)
 		{
 			bloc->visible = true;
-			//set = true;
-			//break;
+			visibleFaces |= currentFace;
 		}
-		//hardNei += nei->type != NO_TYPE ? 1 : 0;
-		//invisibleNei += nei->type == NO_TYPE || bloc->visible == false ? 1 : 0;
 	}
-	//if (hardNei == neighbors.size())
-		//bloc->visible = false;
-	//else if (invisibleNei == neighbors.size() && !set)
-		//bloc->visible = false;
+	return visibleFaces;
 }
 
 bool Chunk::generatePosOffsets(void)
@@ -437,11 +432,11 @@ bool Chunk::generatePosOffsets(void)
 	{
 		GLfloat	*WIP_transform = new GLfloat[hardBlocVisible * 3];//CHUNK_HEIGHT * CHUNK_WIDTH * CHUNK_DEPTH * 3];
 		GLint	*WIP_type = new GLint[hardBlocVisible];
-		for(unsigned int y = 0; y < CHUNK_HEIGHT; y++)	// Too big of a loop
+		for(int y = CHUNK_HEIGHT - 1; y >= 0; y--)	// Too big of a loop
 		{
-			for(unsigned int z = 0; z < CHUNK_DEPTH; z++)
+			for(int z = CHUNK_DEPTH - 1; z >= 0; z--)
 			{
-				for(unsigned int x = 0; x < CHUNK_WIDTH; x++)
+				for(int x = CHUNK_WIDTH -1 ; x >= 0; x--)
 				{
 					unsigned int indexX = 0;
 					unsigned int indexY = 0;
@@ -474,6 +469,12 @@ bool Chunk::generatePosOffsets(void)
 				WIP_type, GL_STATIC_DRAW);
 		delete [] WIP_type;
 
+		if (hardBlocVisible != facesToRender.size())
+			std::cout << "Error : wtf problem with visible blocs and faces" << std::endl;
+		glBindBuffer(GL_ARRAY_BUFFER, facesVBO);
+		glBufferData(GL_ARRAY_BUFFER, facesToRender.size() * sizeof(GLuint),
+				facesToRender.data(), GL_STATIC_DRAW);
+
 
 		updateChunk = false;
 		return true;
@@ -495,7 +496,10 @@ void Chunk::draw(Shader* shader)
 
 	//glBindTexture(GL_TEXTURE_CUBE_MAP, texture->getID());	// TODO : Modify in order to use more than one texture at once and those texture should not be loaded here but
 															// in ResourceManager.
-	RectangularCuboid::drawInstance(shader, positionVBO, typeVBO, hardBlocVisible);
+	//RectangularCuboid::drawInstance(shader, positionVBO, typeVBO, hardBlocVisible);
+	//RectangularCuboid::drawFace(shader, positionVBO, typeVBO, hardBlocVisible, facesToRender);
+	RectangularCuboid::drawFaceInstance(shader, positionVBO, typeVBO, hardBlocVisible, facesVBO);
+	
 	draw_safe.unlock();
 }
 

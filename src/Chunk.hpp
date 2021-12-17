@@ -61,7 +61,7 @@ private:
 			std::function<void(const BlocData&)> callBack = nullptr);
 	bool 	updateVis = false;
 	void	updateVisibility(void);
-	void	setVisibilityByNeighbors(int x, int y, int z);
+	GLuint	setVisibilityByNeighbors(int x, int y, int z);
 	void	caveTest();
 	void	worleyCaveTest();
 	void	destroyIlots();
@@ -82,7 +82,8 @@ private:
 	std::mutex	draw_safe;
 	Texture* texture;
 
-	GLuint typeVBO, positionVBO;
+	GLuint typeVBO, positionVBO, facesVBO;
+	std::vector<GLuint>	facesToRender;
 
 	std::vector<std::pair<Vec2, Chunk*>> myNeighbours;
 
