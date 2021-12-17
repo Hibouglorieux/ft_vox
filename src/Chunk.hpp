@@ -23,6 +23,27 @@
 # define CHUNK_SIZE CHUNK_HEIGHT * CHUNK_WIDTH * CHUNK_DEPTH
 
 # define WATER_LEVEL 32
+/*
+class Block : public Object{
+	public:
+		Block(int x, int y, int z)
+		{
+			position = Vec3(x, y, z);
+			type = NO_TYPE;
+			isActive = false;
+			isVisible = false;
+		}
+	private:
+		Vec3 		position;
+		blockType	type;
+		bool		isActive;
+		bool		isVisible;
+};
+
+class Chunk : public Object{
+	public:
+	private:
+};*/
 
 class Chunk : public Object{
 public:
@@ -54,8 +75,11 @@ private:
 		bool isOnFrustum;
 	};
 	typedef std::array<std::array<std::array<struct bloc, CHUNK_WIDTH>, CHUNK_DEPTH>, CHUNK_HEIGHT> BlocData;
-	typedef std::array<std::array<std::array<int, CHUNK_WIDTH>, CHUNK_DEPTH>, CHUNK_HEIGHT> BlocSearchData;
+	typedef std::array<std::array<std::array<int, CHUNK_WIDTH>, CHUNK_DEPTH>, CHUNK_HEIGHT> VisibilityGraph;
 
+	void	iterateAndUpdateThroughBloc(int x, int y, int z, int zone);
+	void	generateVisibilityGraph();
+	
 	void	updateVisibilityWithNeighbour(Vec2 NeighbourPos,
 			const BlocData& neighbourBlocs,
 			std::function<void(const BlocData&)> callBack = nullptr);
@@ -70,7 +94,7 @@ private:
 
 	Vec3	position;
 	BlocData blocs;
-	BlocSearchData blocsTests;
+	VisibilityGraph blocsVisibility;
 
 	bool	updateChunk;
 	bool	init;

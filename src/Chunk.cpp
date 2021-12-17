@@ -100,7 +100,6 @@ void Chunk::initChunk(void)
 
 	// Get height map for chunk
 	blocs = BlocData();// memset equivalent (needed)
-	blocs = {NO_TYPE, 0, 0}; // TODO : Check if correct
 
 	int min, max;
 	min = CHUNK_HEIGHT + 1;
@@ -119,7 +118,7 @@ void Chunk::initChunk(void)
 			}
 			bloc = &(blocs[0][z][x]);
 			bloc->type = BLOCK_BEDROCK;
-			bloc->visible = true; // will be updated after with updateVisibility
+			bloc->visible = false; // will be updated after with updateVisibility
 			bloc->isOnFrustum = false;
 			hardBloc++;
 
@@ -132,20 +131,20 @@ void Chunk::initChunk(void)
 
 			bloc = &(blocs[(int)blockValue][z][x]);
 			
-			/*for (int y = (int)blockValue - 1; y > 0; y--)
+			for (int y = (int)blockValue - 1; y > 0; y--)
 			{
 				bloc = &(blocs[y][z][x]);
 
 				int bloc_type = bloc->type;
 				bloc->type = BLOCK_DIRT;
-				bloc->visible = 0;
+				bloc->visible = false;
 				hardBloc++;
 				if (bloc_type != NO_TYPE) // block exists // broken with type because lol
 				{
 					float xScaled = x / (float)CHUNK_WIDTH + position.x / CHUNK_WIDTH;
 					float yScaled = y / (float)CHUNK_HEIGHT;
 					float zScaled = z / (float)CHUNK_DEPTH + position.z / CHUNK_DEPTH;
-					if (VoxelGenerator::getWorleyValueAt(xScaled, yScaled, zScaled) >= 0.5f) // random value
+					if (VoxelGenerator::getWorleyValueAt(xScaled, yScaled, zScaled) >= 0.6f) // random value
 					{
 						bloc->type = NO_TYPE;
 						hardBloc--;
@@ -161,7 +160,7 @@ void Chunk::initChunk(void)
 						hardBlocVisible++;
 					}
 				}
-			}*/
+			}
 		}
 	}
 	//std::cout << max << std::endl;
@@ -171,6 +170,7 @@ void Chunk::initChunk(void)
 	//boundingVolume = AABB(Vec3(0, 0, 0), Vec3(CHUNK_WIDTH, max, CHUNK_DEPTH));
 	//std::cout << "Is on frustum : " << boundingVolume.isOnFrustum(playerCamera->getFrustum()) << std::endl;
 
+	//generateVisibilityGraph();
 	updateVisibility();
 	//updateVisibilityByCamera();
 
@@ -285,8 +285,70 @@ Chunk::~Chunk(void)
 	totalChunks--;
 }
 
+void Chunk::iterateAndUpdateThroughBloc(int x, int y, int z, int zone)
+{
+	// This function does go back to already visited x/y/z blocs, not that good
+	struct bloc	bloc;
+
+	if (x < 0 || y < 0 || z < 0 || x > CHUNK_WIDTH - 1 || y > CHUNK_HEIGHT - 1 || z > CHUNK_DEPTH - 1)
+		return;
+
+	bloc = blocs[y - 1][z - 1][x - 1];
+	if (!(bloc.type == NO_TYPE || bloc.type == BLOCK_WATER) || blocsVisibility[y][z][x] != 0)
+	{
+		if (!(bloc.type == NO_TYPE || bloc.type == BLOCK_WATER))
+			blocsVisibility[y][z][x] = -1;
+		return;
+	}
+	// We also need to know if we are connecting to another face of another chunk
+	blocsVisibility[y][z][x] = zone;
+
+	iterateAndUpdateThroughBloc(x - 1	, y		, z		, zone);
+	iterateAndUpdateThroughBloc(x + 1	, y		, z		, zone);
+	iterateAndUpdateThroughBloc(x		, y - 1	, z		, zone);
+	iterateAndUpdateThroughBloc(x		, y + 1	, z		, zone);
+	iterateAndUpdateThroughBloc(x		, y		, z - 1	, zone);
+	iterateAndUpdateThroughBloc(x		, y		, z + 1	, zone);
+}
+
+void Chunk::generateVisibilityGraph()
+{
+	/*
+	*	This function should generate a visibility graph using flood fill algorithm.
+	*	We will iterate all NO_TYPE/WATER block to know if there are visible.
+	*	-
+	*	Should differents spaces be assigned ?
+	*
+	*
+	*	See :
+	*		https://tomcc.github.io/2014/08/31/visibility-1.html
+	*		https://tomcc.github.io/2014/08/31/visibility-2.html
+	*/
+	blocsVisibility = VisibilityGraph();
+	struct bloc	bloc;
+	int			zone;
+
+	zone = 1;
+	for(int y = CHUNK_HEIGHT; y > 0; y--)
+	{
+		for(int z = CHUNK_DEPTH; z > 0; z--)
+		{
+			for(int x = CHUNK_WIDTH; x > 0; x--)
+			{
+				bloc = blocs[y - 1][z - 1][x - 1];
+				if (bloc.type == NO_TYPE || bloc.type == BLOCK_WATER)
+				{
+					iterateAndUpdateThroughBloc(x - 1, y - 1, z - 1, zone);
+					zone++;
+				}
+			}
+		}
+	}
+}
+
 void Chunk::updateVisibilityByCamera(bool freeze)
 {
+	//return;
 	// Raycasting -> Bad idea
 	// This functions does not seems like a good idea.
 	// It is not working as intended and destroying perf for the moment
@@ -307,9 +369,11 @@ void Chunk::updateVisibilityByCamera(bool freeze)
 			for(int x = CHUNK_WIDTH; x > 0; x--)
 			{
 				bloc = &(blocs[y - 1][z - 1][x - 1]);
+				if (bloc->type == NO_TYPE)
+					continue;
 
 				// Compute line of sight from block to player.
-				if (bloc->type != NO_TYPE)
+				if (false && bloc->type != NO_TYPE)
 				{
 					// Block position
 					Vec3 blockPosition = Vec3(position + Vec3(x - 1, y - 1, z - 1));
@@ -358,7 +422,7 @@ void Chunk::updateVisibilityByCamera(bool freeze)
 	//printf("\n");
 	//printf("Block visible : %i\n", hardBlocVisible);
 
-	updateChunk = true;
+	//updateChunk = true;
 	//if (hardBlocVisible > 0)
 	//	Chunk::generatePosOffsets();
 	//draw_safe.unlock();
@@ -387,7 +451,6 @@ void Chunk::updateVisibility(void)
 		}
 	}
 }
-
 
 void Chunk::setVisibilityByNeighbors(int x, int y, int z) // Activates visibility if one neighbour is transparent
 {
