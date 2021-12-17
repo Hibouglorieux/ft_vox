@@ -84,29 +84,17 @@ void Camera::updateFrustum(bool blocFrustum)
 	printf("\n");*/
 
 	// Corner of viewPlane at Z = 1
-	Vec3 northWest = Vec3(-halfHSide, halfVSide, 1).getNormalized();
+	/*Vec3 northWest = Vec3(-halfHSide, halfVSide, 1).getNormalized();
 	Vec3 northEast = Vec3(halfHSide, halfVSide, 1).getNormalized();
 	Vec3 southWest = Vec3(-halfHSide, -halfVSide, 1).getNormalized();
-	Vec3 southEast = Vec3(halfHSide, -halfVSide, 1).getNormalized();
+	Vec3 southEast = Vec3(halfHSide, -halfVSide, 1).getNormalized();*/
 
-	if (!blocFrustum)
-	{
-		frustum.nearFace 	=	{ pos + Front * NEAR, Front 										};
-		frustum.farFace 	=	{ pos + frontMultFar, -Front 										};
-		frustum.rightFace 	=	{ pos				, Up.cross(frontMultFar + Right * halfHSide) 	};
-		frustum.leftFace 	=	{ pos				, (frontMultFar - Right * halfHSide).cross(Up) 	};
-		frustum.topFace 	=	{ pos				, Right.cross(frontMultFar - Up * halfVSide) 	};
-		frustum.bottomFace 	= 	{ pos				, (frontMultFar + Up * halfVSide).cross(Right) 	};
-	}
-	else
-	{
-		frustum.nearFace 	=	{ pos + Front * NEAR		, Front 										};
-		frustum.farFace 	=	{ pos + frontMultFar		, Front 										};
-		frustum.rightFace 	=	{ pos						, Up.cross(frontMultFar + Right * halfHSide) 	* 0.5};
-		frustum.leftFace 	=	{ pos						, (frontMultFar - Right * halfHSide).cross(Up) 	* 0.5};
-		frustum.topFace 	=	{ pos						, Right.cross(frontMultFar - Up * halfVSide) 	};
-		frustum.bottomFace 	= 	{ pos						, (frontMultFar + Up * halfVSide).cross(Right) 	};
-	}
+	frustum.nearFace 	=	{ pos + Front * NEAR, Front 										};
+	frustum.farFace 	=	{ pos + frontMultFar, -Front 										};
+	frustum.rightFace 	=	{ pos				, Up.cross(frontMultFar + Right * halfHSide) 	};
+	frustum.leftFace 	=	{ pos				, (frontMultFar - Right * halfHSide).cross(Up) 	};
+	frustum.topFace 	=	{ pos				, Right.cross(frontMultFar - Up * halfVSide) 	};
+	frustum.bottomFace 	= 	{ pos				, (frontMultFar + Up * halfVSide).cross(Right) 	};
 }
 
 Frustum Camera::getFrustum() const

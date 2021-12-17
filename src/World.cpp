@@ -182,6 +182,7 @@ void World::render()
 
 		for (std::thread& worker : threads)
 		{
+			//worker.detach();
 			worker.join();
 		}
 

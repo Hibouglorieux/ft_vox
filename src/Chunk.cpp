@@ -287,22 +287,19 @@ Chunk::~Chunk(void)
 
 void Chunk::updateVisibilityByCamera(bool freeze)
 {
+	// Raycasting -> Bad idea
 	// This functions does not seems like a good idea.
 	// It is not working as intended and destroying perf for the moment
 	struct bloc	*bloc;
 	if (freeze || !init)
 		return;
-	//draw_safe.lock();
-	//printf("Updating visibilty by camera of chunk !\n");
 
-	playerCamera->updateFrustum(true);
 	Frustum playerFrustum = playerCamera->getFrustum();
 	Vec3 playerSight = playerCamera->getDirection();
+	//float sightLen = playerSight.getLength();
 	Vec3 playerPos = playerCamera->getPos();
+	float half_fov = 1.0 / 180.0 * (FOV * 1.2);
 
-	int	Blocks[CHUNK_SIZE] = {0};
-
-	//hardBlocVisible = 0;
 	for(int y = CHUNK_HEIGHT; y > 0; y--)
 	{
 		for(int z = CHUNK_DEPTH; z > 0; z--)
@@ -311,41 +308,6 @@ void Chunk::updateVisibilityByCamera(bool freeze)
 			{
 				bloc = &(blocs[y - 1][z - 1][x - 1]);
 
-				if (false && bloc->type != NO_TYPE)
-				{
-					bool isOnFrustum = AABB(Vec3(position.x + x - 1, position.y + y - 1, position.z + z - 1), Vec3(position.x + x, position.y + y, position.z + z)).isOnFrustum(playerFrustum);
-					if (bloc->visible == true)
-					{
-						hardBlocVisible++;
-						if (isOnFrustum)
-						{
-							bloc->type = BLOCK_SAND;
-							bloc->isOnFrustum = true;
-						}
-						else
-						{
-							bloc->isOnFrustum = false;
-							bloc->visible = false;
-							hardBlocVisible--;
-							bloc->type = BLOCK_GRASS;
-						}
-					}
-					else
-					{
-						if (isOnFrustum)
-						{
-							bloc->type = BLOCK_SAND;
-							bloc->isOnFrustum = true;
-							bloc->visible = true;
-							hardBlocVisible++;
-						}
-						else
-						{
-							bloc->type = BLOCK_GRASS;
-							bloc->isOnFrustum = false;
-						}
-					}
-				}
 				// Compute line of sight from block to player.
 				if (bloc->type != NO_TYPE)
 				{
@@ -353,26 +315,28 @@ void Chunk::updateVisibilityByCamera(bool freeze)
 					Vec3 blockPosition = Vec3(position + Vec3(x - 1, y - 1, z - 1));
 					// Direction vector from block to camera
 					Vec3 dirToCamera = Vec3(playerPos - blockPosition).getNormalized();
+					//float dirToLength = dirToCamera.getLength();
 
 					// Angle between the camera direction and the direction
 					// vector of the block to camera
 					float value = dirToCamera.dot(playerSight);
-					float cos = value / (dirToCamera.getLength() * playerSight.getLength());
+					//float cos = value / (dirToLength * sightLen);
 
-					Vec3 cross = dirToCamera.cross(playerSight);
-					float sin = cross.getLength() / (dirToCamera.getLength() * playerSight.getLength());
+					/*Vec3 cross = dirToCamera.cross(playerSight);
+					float sin = cross.getLength() / (dirToLength * sightLen);
 
-					float angle = std::acos(cos) * 180.0 / M_PI;
-					angle = cos;
+					float angle = std::acos(cos) * 180.0 / M_PI;*/
+					float angle = value;
 					//if (sin < 0)
 					//	angle = -angle;
-					printf("Sight value : %f\n", angle);
-					if ((angle <= 0.5 && angle >= -0.5) || angle >= -0.9)
+					//printf("Sight value : %f\n", angle);
+					//printf("%f\n", half_fov);
+					if (angle <= -1 + half_fov && angle >= -1)
 					{
 						if (bloc->visible == false)
 						{
-							printf("Value : %f >= %f >= %f\n", FOV, value, -FOV);
-							printf("Showing block\n");
+							//printf("Value : %f >= %f >= %f\n", FOV, value, -FOV);
+							//printf("Showing block\n");
 							bloc->visible = true;
 							hardBlocVisible++;
 						}
@@ -381,8 +345,8 @@ void Chunk::updateVisibilityByCamera(bool freeze)
 					{
 						if (bloc->visible)
 						{
-							printf("Value : %f >= %f >= %f\n", FOV, value, -FOV);
-							printf("Hiding block\n");
+							//printf("Value : %f >= %f >= %f\n", FOV, value, -FOV);
+							//printf("Hiding block\n");
 							hardBlocVisible--;
 						}
 						bloc->visible = false;
@@ -391,10 +355,12 @@ void Chunk::updateVisibilityByCamera(bool freeze)
 			}
 		}
 	}
-	printf("\n");
-	printf("Block visible : %i\n", hardBlocVisible);
-	//updateVisibility();
+	//printf("\n");
+	//printf("Block visible : %i\n", hardBlocVisible);
+
 	updateChunk = true;
+	//if (hardBlocVisible > 0)
+	//	Chunk::generatePosOffsets();
 	//draw_safe.unlock();
 }
 
