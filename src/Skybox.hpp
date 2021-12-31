@@ -30,6 +30,8 @@ private:
 	static Shader* shader;
     static GLuint VAO, VBO;
 
+	static float ToDELETEClamp(float x, float low, float high);
+	static float ToDELETESmoothStep(float a, float b, float x, float c1, float c2);
 };
 
 #endif

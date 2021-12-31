@@ -55,9 +55,9 @@ Vec3 Vec3::getAngle() const
 	return angle;
 }
 
-Vec3 Vec3::getNormalized() const 
+Vec3 Vec3::getNormalized() const
 {
-	float length = this->getLength();	
+	float length = this->getLength();
 
 	if (length == 0)
 		return Vec3::ZERO;
@@ -71,7 +71,10 @@ float Vec3::dot(Vec3 rhs) const
 
 Vec3 Vec3::cross(Vec3 rhs) const
 {
-	return Vec3(y * rhs.z - z * rhs.y, z * rhs.x - x * rhs.z, x * rhs.y - y * rhs.x);
+	float xn = y * rhs.z - z * rhs.y;
+	float yn = z * rhs.x - x * rhs.z;
+	float zn = x * rhs.y - y * rhs.x;
+	return Vec3(xn, yn, zn);
 }
 
 std::string Vec3::toString() const

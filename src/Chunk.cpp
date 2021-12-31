@@ -45,7 +45,7 @@ Chunk::Chunk(int x, int z, Camera* camera, std::vector<std::pair<Vec2, Chunk*>> 
 	//myNeighbours = neighbours;
 }
 
-float Chunk::getBlockBiome(int x, int z)
+float Chunk::getBlockBiome(int x, int z, bool setBlocInChunk)
 {
 	float flatTerrain = VoxelGenerator::Noise2D(position.x + x, position.z + z, 0.4f, 0.00033f, 0.45f, 4, 0, 2, 0.65); // Kind of flat
 	flatTerrain = pow(flatTerrain * 0.75, 2);
@@ -80,12 +80,14 @@ float Chunk::getBlockBiome(int x, int z)
 	else if (moutainBiomeValue < 0.55)
 	{
 		// Create a little mountain biome ? Or canyon or i don't know what
-	}	
-	
+	}
+
 	//float deleteNoise = VoxelGenerator::Noise2D(position.x + x, position.z + z, 0.2, 0.0045, 0.065, 2, 3, 2, 0.5); // Noise used to create hole / entrance to caves in the ground
 	//std::cout << deleteNoise << std::endl;
 
 	//std::cout << heightValue << std::endl;
+	if (!setBlocInChunk)
+		return heightValue;
 	struct bloc	*bloc = &(blocs[(int)heightValue][z][x]);
 	bloc->type = BLOCK_GRASS;
 	bloc->visible = 1;
@@ -116,12 +118,10 @@ void Chunk::initChunk(void)
 				bloc = &(blocs[y][z][x]);
 				bloc->type = NO_TYPE;
 				bloc->visible = false;
-				bloc->isOnFrustum = false;
 			}
 			bloc = &(blocs[0][z][x]);
 			bloc->type = BLOCK_BEDROCK;
 			bloc->visible = true; // will be updated after with updateVisibility
-			bloc->isOnFrustum = false;
 			hardBloc++;
 
 			float blockValue = this->getBlockBiome(x, z);
@@ -132,7 +132,7 @@ void Chunk::initChunk(void)
 				max = blockValue;
 
 			bloc = &(blocs[(int)blockValue][z][x]);
-			
+
 			/*for (int y = (int)blockValue - 1; y > 0; y--)
 			{
 				bloc = &(blocs[y][z][x]);
@@ -180,7 +180,7 @@ void Chunk::initChunk(void)
 
 	Vec2 myPos = worldCoordToChunk(getPos());
 	std::vector<std::thread> threads;
-	for (auto it : myNeighbours)
+	/*for (auto it : myNeighbours)
 	{
 		threadUseCount++;
 		Vec2 neighbourPos = it.first;
@@ -191,7 +191,7 @@ void Chunk::initChunk(void)
 		auto threadFunc = [myPos, callBack](const BlocData& bd, Chunk* neighbour){neighbour->updateVisibilityWithNeighbour(myPos, bd, callBack);};
 		threads.push_back(std::thread(threadFunc, blocs, it.second));
 		//it.second->updateVisibilityWithNeighbour(myPos, blocs, callBack);
-	}
+	}*/
 	for (std::thread& worker : threads)
 	{
 		worker.join();
@@ -215,7 +215,7 @@ void	Chunk::worleyCaveTest() // destroying blocks following a 3d worley noise to
 					float yScaled = y / (float)CHUNK_HEIGHT;
 					float zScaled = z / (float)CHUNK_DEPTH + position.z / CHUNK_DEPTH;
 					if (VoxelGenerator::getWorleyValueAt(xScaled, yScaled, zScaled) >= 0.8f) // random value
-					{			
+					{
 
 						//texture = ResourceManager::getBlockTexture(BLOCK_STONE);
 						// destroy the block
@@ -392,9 +392,20 @@ void Chunk::updateVisibility(void)
 
 GLuint Chunk::setVisibilityByNeighbors(int x, int y, int z) // Activates visibility if one neighbour is transparent
 {
-	struct bloc			*bloc = &(blocs[y][z][x]);
+	struct bloc										*bloc = &(blocs[y][z][x]);
 	std::vector<std::pair<struct bloc*, GLuint>>	neighbors = {};
-	GLuint visibleFaces = 0;
+	std::vector<std::pair<float, GLuint>>			border_neighbors = {};
+	GLuint											visibleFaces = 0;
+
+	// Check with neighbors case using noise
+	if (x == 0)
+		border_neighbors.push_back({this->getBlockBiome(x - 1, z, false), LEFT_NEIGHBOUR});
+	else if (x == CHUNK_WIDTH - 1)
+		border_neighbors.push_back({this->getBlockBiome(x + 1, z, false), RIGHT_NEIGHBOUR});
+	if (z == 0)
+		border_neighbors.push_back({this->getBlockBiome(x, z - 1, false), BACK_NEIGHBOUR});
+	else if (z == CHUNK_DEPTH - 1)
+		border_neighbors.push_back({this->getBlockBiome(x, z + 1, false), FRONT_NEIGHBOUR});
 
 	if (y > 0)
 		neighbors.push_back({&(blocs[y - 1][z][x]), BOTTOM_NEIGHBOUR});
@@ -408,11 +419,22 @@ GLuint Chunk::setVisibilityByNeighbors(int x, int y, int z) // Activates visibil
 		neighbors.push_back({&(blocs[y][z - 1][x]), BACK_NEIGHBOUR});
 	if (z < CHUNK_DEPTH - 1)
 		neighbors.push_back({&(blocs[y][z + 1][x]), FRONT_NEIGHBOUR});
+
 	for (auto it : neighbors)
 	{
 		struct bloc *nei = it.first;
 		GLuint currentFace = it.second;
 		if (nei->type == NO_TYPE)
+		{
+			bloc->visible = true;
+			visibleFaces |= currentFace;
+		}
+	}
+	for (auto it : border_neighbors)
+	{
+		float max_height = it.first;
+		GLuint currentFace = it.second;
+		if (max_height < y)
 		{
 			bloc->visible = true;
 			visibleFaces |= currentFace;

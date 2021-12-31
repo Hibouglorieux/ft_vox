@@ -54,7 +54,7 @@ struct AABB : public BoundingVolume
 {
 	Vec3 center{ 0.f, 0.f, 0.f };
 	Vec3 extents{ 0.f, 0.f, 0.f };
-	Vec3 worldPos{ 0.f, 0.f, 0.f};
+	Vec3 worldPos{ 0.f, 0.f, 0.f };
 
 	AABB(const Vec3& min, const Vec3& max)
 		: BoundingVolume{}, center{(max - min) * 0.5f}, extents{(max - min) *  0.5f}, worldPos{(min + extents)}
@@ -75,7 +75,7 @@ struct AABB : public BoundingVolume
 		const float r = extents.x * std::abs(plan.normal.x) + extents.y * std::abs(plan.normal.y) +
 			extents.z * std::abs(plan.normal.z);
 
-		if (BB_VERBOSE)
+		if (BB_VERBOSE && -r >= plan.getSignedDistanceToPlan(center))
 		{
 			printf("WorldPos : ");
 			worldPos.print();
@@ -136,18 +136,19 @@ struct AABB : public BoundingVolume
 		bool bleft, bright, btop, bbottom, bnear, bfar = false;
 		if (BB_VERBOSE)
 		{
-			printf("Left  face  : ");
 			bleft = globalAABB.isOnOrForwardPlan(camFrustum.leftFace);
-			printf("Right face  : ");
+			//if (bleft) printf("Left  face\n");
 			bright = globalAABB.isOnOrForwardPlan(camFrustum.rightFace);
-			printf("Top face    : ");
+			//if (bright) printf("Right face\n");
 			btop = globalAABB.isOnOrForwardPlan(camFrustum.rightFace);
-			printf("Bottom face : ");
+			//if (btop) printf("Top face\n");
 			bbottom = globalAABB.isOnOrForwardPlan(camFrustum.rightFace);
-			printf("Near face   : ");
+			//if (bbottom) printf("Bottom face\n");
 			bnear = globalAABB.isOnOrForwardPlan(camFrustum.rightFace);
-			printf("Far face    : ");
+			//if (bnear) printf("Near face\n");
 			bfar = globalAABB.isOnOrForwardPlan(camFrustum.rightFace);
+			//if (bfar) printf("Far face\n");
+			//printf("\n");
 		}
 		else
 		{
@@ -158,7 +159,6 @@ struct AABB : public BoundingVolume
 			bnear = globalAABB.isOnOrForwardPlan(camFrustum.rightFace);
 			bfar = globalAABB.isOnOrForwardPlan(camFrustum.rightFace);
 		}
-		
 
 		return (bleft && bright && btop && bbottom && bnear && bfar);
 	};

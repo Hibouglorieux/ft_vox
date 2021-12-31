@@ -30,6 +30,7 @@ public:
 	Texture(std::vector<std::string> paths, BigHeightMap& heightMap);
 	Texture(std::vector<std::string> paths, HeightMap& heightMap, bool smoll);
 	Texture(float NoiseTest = 42);
+	Texture(bool skybox);
 	Texture(HeightMap& heightMap);
 	~Texture(void);
 	unsigned int getID() const;

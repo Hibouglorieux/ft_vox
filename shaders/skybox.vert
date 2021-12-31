@@ -1,14 +1,14 @@
 #version 450 core
+layout (location = 0) in vec3 aPos;
 
-layout (location = 0) in vec3 pos;
-
+out vec3 pos;
 out vec3 texCoord;
-out	vec3 vertexPos;
 
 uniform mat4 precalcMat;
 
 void main()
 {
-	texCoord = pos;
-	gl_Position = precalcMat * vec4(pos * 800 , 1.0);
+	texCoord = aPos;
+	gl_Position = precalcMat * vec4(aPos * 800 , 1.0);
+	pos = aPos;
 }

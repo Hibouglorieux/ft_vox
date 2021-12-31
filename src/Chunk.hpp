@@ -87,7 +87,7 @@ private:
 
 	std::vector<std::pair<Vec2, Chunk*>> myNeighbours;
 
-	float	getBlockBiome(int x, int z);
+	float	getBlockBiome(int x, int z, bool setBlocInChunk = true);
 
 	Camera	*playerCamera;
 };

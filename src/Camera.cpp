@@ -17,8 +17,8 @@
 
 #define X_ROTATION_SPEED 1
 #define Y_ROTATION_SPEED 1
-#define DEFAULT_CAMERA_POS Vec3(0.f, 250.f, 0.f)
-#define DEFAULT_CAMERA_ROT Vec3(-90.f, 0.f, 0.f)
+#define DEFAULT_CAMERA_POS Vec3(0.f, 42.f, 0.f)
+#define DEFAULT_CAMERA_ROT Vec3(0.f, 0.f, 0.f)
 
 Camera::Camera() : Camera(DEFAULT_CAMERA_POS)
 {
@@ -34,8 +34,12 @@ Camera::Camera(Vec3 position)
 	dir = DEFAULT_CAMERA_ROT;// TODO tmp to view map generation from ahead
 
 	WorldUp = Vec3(0, 1, 0);
-	Up = Vec3(1, 0, 0); // TODO : Update to use default cam rot
+	Up = Vec3(0, 1, 0); // TODO : Update to use default cam rot
+	Right = Vec3(1, 0, 0); // TODO : Update to use default cam rot
 
+	Front = getDirection();
+	Right = Front.cross(Up).getNormalized();
+	Up = Front.cross(Right).getNormalized();
 	updateFrustum(false);
 	
 	/*
@@ -54,14 +58,6 @@ Camera::Camera(Vec3 position)
 
 void Camera::updateFrustum(bool blocFrustum)
 {
-	Front = getDirection();
-	Right = Up.cross(Front).getNormalized(); //Vec3(Up.y * Front.z - Up.z * Front.y, Up.z * Front.x - Up.x * Front.z, Up.x * Front.y - Up.y * Front.x);
-	Up = Front.cross(Right).getNormalized(); //Vec3(Front.y * Right.z - Front.z * Right.y, Front.z * Right.x - Front.x * Right.z, Front.x * Right.y - Front.y * Right.x);
-
-	/*Front.print();
-	Right.print();
-	Up.print();
-	printf("\n");*/
 
 	float	halfVSide, halfHSide = 0;
     Vec3	frontMultFar;
@@ -69,9 +65,9 @@ void Camera::updateFrustum(bool blocFrustum)
 
 	appWindow::getWindowSize(&width, &height);
 	if (blocFrustum)
-		halfVSide = FAR * tanf(FOV * 0.5f);
+		halfVSide = FAR * tanf(FOV_RAD * 0.5f);
 	else
-		halfVSide = FAR * tanf(FOV * 0.5f);
+		halfVSide = -FAR * tanf(FOV_RAD * 0.4f);
 
 	halfHSide = (halfVSide * ((float)width / (float)height));
 	frontMultFar = getDirection() * FAR;
@@ -116,6 +112,7 @@ void Camera::reset()
 Matrix Camera::getMatrix()
 {
 	actualizeView();
+
 	updateFrustum(false);
 	return view;
 }
@@ -177,6 +174,13 @@ void Camera::rotate(double x, double y)
 	if (dir.x < -89.0f)
 		dir.x = -89.0f;
 
+	Front = getDirection();
+	Right = Front.cross(Up).getNormalized();
+	Up = Front.cross(Right).getNormalized();
+	/*Front.print();
+	Right.print();
+	Up.print();
+	printf("\n");*/
 	//updateFrustum(false);
 }
 

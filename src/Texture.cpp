@@ -197,6 +197,46 @@ Texture::Texture(float noiseTest)
 	//glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
 }
 
+
+Texture::Texture(bool skybox)
+{
+	name = "skybox";
+	if (textureLoaded.find(name) == textureLoaded.end())
+		textureLoaded.insert(std::pair<std::string, TextureCommonData>(name, {0, 1, 0}));
+	else
+	{
+		textureLoaded[name].nbOfInstance++;
+		return;
+	}
+	glGenTextures(1, &textureLoaded[name].ID);// getting the ID from OpenGL
+	glBindTexture(GL_TEXTURE_CUBE_MAP, textureLoaded[name].ID);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	std::cout << "added new texture: " << name << textureLoaded[name].ID << std::endl; 
+	unsigned char* array = new unsigned char[512 * 512 * 3 * sizeof(unsigned char)];
+	for (unsigned int i = 0; i < 6; i++)
+	{
+		float k = 0;
+		float c = 0;
+		for (unsigned int j = 0; j < 512 * 512; j++)
+		{
+			if (j % 512 == 0 && j != 0)
+				c += 1;
+			if (c >= 255)
+				c = 255;
+			array[j * 3] = (unsigned char)(c);
+			array[j * 3 + 1] = (unsigned char)(c);
+			array[j * 3 + 2] = (unsigned char)(c);
+		}
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, 512, 512, 0, GL_RGB, GL_UNSIGNED_BYTE, array);
+	}
+	delete [] array;
+	//glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
+}
+
 Texture::Texture(std::vector<std::string> paths, HeightMap& heightMap, bool smoll)
 {
 	(void)smoll;
