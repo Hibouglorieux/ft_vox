@@ -25,6 +25,8 @@ public:
 	static void initialize();
 	static void draw(Matrix& precalculatedMat);
 	static void clear();
+
+	static Vec3 playerPos;
 private:
 	static Texture* texture;
 	static Shader* shader;

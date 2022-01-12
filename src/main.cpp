@@ -66,7 +66,7 @@ int		main( int argc, char *argv[] )
 	World* world = new World();
 
 	Loop::setWorld(world);
-	
+
 	Loop::loop();
 	std::cout << glGetError() << std::endl;
 	delete world;

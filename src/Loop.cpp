@@ -27,7 +27,7 @@ double Loop::mouseY = 0.0;
 double Loop::fpsRefreshTime = 0.0;
 unsigned char Loop::frameCount = 0;
 
-#define CAMERA_MOUVEMENT_SPEED 0.3f
+#define CAMERA_MOUVEMENT_SPEED 1.0f
 #define REFRESH_FPS_RATE 0.5
 
 
@@ -43,7 +43,7 @@ void Loop::loop()
 		processInput();
 
 		if (!(world->pause))
-			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+			glClear(/*GL_COLOR_BUFFER_BIT | */GL_DEPTH_BUFFER_BIT);
 
 
 		if (world && !(world->pause))
@@ -92,7 +92,7 @@ void Loop::processInput()
 	bool shift = glfwGetKey(appWindow::getWindow(), GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS ? true : false;
 	if (world)
 	{
-		world->getCamera().move(forward, backward, left, right, (shift == true ? 10 : 1)* CAMERA_MOUVEMENT_SPEED);
+		world->getCamera().move(forward, backward, left, right, (shift == true ? 100 : 10) * CAMERA_MOUVEMENT_SPEED * frameTime);
 		if (glfwGetKey(appWindow::getWindow(), GLFW_KEY_SPACE) == GLFW_PRESS)
 			world->getCamera().moveUp();
 		if (glfwGetKey(appWindow::getWindow(), GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
@@ -116,6 +116,8 @@ void Loop::processInput()
 
 void Loop::KeyCallbackProcess(bool keysPressed[389])
 {
+	static bool wireframe = false;
+
 	for (int i = 0; i < 389; i++)
 	{
 		if (!keysPressed[i])
@@ -147,6 +149,14 @@ void Loop::KeyCallbackProcess(bool keysPressed[389])
 			else
 				printf("World blocks resumed\n");
 		}
+		if (i == GLFW_KEY_Z)
+		{
+			wireframe = !wireframe;
+			if (wireframe)
+				glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+			else
+				glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+		}
 	}
 }
 
@@ -160,7 +170,7 @@ void Loop::keyCallback(GLFWwindow* window, int key, int scancode, int action, in
 	if (key == GLFW_KEY_R && action == GLFW_PRESS && world)
 		world->getCamera().reset();
 
-	
+
 	static bool keysPressed[389] = {false};
 
 	keysPressed[key] = action;

@@ -10,10 +10,12 @@
 # include "VoxelGenerator.hpp"
 # include <cstring>
 # include "ft_vox.h"
+# include "Biome.hpp"
 # include "Vec2.hpp"
 # include <functional>
 # include <mutex>
 # include <memory>
+# include <algorithm>
 
 # define CHUNK_HEIGHT HEIGHT
 
@@ -21,8 +23,6 @@
 # define CHUNK_DEPTH BLOC_WIDTH_PER_CHUNK
 
 # define CHUNK_SIZE CHUNK_HEIGHT * CHUNK_WIDTH * CHUNK_DEPTH
-
-# define WATER_LEVEL 32
 
 class Chunk : public Object{
 public:
@@ -53,19 +53,40 @@ private:
 		bool visible;
 		bool isOnFrustum;
 	};
+
+	struct compare
+	{
+		Vec3 key;
+		compare(const Vec3 &i):key(i) {}
+
+		bool operator()(const Vec3 &i) {
+			return (i == key);
+		}
+	};
+
 	typedef std::array<std::array<std::array<struct bloc, CHUNK_WIDTH>, CHUNK_DEPTH>, CHUNK_HEIGHT> BlocData;
 	typedef std::array<std::array<std::array<int, CHUNK_WIDTH>, CHUNK_DEPTH>, CHUNK_HEIGHT> BlocSearchData;
 
 	void	updateVisibilityWithNeighbour(Vec2 NeighbourPos,
 			const BlocData& neighbourBlocs,
 			std::function<void(const BlocData&)> callBack = nullptr);
-	bool 	updateVis = false;
+	bool	updateVis = false;
 	void	updateVisibility(void);
 	GLuint	setVisibilityByNeighbors(int x, int y, int z);
-	void	caveTest();
-	void	worleyCaveTest();
-	void	destroyIlots();
-	bool 	destroyIlotsSearchAndDestroy(struct bloc *block, Vec3 pos, std::vector<struct bloc*> *blockGroup);
+
+	// Space Functions
+	void	generateConnectedBlocList(int x, int y, int z, std::vector<Vec3> *connectedBlocPos);
+	void	generateConnectedSpaces(void);
+	// End of Space Functions
+
+	// Greedy Meshing Functions
+	bool		compareBlocs(const struct bloc *b1, const struct bloc *b2);
+	struct bloc *getVoxel(int x, int y, int z);
+	void		greedyMesh();
+	void		createQuad(Vec3 bottomLeft, Vec3 topLeft, Vec3 topRight, Vec3 bottomRight, int width, int height, Chunk::bloc *voxel);
+	// End of GM Functions
+
+	void	getQuads();
 	bool	generatePosOffsets();
 
 	Vec3	position;
@@ -75,12 +96,12 @@ private:
 	bool	updateChunk;
 	bool	init;
 	unsigned char	threadUseCount;
-	HeightMap*	heightMap;
-	CaveMap*	caveMap;
+	HeightMap*	heightMap;					// TODO : Delete, Not useful anymore
+	CaveMap*	caveMap;					// TODO : Delete, not useful
 	unsigned int hardBloc;
 	unsigned int hardBlocVisible;
 	std::mutex	draw_safe;
-	Texture* texture;
+	Texture* texture;						// TODO : Delete
 
 	GLuint typeVBO, positionVBO, facesVBO;
 	std::vector<GLuint>	facesToRender;
@@ -88,6 +109,7 @@ private:
 	std::vector<std::pair<Vec2, Chunk*>> myNeighbours;
 
 	float	getBlockBiome(int x, int z, bool setBlocInChunk = true);
+	//float	getBlockBiome(int x, int z, bool setBlocInChunk = true, bool superFlat = false);
 
 	Camera	*playerCamera;
 };

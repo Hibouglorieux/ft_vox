@@ -40,6 +40,7 @@ public:
 	Vec2 operator-() const;
 	bool operator<(const Vec2& rhs) const;//only here for map, not maths
 	bool isSmaller(const Vec2& rhs) const;
+	float dot(Vec2 rhs) const;
 	bool operator>(const Vec2& rhs) const;
 	int at(const int i) const;
 	int& operator[]( const int i );

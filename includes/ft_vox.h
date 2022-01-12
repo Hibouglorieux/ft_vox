@@ -24,7 +24,7 @@
 #define NEAR 0.1f
 #define PROJECT_NAME "ft_vox"
 #define FAR 1500.0f
-#define FOV 60.0f
+#define FOV 80.0f
 #define FOV_RAD FOV * M_PI / 180.0
 
 #define SEC_TO_MICROSEC 1000000

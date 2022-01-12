@@ -71,9 +71,9 @@ Texture::Texture(std::vector<std::string> paths, std::string textureName)
 	glGenTextures(1, &textureLoaded[name].ID);// getting the ID from OpenGL
 	std::cout << "added new texture: " << name << textureLoaded[name].ID << std::endl;
 	glBindTexture(GL_TEXTURE_CUBE_MAP, textureLoaded[name].ID);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_REPEAT);//CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_REPEAT);//CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_REPEAT);//CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	for (unsigned int i = 0; i < paths.size(); i++)
@@ -172,12 +172,14 @@ Texture::Texture(float noiseTest)
 		z = z / (32);
 		return VoxelGenerator::Noise3D(x, caveMapDepth, z, 0, frequency, amplitude, octaves, tableId, lacunarity, gain);};
 		*/
-#define NOISE_TEXTURE_WIDTH 512
+#define NOISE_TEXTURE_WIDTH 1024
 	std::function<float(float x, float z)> f = [=](float x, float z)
 	{
-		x = x * ((float)WORLEY_SIZE / (float)NOISE_TEXTURE_WIDTH);
-		z = z * ((float)WORLEY_SIZE / (float)NOISE_TEXTURE_WIDTH);
-		float tmp = VoxelGenerator::getWorleyValueAt(x, caveMapDepth, z);
+		//x = x * ((float)WORLEY_SIZE / (float)NOISE_TEXTURE_WIDTH);
+		//z = z * ((float)WORLEY_SIZE / (float)NOISE_TEXTURE_WIDTH);
+		x = x * ( 32.f / 1024.0f);
+		z = z * ( 32.f / 1024.f);
+		float tmp = VoxelGenerator::getWorleyValueAt(x, 0, z);
 		//printf("for x:%f. z:%f i get:%f\n", x, z, tmp);
 		return tmp;
 	};
@@ -219,7 +221,7 @@ Texture::Texture(bool skybox)
 	unsigned char* array = new unsigned char[512 * 512 * 3 * sizeof(unsigned char)];
 	for (unsigned int i = 0; i < 6; i++)
 	{
-		float k = 0;
+		//float k = 0;
 		float c = 0;
 		for (unsigned int j = 0; j < 512 * 512; j++)
 		{

@@ -127,10 +127,12 @@ void World::render()
 	// draw skybox
 	glDisable(GL_DEPTH_TEST);
 	glDisable(GL_CULL_FACE);
+	Skybox::playerPos = camera.getPos();
 	Skybox::draw(precalculatedMat);
 
 	// draw chunks
 	glEnable(GL_DEPTH_TEST);
+	glDepthMask(true);
 	glEnable(GL_CULL_FACE);
 	glCullFace(GL_BACK);// renders only visible squares of cubes
 	shader->use();
@@ -154,12 +156,12 @@ void World::render()
 	std::vector<std::pair<Vec2, Chunk*>> chunksToRender;
 	if (!freeze)
 	{
-		//std::vector<std::thread> threads;
+		/*std::vector<std::thread> threads;
 
 		auto chunkVisibilityUpdate = [](Chunk *chnk, bool freeze)
 		{
 			chnk->updateVisibilityByCamera(freeze);
-		};
+		};*/
 
 		for (auto it : visibleChunks)
 		{
@@ -180,9 +182,16 @@ void World::render()
 			//printf("\n");
 		}
 
+		Camera clone = camera;
 		//printf("\n\n\n");
-		std::sort(chunksToRender.begin(), chunksToRender.end(), [](std::pair<Vec2, Chunk*>& a, std::pair<Vec2, Chunk*>& b) {
-				return a.first.isSmaller(b.first);
+		std::sort(chunksToRender.begin(), chunksToRender.end(), [/*camera=clone*/](std::pair<Vec2, Chunk*>& a, std::pair<Vec2, Chunk*>& b) {
+				return a.first.isSmaller(b.first); // NOTE : Old way, make the closet chunk to us load
+				/*Vec3 a3 = Vec3(a.first.x, 0, a.first.y);
+				Vec3 b3 = Vec3(b.first.x, 0, b.first.y);
+				float value = a3.dot(camera.getDirection());
+				float value2 = b3.dot(camera.getDirection());
+
+				return value < value2;*/
 				});
 		chunksToRenderFix = chunksToRender;
 	}
@@ -259,7 +268,7 @@ void World::updateChunkBuffers(Vec2 newPos)
 	posBuffer = getPosInRange(newPos, CHUNK_VIEW_DISTANCE, MAX_PRELOAD_DISTANCE);
 	auto initNewChunks = [](std::vector<Chunk*> chunks) { for (auto it : chunks) it->initChunk();};
 	std::vector<Chunk*> chunks;
-	for (Vec2& preloadedPositions : posBuffer)
+	for (Vec2& preloadedPositions : posBuffer) // TODO Load those in front first, who cares about the chunk behind us
 	{
 		if (preLoadedChunks.find(preloadedPositions) == preLoadedChunks.end())
 		{
@@ -333,37 +342,16 @@ std::vector<std::pair<Vec2, Chunk*>>	World::getAllocatedNeighbours(Vec2 chunkPos
 	return neighbours;
 }
 
-/*bool	World::shouldBeRendered(Vec2 chunkPos, const Chunk* chnk, Matrix& matrix)
-{
-	if (chunkPos == curPos)
-		return true;
-	Vec3 topLeft = chnk->getPos();
-	Vec3 botRight = topLeft + Vec3(CHUNK_WIDTH, 0, CHUNK_DEPTH);
-	Vec3 tmp = matrix * topLeft;
-	if (tmp.x <= 1 && tmp.x >= -1 && tmp.z <= 1)
-		return true;
-	tmp = matrix * botRight;
-	if (tmp.x <= 1 && tmp.x >= -1 && tmp.z <= 1)
-		return true;
-	tmp = matrix * Vec3(topLeft.x, 0, botRight.z);
-	if (tmp.x <= 1 && tmp.x >= -1 && tmp.z <= 1)
-		return true;
-	tmp = matrix * Vec3(botRight.x, 0, topLeft.z);
-	if (tmp.x <= 1 && tmp.x >= -1 && tmp.z <= 1)
-		return true;
-	return false;
-}*/
-
 bool	World::shouldBeRendered(Vec2 chunkPos, const Chunk* chnk, Matrix& matrix)
 {
 	(void)chunkPos;
 	(void)matrix;
 	// Using direction and pos, we could elimate those behind us directly
-
-	if (chunkPos == curPos)
-		return true;
-	//camera.getPos().print();
-	return (chnk->boundingVolume.isOnFrustum(camera.getFrustum()));
+	Vec3 chunkToPlayer = (chnk->getPos() - camera.getPos()).getNormalized();
+	float value = chunkToPlayer.dot(camera.getDirection());
+	if (value > 0 || chunkPos == curPos)
+		return (chnk->boundingVolume.isOnFrustum(camera.getFrustum()));
+	return false;
 }
 
 void World::setCamera(Camera newCamera)

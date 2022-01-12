@@ -18,6 +18,8 @@ Shader* Skybox::shader = nullptr;
 GLuint Skybox::VAO = 0;
 GLuint Skybox::VBO = 0;
 
+Vec3 Skybox::playerPos = Vec3(0, 0, 0);
+
 void Skybox::initialize()
 {
 	std::vector<std::string> names = 
@@ -34,10 +36,10 @@ void Skybox::initialize()
 	//texture = new Texture(names, *bigHeightMap);
 
 	//texture = new Texture(names, *caveMap);
-	texture = new Texture(true);// noiseTest
+	//texture = new Texture(false);// noiseTest
 	 
-	glActiveTexture(GL_TEXTURE0 + TEXTURECOUNT);// TODO this is a shortcut and is simply added as the last array of textures using, should be included in the enum or have a better variable name
-	glBindTexture(GL_TEXTURE_CUBE_MAP, texture->getID());
+	//glActiveTexture(GL_TEXTURE0 + TEXTURECOUNT);// TODO this is a shortcut and is simply added as the last array of textures using, should be included in the enum or have a better variable name
+	//glBindTexture(GL_TEXTURE_CUBE_MAP, texture->getID());
 	shader = new Shader("skybox.vert", "skybox.frag");
 
     glGenVertexArrays(1, &VAO);
@@ -116,7 +118,8 @@ void Skybox::draw(Matrix& precalculatedMat)
 {
 	shader->use();
 	glUniformMatrix4fv(glGetUniformLocation(shader->getID(), "precalcMat"), 1, GL_TRUE, precalculatedMat.exportForGL());
-	glUniform1i(glGetUniformLocation(shader->getID(), "skyboxTexture"), TEXTURECOUNT);
+	//glUniform1i(glGetUniformLocation(shader->getID(), "skyboxTexture"), TEXTURECOUNT);
+	glUniform1i(glGetUniformLocation(shader->getID(), "textureActive"), false);
 
 	//  TODO :	Keep the sun/moon update move outside of this file (put it in world)
 	//			And make the sun displacment stable (unrelated to framerate)
@@ -135,6 +138,8 @@ void Skybox::draw(Matrix& precalculatedMat)
 		i = 0;
 	Vec3 sunPos = rot * Vec3(0, 3000, 0);
 
+	glUniform3f(glGetUniformLocation(shader->getID(), "playerPos"), playerPos.x, playerPos.y, playerPos.z);
+	
 	glUniform3f(glGetUniformLocation(shader->getID(), "sunPos"), sunPos.x, sunPos.y, sunPos.z);
 	glUniform1f(glGetUniformLocation(shader->getID(), "sunIntensity"), intensity);
 	
@@ -146,7 +151,7 @@ void Skybox::draw(Matrix& precalculatedMat)
 
 void Skybox::clear()
 {
-	delete texture;
+	//delete texture;
 	delete shader;
 	glBindVertexArray(VAO);
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);

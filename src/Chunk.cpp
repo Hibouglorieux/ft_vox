@@ -2,14 +2,14 @@
 #include <unistd.h>
 #include <thread>
 
-#define MAX(x, y) (x)//(x > y ? x : y)
+#define MAX(x, y) (x) //(x > y ? x : y)
 #define TMP_SLEEP_VALUE 0.05 * SEC_TO_MICROSEC
 
 //#define NO_TYPE 99
 
 int Chunk::totalChunks = 0;
 
-Chunk::Chunk(int x, int z, Camera* camera)
+Chunk::Chunk(int x, int z, Camera *camera)
 {
 	totalChunks++;
 	position = Vec3(x * CHUNK_WIDTH, 0, z * CHUNK_DEPTH);
@@ -19,20 +19,13 @@ Chunk::Chunk(int x, int z, Camera* camera)
 
 	// Should we recompute the chunk's blocs positions
 	updateChunk = false;
+
 	// How many solid bloc in chunk
 	hardBloc = 0;
 	hardBlocVisible = 0;
 	init = false;
 	threadUseCount = 1;
-	/*
-	texture = new Texture({
-		{"packDefault/GRASS_SIDE.jpg"},
-		{"packDefault/GRASS_SIDE.jpg"},
-		{"packDefault/GRASS_TOP.jpg"},
-		{"packDefault/GRASS_BOTTOM.jpg"},
-		{"packDefault/GRASS_SIDE.jpg"},
-		{"packDefault/GRASS_SIDE.jpg"}});
-		*/
+	
 	myNeighbours = {};
 	playerCamera = camera;
 	glGenBuffers(1, &typeVBO);
@@ -40,56 +33,138 @@ Chunk::Chunk(int x, int z, Camera* camera)
 	glGenBuffers(1, &facesVBO);
 }
 
-Chunk::Chunk(int x, int z, Camera* camera, std::vector<std::pair<Vec2, Chunk*>> neighbours) : Chunk(x, z, camera)
+Chunk::Chunk(int x, int z, Camera *camera, std::vector<std::pair<Vec2, Chunk *>> neighbours) : Chunk(x, z, camera)
 {
 	//myNeighbours = neighbours;
 }
 
-float Chunk::getBlockBiome(int x, int z, bool setBlocInChunk)
+/*
+float Chunk::getBlockBiome(int x, int z, bool setBlocInChunk, bool superFlat)
 {
-	float flatTerrain = VoxelGenerator::Noise2D(position.x + x, position.z + z, 0.4f, 0.00033f, 0.45f, 4, 0, 2, 0.65); // Kind of flat
-	flatTerrain = pow(flatTerrain * 0.75, 2);
-	//float heightValue = VoxelGenerator::Noise2D(position.x + x, position.z + z, 0.0f, 0.00025f, 2.66f, 2, 1, 2.45, 0.55); // Big hills or mountains ?
-	//float heightValue = VoxelGenerator::Noise2D(position.x + x, position.z + z, 0.0f, 0.005f, 0.66f, 1, 1, 2, 1); // Initial form of mountains
-	float moutainBiomeValue = VoxelGenerator::Noise2D(position.x + x, position.z + z, 0.0f, 0.000125f, 0.75f, 2, 1, 4, 1); // Nice moutains ? (flat with 2 octaves instead of 1)
-	//float heightValue = VoxelGenerator::Noise2D(position.x + x, position.z + z, 0.0f, 0.0025f, 1.2f, 1, 1); // Nice moutains ?
-
-	float heightValue = (flatTerrain * (HEIGHT - 1) * 0.66);
-
-	if (moutainBiomeValue > 0.65) // TODO : Set textures (stone/snow) and add decoration (trees ?)
+	// First step :
+	//	Compute flat floor at height 63 (Chunk being 256 bloc tall)
+	float heightValue = 63;
+	if (!superFlat)
 	{
-		//std::cout << moutainBiomeValue << std::endl;
-		if (moutainBiomeValue < 0.75) // If value is inferior to 0.70, we smooth the passage from mountain to other biome
+		// Second step :
+		//	Generate Temperature & Humidity value of the block
+		//float temperature	= VoxelGenerator::Noise2D(position.x + x, position.z + z, 0.0f, 0.000125f, 0.75f, 2, 1, 4, 1) * MAX_TEMPERATURE; 		// TODO : Determine correct value
+		//float humidity		= VoxelGenerator::Noise2D(position.x + x, position.z + z, 0.0f, 0.000125f, 0.75f, 2, 1, 2, 0.5) * 100.0;				// TODO : Get different value than temperature
+		//int biome = BasicBiome;	// Set biome according to biome table
+
+		float biomeSelector 		= VoxelGenerator::Noise2D(position.x + x, position.z + z, 0, 0.00025f, 0.85f, 2, 0, 2.0f, 0.5f);
+
+		float flatTerrain 			= VoxelGenerator::Noise2D(position.x + x, position.z + z, 0.0f, 0.000133f, 0.25f, 4, 0, 2, 0.65);
+		float hillTerrain			= VoxelGenerator::Noise2D(position.x + x, position.z + z, 0.0f, 0.000125f, 0.55f, 2, 1, 4, 1);
+		float mountainTerrain		= VoxelGenerator::Noise2D(position.x + x, position.z + z, 0.0f, 0.00525f, 0.75f, 1, 0, 3, 0.65);
+		float desertTerrain			= VoxelGenerator::Noise2D(position.x + x, position.z + z, 0.0f, 0.000525f, 0.15f, 2, 1, 4, 1);
+
+		if (biomeSelector < 0.3)		// Basic
+			heightValue = 64;
+		else if (biomeSelector < 0.5)	// Hills
+			heightValue = 70;
+		else if (biomeSelector < 0.7)	// Moutain
+			heightValue = 80;
+		else
+			heightValue = mountainTerrain * (HEIGHT - 1);
+		/*float value = biomeSelector;
+		//printf("%f\n", value);
+
+		if (value < 0)
+			value = 0;
+		else if (value > 1)
+			value = 1;
+
+		heightValue = value * (HEIGHT - 1);
+
+// Third step :
+//	Determine the bloc style, type & height
+switch (biome)
 		{
-			float moutainTerrain = VoxelGenerator::Noise2D(position.x + x, position.z + z, 0.15f, 0.00225f, 1.5f, 1, 0, 3, 0.65); // Nice moutains!
-			moutainTerrain = pow(moutainTerrain, 1.66);
-			float biomeRange = (0.75 - 0.65);
-			float surfaceRange = (moutainTerrain - flatTerrain);
-			float interpolationValue = (((moutainBiomeValue - 0.65) * surfaceRange) / biomeRange) + flatTerrain;
-			if (interpolationValue > 1)
-				interpolationValue = 1;
-			heightValue = (interpolationValue * (HEIGHT - 1) * 0.66);
+			case BasicBiome:
+				// Set biome matching terrain
+				break;
+			case ForestBiome:
+				// Set biome matching terrain
+				break;
+			case DesertBiome:
+				// Set biome matching terrain
+				break;
+			case MountainBiome:
+				// Set biome matching terrain
+				break;
+			
+			default:
+				break;
 		}
-		else	// Biome is fully mountain
-		{
-			float moutainTerrain = VoxelGenerator::Noise2D(position.x + x, position.z + z, 0.15f, 0.00225f, 1.5f, 1, 0, 3, 1.65); // Nice moutains!
-			moutainTerrain = pow(moutainTerrain, 1.66);// * 0.65;
-			heightValue = (moutainTerrain * (HEIGHT - 1) * 0.66);
-		}
-	}
-	else if (moutainBiomeValue < 0.55)
-	{
-		// Create a little mountain biome ? Or canyon or i don't know what
+
+		// Fourth step :
+		//	Check if there is a river
 	}
 
-	//float deleteNoise = VoxelGenerator::Noise2D(position.x + x, position.z + z, 0.2, 0.0045, 0.065, 2, 3, 2, 0.5); // Noise used to create hole / entrance to caves in the ground
-	//std::cout << deleteNoise << std::endl;
-
-	//std::cout << heightValue << std::endl;
+	// Final step :
+	//	If setBlocInChunk is true, set the bloc using what has been determined at the previous steps
 	if (!setBlocInChunk)
 		return heightValue;
 	struct bloc	*bloc = &(blocs[(int)heightValue][z][x]);
 	bloc->type = BLOCK_GRASS;
+	if (heightValue >= 70)
+		bloc->type = BLOCK_SAND;
+	if (heightValue >= 80)
+		bloc->type = BLOCK_STONE;
+	bloc->visible = 1;
+	hardBloc += 1;
+	hardBlocVisible++;
+
+	return heightValue;
+}*/
+
+static inline float lerp(float a, float b, float f)
+{
+	return a + f * (b - a);
+}
+
+float Chunk::getBlockBiome(int x, int z, bool setBlocInChunk)
+{
+	float flatTerrain = VoxelGenerator::Noise2D(position.x + x, position.z + z, 0.2f, 0.00033f, 0.25f, 4, 0, 2, 0.65); // Kind of flat
+	flatTerrain = pow(flatTerrain * 0.75, 2);
+	float terrainBiomeValue = VoxelGenerator::Noise2D(position.x + x, position.z + z, 0.0f, 0.000125f, 0.75f, 2, 1, 4, 1);
+
+	int blocType = BLOCK_GRASS;
+
+	float heightValue = (flatTerrain * (HEIGHT - 1) * 0.66);
+
+	if (terrainBiomeValue > 0.45)
+	{
+		float moutainTerrain = VoxelGenerator::Noise2D(position.x + x, position.z + z, 0.15f, 0.00225f, 2.5f, 1, 0, 2.13f, 0.65);
+		moutainTerrain = pow(moutainTerrain, 1.66);
+
+		float biomeRange = (1.0 - 0.45);
+		float surfaceRange = (moutainTerrain - flatTerrain);
+		float interpolationValue = (((terrainBiomeValue - 0.45) * surfaceRange) / biomeRange) + flatTerrain;
+
+		if (interpolationValue > 1)
+			interpolationValue = 1;
+		if (interpolationValue < 0.0)
+			interpolationValue = 0;
+		heightValue = (interpolationValue * (HEIGHT - 1) * 0.66);
+		if (heightValue > 120)
+			blocType = BLOCK_SNOW;
+		else if (heightValue > 80 && moutainTerrain > 0.88)
+			blocType = BLOCK_STONE;
+	}
+	else if (terrainBiomeValue < 0.45)
+	{
+		// Forest ?
+	}
+
+	if (!setBlocInChunk)
+		return heightValue;
+
+	struct bloc *bloc = &(blocs[(int)heightValue][z][x]);
+
+	bloc->type = blocType;
+
 	bloc->visible = 1;
 	hardBloc += 1;
 	hardBlocVisible++;
@@ -99,21 +174,21 @@ float Chunk::getBlockBiome(int x, int z, bool setBlocInChunk)
 
 void Chunk::initChunk(void)
 {
-	struct bloc	*bloc;
+	struct bloc *bloc;
 
 	// Get height map for chunk
-	blocs = BlocData();// memset equivalent (needed)
+	blocs = BlocData();		 // memset equivalent (needed)
 	blocs = {NO_TYPE, 0, 0}; // TODO : Check if correct
 
 	int min, max;
 	min = CHUNK_HEIGHT + 1;
 	max = -1;
 	// Set bloc type
-	for(unsigned int z = 0; z < CHUNK_DEPTH; z++)
+	for (unsigned int z = 0; z < CHUNK_DEPTH; z++)
 	{
-		for(unsigned int x = 0; x < CHUNK_WIDTH; x++)
+		for (unsigned int x = 0; x < CHUNK_WIDTH; x++)
 		{
-			for(unsigned int y = 0; y < CHUNK_HEIGHT; y++)
+			for (unsigned int y = 0; y < CHUNK_HEIGHT; y++)
 			{
 				bloc = &(blocs[y][z][x]);
 				bloc->type = NO_TYPE;
@@ -121,7 +196,7 @@ void Chunk::initChunk(void)
 			}
 			bloc = &(blocs[0][z][x]);
 			bloc->type = BLOCK_BEDROCK;
-			bloc->visible = true; // will be updated after with updateVisibility
+			bloc->visible = false; // will be updated after with updateVisibility
 			hardBloc++;
 
 			float blockValue = this->getBlockBiome(x, z);
@@ -131,22 +206,23 @@ void Chunk::initChunk(void)
 			if (blockValue > max)
 				max = blockValue;
 
-			bloc = &(blocs[(int)blockValue][z][x]);
-
-			/*for (int y = (int)blockValue - 1; y > 0; y--)
+			for (int y = (int)blockValue - 1; y > 0; y--)
 			{
 				bloc = &(blocs[y][z][x]);
 
 				int bloc_type = bloc->type;
-				bloc->type = BLOCK_DIRT;
+				if ((&(blocs[(int)blockValue][z][x]))->type == BLOCK_GRASS || (&(blocs[(int)blockValue][z][x]))->type == NO_TYPE)
+					bloc->type = BLOCK_DIRT;
+				else
+					bloc->type = BLOCK_STONE;
 				bloc->visible = 0;
 				hardBloc++;
-				if (bloc_type != NO_TYPE) // block exists // broken with type because lol
+				/*if (bloc_type == NO_TYPE && y < blockValue - 3 && y > 0) // block exists // broken with type because lol
 				{
-					float xScaled = x / (float)CHUNK_WIDTH + position.x / CHUNK_WIDTH;
-					float yScaled = y / (float)CHUNK_HEIGHT;
-					float zScaled = z / (float)CHUNK_DEPTH + position.z / CHUNK_DEPTH;
-					if (VoxelGenerator::getWorleyValueAt(xScaled, yScaled, zScaled) >= 0.5f) // random value
+					float xScaled = (x / (float)CHUNK_WIDTH + position.x / CHUNK_WIDTH) * ((float)WORLEY_SIZE / 512.0f);
+					float yScaled = y;
+					float zScaled = (z / (float)CHUNK_DEPTH + position.z / CHUNK_DEPTH) * ((float)WORLEY_SIZE / 512.0f);
+					if (VoxelGenerator::getWorleyValueAt(xScaled, yScaled, zScaled) >= 0.9f) // random value
 					{
 						bloc->type = NO_TYPE;
 						hardBloc--;
@@ -161,8 +237,8 @@ void Chunk::initChunk(void)
 						bloc->visible = true;
 						hardBlocVisible++;
 					}
-				}
-			}*/
+				}*/
+			}
 		}
 	}
 	//std::cout << max << std::endl;
@@ -179,56 +255,147 @@ void Chunk::initChunk(void)
 	updateChunk = true;
 
 	Vec2 myPos = worldCoordToChunk(getPos());
-	std::vector<std::thread> threads;
-	/*for (auto it : myNeighbours)
-	{
-		threadUseCount++;
-		Vec2 neighbourPos = it.first;
-		auto callBack = [this, neighbourPos]
-			(const BlocData& neighbourBlocs)
-			{this->updateVisibilityWithNeighbour(neighbourPos, neighbourBlocs, nullptr);
-			};
-		auto threadFunc = [myPos, callBack](const BlocData& bd, Chunk* neighbour){neighbour->updateVisibilityWithNeighbour(myPos, bd, callBack);};
-		threads.push_back(std::thread(threadFunc, blocs, it.second));
-		//it.second->updateVisibilityWithNeighbour(myPos, blocs, callBack);
-	}*/
-	for (std::thread& worker : threads)
+	/*std::vector<std::thread> threads;
+	for (auto it : myNeighbours)
+	  {
+	  threadUseCount++;
+	  Vec2 neighbourPos = it.first;
+	  auto callBack = [this, neighbourPos]
+	  (const BlocData& neighbourBlocs)
+	  {this->updateVisibilityWithNeighbour(neighbourPos, neighbourBlocs, nullptr);
+	  };
+	  auto threadFunc = [myPos, callBack](const BlocData& bd, Chunk* neighbour){neighbour->updateVisibilityWithNeighbour(myPos, bd, callBack);};
+	  threads.push_back(std::thread(threadFunc, blocs, it.second));
+	//it.second->updateVisibilityWithNeighbour(myPos, blocs, callBack);
+	}
+	for (std::thread &worker : threads)
 	{
 		worker.join();
-	}
+	}*/
 	threadUseCount--;
+	//generateConnectedSpaces();
+	//greedyMesh();
 }
 
-void	Chunk::worleyCaveTest() // destroying blocks following a 3d worley noise to generate caves
-{
-	struct bloc	*bloc;
-	for(unsigned int y = 3; y < CHUNK_HEIGHT; y++)// random number, can't dig lower than 3, cant dig higher than floor
-		for(unsigned int x = 0; x < CHUNK_WIDTH; x++)
-			for(unsigned int z = 0; z < CHUNK_DEPTH; z++)
-			{
-				//if (y >= )// TODO add condition here to make it not being able to make a hole through a mountain (keep it below floor/water level ?). Also needs coherent noise that doesnt start at 0.6f of CHUNK_HEIGHT as minimum result
-					//continue;
-				bloc = &(blocs[y][z][x]);
-				if (bloc->type != NO_TYPE) // block exists // broken with type because lol
-				{
-					float xScaled = x / (float)CHUNK_WIDTH + position.x / CHUNK_WIDTH;
-					float yScaled = y / (float)CHUNK_HEIGHT;
-					float zScaled = z / (float)CHUNK_DEPTH + position.z / CHUNK_DEPTH;
-					if (VoxelGenerator::getWorleyValueAt(xScaled, yScaled, zScaled) >= 0.8f) // random value
-					{
+// Recursive version -> No Good too many call
+/*void Chunk::generateConnectedBlocList(int x, int y, int z, std::vector<Vec3> *connectedBlocPos)
+  {
+  if ((x < 0 || x >= CHUNK_WIDTH) || (y < 0 || y >= 60)
+  || (z < 0 || z >= CHUNK_DEPTH))
+  return;
+  if (blocs[y][z][x].type != NO_TYPE || std::find_if((*connectedBlocPos).begin(), (*connectedBlocPos).end(),
+  compare(Vec3(x, y, z)))  != (*connectedBlocPos).end())
+  return;
+  connectedBlocPos->push_back(Vec3(x, y, z));
+  generateConnectedBlocList(x - 1, y, z, connectedBlocPos);
+  generateConnectedBlocList(x + 1, y, z, connectedBlocPos);
 
-						//texture = ResourceManager::getBlockTexture(BLOCK_STONE);
-						// destroy the block
-						bloc->type = NO_TYPE;
-						bloc->visible = 0;
-						hardBloc--;
-						hardBlocVisible--;
-					}
+  generateConnectedBlocList(x, y - 1, z, connectedBlocPos);
+  generateConnectedBlocList(x, y + 1, z, connectedBlocPos);
+
+  generateConnectedBlocList(x, y, z - 1, connectedBlocPos);
+  generateConnectedBlocList(x, y, z + 1, connectedBlocPos);
+  }*/
+
+// Iterative version : Not so much better...
+void Chunk::generateConnectedBlocList(int ox, int oy, int oz, std::vector<Vec3> *connectedBlocPos)
+{
+	std::vector<Vec3> stack;
+	std::vector<Vec3> visitedBlocs;
+	Vec3 cur;
+	float x, y, z;
+
+	stack.clear();
+	visitedBlocs.clear();
+	cur = Vec3(ox, oy, oz);
+	stack.push_back(cur);
+	while (!stack.empty())
+	{
+		cur = stack.back();
+		x = cur.x;
+		y = cur.y;
+		z = cur.z;
+		stack.pop_back();
+		if (blocs[cur.y][cur.z][cur.x].type != NO_TYPE)
+			continue;
+		if (std::find_if(visitedBlocs.begin(), visitedBlocs.end(), compare(cur)) != visitedBlocs.end())
+			continue;
+		visitedBlocs.push_back(cur);
+		connectedBlocPos->push_back(cur);
+
+		if (x > 0)
+			stack.push_back(Vec3(x - 1, y, z));
+		if (x < CHUNK_WIDTH - 1)
+			stack.push_back(Vec3(x + 1, y, z));
+		if (y > 0)
+			stack.push_back(Vec3(x, y - 1, z));
+		if (y < 59) //CHUNK_HEIGHT - 1)
+			stack.push_back(Vec3(x, y + 1, z));
+		if (z > 0)
+			stack.push_back(Vec3(x, y, z - 1));
+		if (z < CHUNK_DEPTH - 1)
+			stack.push_back(Vec3(x, y, z + 1));
+	}
+	if (connectedBlocPos->size() != 0)
+		printf("Connected empty blocs count : %li\n", connectedBlocPos->size());
+}
+
+void Chunk::generateConnectedSpaces(void)
+{
+	// Function using floodfill algorithm to compute which blocs are in the same
+	// "space". This will help us know which blocs must be displayed.
+	// -
+	// The floodfill algorithm is to iterate throught all empty bloc in the chunk
+	// and mark them according to the connected space. All adjacent bloc (6 directions)
+	// are in the same space.
+	//
+	// Idea : To optimize, we might draw the chunk before this function is done
+	//			instead of waiting for it. We would redraw once done.
+	//
+	// Space : A space will be a collection of empty connected blocs.
+	// It will make us able to know which blocs are border of this space and
+	// if the space is connected to other chunks
+
+	// Goal : Mark all NO_TYPE block as belonging to a space
+	// Step 1 : Get a random NO_TYPE block
+	// Step 2 : Get all connected NO_TYPE block in relation of step1
+	// Step 3 : Redo this till no more NO_TYPE block orphan
+
+	printf("Starting space generation\n");
+	printf("Max amount of bloc in chunk : %i\n", CHUNK_SIZE);
+	int spaceId = -1;
+	std::vector<std::vector<Vec3>> spaces;
+	std::vector<Vec3> visitedBlocs;
+	spaces.clear();
+	visitedBlocs.clear();
+	for (unsigned int y = 0; y < CHUNK_HEIGHT; y++)
+		for (unsigned int x = 0; x < CHUNK_WIDTH; x++)
+			for (unsigned int z = 0; z < CHUNK_DEPTH; z++)
+			{
+				struct bloc *bloc = &(blocs[y][z][x]);
+				if (bloc->type != NO_TYPE || y > 60)
+					continue;
+				if (std::find_if(visitedBlocs.begin(), visitedBlocs.end(), compare(Vec3(x, y, z))) != visitedBlocs.end())
+					continue;
+				spaceId++;
+				// Current block is of NO_TYPE type.
+				// Mark it as belonging to space #spaceId
+				// Iterate to its neighbors (6 directions)
+				std::vector<Vec3> spaceX;
+				spaceX.clear();
+				generateConnectedBlocList(x, y, z, &spaceX);
+				if (spaceX.size() > 0)
+				{
+					//printf("Space #%3i : %4li blocs\n", spaceId, spaceX.size());
+					visitedBlocs.insert(visitedBlocs.end(), spaceX.begin(), spaceX.end());
+					spaceX.clear();
 				}
 			}
+	printf("Chunk space count : %i\n", spaceId);
+	printf("Chunk floodfill done\n");
 }
 
-void Chunk::updateVisibilityWithNeighbour(Vec2 NeighbourPos, const BlocData& neighbourBlocs, std::function<void(const BlocData&)> callBack)
+void Chunk::updateVisibilityWithNeighbour(Vec2 NeighbourPos, const BlocData &neighbourBlocs, std::function<void(const BlocData &)> callBack)
 {
 	Vec2 relativePos = NeighbourPos - worldCoordToChunk(getPos());
 
@@ -241,10 +408,10 @@ void Chunk::updateVisibilityWithNeighbour(Vec2 NeighbourPos, const BlocData& nei
 	{
 		int x = relativePos.x == -1 ? 0 : CHUNK_WIDTH - 1;
 		int neighbourX = x == 0 ? CHUNK_WIDTH - 1 : 0;
-		for(int y = 0; y < CHUNK_HEIGHT; y++)
+		for (int y = 0; y < CHUNK_HEIGHT; y++)
 			for (int z = 0; z < CHUNK_DEPTH; z++)
 			{
-				struct bloc& bloc = blocs[y][z][x];
+				struct bloc &bloc = blocs[y][z][x];
 				if (bloc.type != NO_TYPE && !bloc.visible && neighbourBlocs[y][z][neighbourX].type == NO_TYPE)
 				{
 					hardBlocVisible++;
@@ -253,14 +420,14 @@ void Chunk::updateVisibilityWithNeighbour(Vec2 NeighbourPos, const BlocData& nei
 				}
 			}
 	}
-	else  // relativePos.y != 0
+	else // relativePos.y != 0
 	{
 		int z = relativePos.y == -1 ? 0 : CHUNK_DEPTH - 1;
 		int neighbourZ = z == 0 ? CHUNK_DEPTH - 1 : 0;
-		for(int y = 0; y < CHUNK_HEIGHT; y++)
+		for (int y = 0; y < CHUNK_HEIGHT; y++)
 			for (int x = 0; x < CHUNK_WIDTH; x++)
 			{
-				struct bloc& bloc = blocs[y][z][x];
+				struct bloc &bloc = blocs[y][z][x];
 				if (bloc.type != NO_TYPE && !bloc.visible && neighbourBlocs[y][neighbourZ][x].type == NO_TYPE)
 				{
 					hardBlocVisible++;
@@ -291,7 +458,7 @@ void Chunk::updateVisibilityByCamera(bool freeze)
 	// Raycasting -> Bad idea
 	// This functions does not seems like a good idea.
 	// It is not working as intended and destroying perf for the moment
-	struct bloc	*bloc;
+	struct bloc *bloc;
 	if (freeze || !init)
 		return;
 
@@ -301,11 +468,11 @@ void Chunk::updateVisibilityByCamera(bool freeze)
 	Vec3 playerPos = playerCamera->getPos();
 	float half_fov = 1.0 / 180.0 * (FOV * 1.2);
 
-	for(int y = CHUNK_HEIGHT; y > 0; y--)
+	for (int y = CHUNK_HEIGHT; y > 0; y--)
 	{
-		for(int z = CHUNK_DEPTH; z > 0; z--)
+		for (int z = CHUNK_DEPTH; z > 0; z--)
 		{
-			for(int x = CHUNK_WIDTH; x > 0; x--)
+			for (int x = CHUNK_WIDTH; x > 0; x--)
 			{
 				bloc = &(blocs[y - 1][z - 1][x - 1]);
 
@@ -324,9 +491,9 @@ void Chunk::updateVisibilityByCamera(bool freeze)
 					//float cos = value / (dirToLength * sightLen);
 
 					/*Vec3 cross = dirToCamera.cross(playerSight);
-					float sin = cross.getLength() / (dirToLength * sightLen);
+					  float sin = cross.getLength() / (dirToLength * sightLen);
 
-					float angle = std::acos(cos) * 180.0 / M_PI;*/
+					  float angle = std::acos(cos) * 180.0 / M_PI;*/
 					float angle = value;
 					//if (sin < 0)
 					//	angle = -angle;
@@ -367,13 +534,13 @@ void Chunk::updateVisibilityByCamera(bool freeze)
 
 void Chunk::updateVisibility(void)
 {
-	struct bloc	*bloc;
+	struct bloc *bloc;
 	hardBlocVisible = 0;
-	for(int y = CHUNK_HEIGHT; y > 0; y--)
+	for (int y = CHUNK_HEIGHT; y > 0; y--)
 	{
-		for(int z = CHUNK_DEPTH; z > 0; z--)
+		for (int z = CHUNK_DEPTH; z > 0; z--)
 		{
-			for(int x = CHUNK_WIDTH; x > 0; x--)
+			for (int x = CHUNK_WIDTH; x > 0; x--)
 			{
 				bloc = &(blocs[y - 1][z - 1][x - 1]);
 				if (bloc->type != NO_TYPE)
@@ -392,10 +559,10 @@ void Chunk::updateVisibility(void)
 
 GLuint Chunk::setVisibilityByNeighbors(int x, int y, int z) // Activates visibility if one neighbour is transparent
 {
-	struct bloc										*bloc = &(blocs[y][z][x]);
-	std::vector<std::pair<struct bloc*, GLuint>>	neighbors = {};
-	std::vector<std::pair<float, GLuint>>			border_neighbors = {};
-	GLuint											visibleFaces = 0;
+	struct bloc *bloc = &(blocs[y][z][x]);
+	std::vector<std::pair<struct bloc *, GLuint>> neighbors = {};
+	std::vector<std::pair<float, GLuint>> border_neighbors = {};
+	GLuint visibleFaces = 0;
 
 	// Check with neighbors case using noise
 	if (x == 0)
@@ -440,7 +607,7 @@ GLuint Chunk::setVisibilityByNeighbors(int x, int y, int z) // Activates visibil
 			visibleFaces |= currentFace;
 		}
 	}
-	return visibleFaces;
+	return visibleFaces; // 127 or 63 ?
 }
 
 bool Chunk::generatePosOffsets(void)
@@ -448,17 +615,17 @@ bool Chunk::generatePosOffsets(void)
 	// TODO : Implement way of knowing which bloc should be shown to avoid loading
 	//		too much data.
 	// Should generate position of each bloc based on the chunk position
-	Matrix	mat;
+	Matrix mat;
 	unsigned int i = 0;
 	if (updateChunk)
 	{
-		GLfloat	*WIP_transform = new GLfloat[hardBlocVisible * 3];//CHUNK_HEIGHT * CHUNK_WIDTH * CHUNK_DEPTH * 3];
-		GLint	*WIP_type = new GLint[hardBlocVisible];
-		for(int y = CHUNK_HEIGHT - 1; y >= 0; y--)	// Too big of a loop
+		GLfloat *WIP_transform = new GLfloat[hardBlocVisible * 3]; //CHUNK_HEIGHT * CHUNK_WIDTH * CHUNK_DEPTH * 3];
+		GLint *WIP_type = new GLint[hardBlocVisible];
+		for (int y = CHUNK_HEIGHT - 1; y >= 0; y--) // Too big of a loop
 		{
-			for(int z = CHUNK_DEPTH - 1; z >= 0; z--)
+			for (int z = CHUNK_DEPTH - 1; z >= 0; z--)
 			{
-				for(int x = CHUNK_WIDTH -1 ; x >= 0; x--)
+				for (int x = CHUNK_WIDTH - 1; x >= 0; x--)
 				{
 					unsigned int indexX = 0;
 					unsigned int indexY = 0;
@@ -483,20 +650,19 @@ bool Chunk::generatePosOffsets(void)
 		}
 		glBindBuffer(GL_ARRAY_BUFFER, positionVBO);
 		glBufferData(GL_ARRAY_BUFFER, hardBlocVisible * 3 * sizeof(float),
-			WIP_transform, GL_STATIC_DRAW);
-		delete [] WIP_transform;
+					 WIP_transform, GL_STATIC_DRAW);
+		delete[] WIP_transform;
 
 		glBindBuffer(GL_ARRAY_BUFFER, typeVBO);
 		glBufferData(GL_ARRAY_BUFFER, hardBlocVisible * sizeof(GLint),
-				WIP_type, GL_STATIC_DRAW);
-		delete [] WIP_type;
+					 WIP_type, GL_STATIC_DRAW);
+		delete[] WIP_type;
 
 		if (hardBlocVisible != facesToRender.size())
 			std::cout << "Error : wtf problem with visible blocs and faces" << std::endl;
 		glBindBuffer(GL_ARRAY_BUFFER, facesVBO);
 		glBufferData(GL_ARRAY_BUFFER, facesToRender.size() * sizeof(GLuint),
-				facesToRender.data(), GL_STATIC_DRAW);
-
+					 facesToRender.data(), GL_STATIC_DRAW);
 
 		updateChunk = false;
 		return true;
@@ -504,7 +670,161 @@ bool Chunk::generatePosOffsets(void)
 	return false;
 }
 
-void Chunk::draw(Shader* shader)
+bool Chunk::compareBlocs(const struct bloc *b1, const struct bloc *b2)
+{
+	return (b1->type == b2->type && b1->visible == b2->visible);
+}
+
+Chunk::bloc *Chunk::getVoxel(int x, int y, int z)
+{
+	return (&(blocs[y][z][x]));
+}
+
+void Chunk::greedyMesh(void)
+{
+	int i, j, k, l, w, h, u, v, n = 0;
+
+	int x[] = {0, 0, 0};
+	int dim[] = {CHUNK_WIDTH, CHUNK_HEIGHT, CHUNK_DEPTH};
+	int q[] = {0, 0, 0};
+	int du[] = {0, 0, 0};
+	int dv[] = {0, 0, 0};
+
+	struct bloc *mask[CHUNK_HEIGHT * CHUNK_WIDTH];
+
+	/*
+	 *	The variable backFace will be TRUE on first iteration and FALSE
+	 *	on the second. This allows us to track which direction the indices
+	 *	should run during the quad creation.
+	 *
+	 *	The loop will run twice and the inner one 3 times, each iteration will
+	 *	be for one face of the voxel.
+	 */
+	for (bool backFace = true, b = false; b != backFace; backFace = backFace & b, b = !b)
+	{
+		// B1 and B2 are variables used for comparison;
+		struct bloc *b1, *b2;
+
+		// We check over 3 dimensions (x/y/z). Like explained by Mikola Lysenko.
+		for (int d = 0; d < 3; d++)
+		{
+			// Variable VoxelFace
+			u = (d + 1) % 3;
+			v = (d + 2) % 3;
+
+			x[0] = 0;
+			x[1] = 0;
+			x[2] = 0;
+
+			q[0] = 0;
+			q[1] = 0;
+			q[2] = 0;
+			q[d] = 1;
+
+			// Sweep dimension from FRONT to BACK
+			for (x[d] = -1; x[d] < dim[d];)
+			{
+				n = 0;
+				// Mask computation
+
+				for (x[v] = 0; x[v] < dim[v]; x[v]++)
+					for (x[u] = 0; x[u] < dim[u]; x[u]++)
+					{
+						b1 = (x[d] >= 0) ? getVoxel(x[0], x[1], x[2]) : NULL;
+						b2 = (x[d] < dim[d] - 1) ? getVoxel(x[0] + q[0], x[1] + q[1], x[2] + q[2]) : NULL;
+
+						mask[n++] = ((b1 != NULL && b2 != NULL && compareBlocs(b1, b2))) ? NULL : backFace ? b1
+																										   : b2;
+					}
+				x[d]++;
+
+				n = 0;
+
+				for (j = 0; j < CHUNK_HEIGHT; j++)
+				{
+					for (i = 0; i < CHUNK_WIDTH; i++)
+					{
+						if (mask[n] != NULL)
+						{
+							for (w = 1; i + w < CHUNK_WIDTH && mask[n + w] != NULL &&
+										compareBlocs(mask[n + w], mask[n]);
+								 w++)
+							{
+							}
+
+							bool done = false;
+
+							for (h = 1; j + h < CHUNK_HEIGHT; h++)
+							{
+								for (k = 0; k < w; k++)
+								{
+									if (mask[n + k + h * CHUNK_WIDTH] == NULL || !compareBlocs(mask[n + k + h * CHUNK_WIDTH], mask[n]))
+									{
+										done = true;
+										break;
+									}
+								}
+								if (done)
+									break;
+							}
+
+							if (mask[n]->visible)
+							{
+								// Create quad
+								x[u] = i;
+								x[v] = j;
+
+								du[0] = 0;
+								du[1] = 0;
+								du[2] = 0;
+								du[u] = w;
+
+								dv[0] = 0;
+								dv[1] = 0;
+								dv[2] = 0;
+								dv[v] = h;
+
+								createQuad(Vec3(x[0], x[1], x[2]),
+										   Vec3(x[0] + du[0], x[1] + du[1], x[2] + du[2]),
+										   Vec3(x[0] + du[0] + dv[0], x[1] + du[1] + dv[1], x[2] + du[2] + dv[2]),
+										   Vec3(x[0] + dv[0], x[1] + dv[1], x[2] + dv[2]),
+										   w,
+										   h,
+										   mask[n]);
+
+								// Generate quad using found coordinates
+							}
+
+							for (l = 0; l < h; ++l)
+								for (k = 0; k < w; ++k)
+								{
+									mask[n + k + l * CHUNK_WIDTH] = NULL;
+								}
+
+							i += w;
+							n += w;
+						}
+						else
+						{
+							i++;
+							n++;
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+void Chunk::createQuad(Vec3 bottomLeft, Vec3 topLeft, Vec3 topRight, Vec3 bottomRight, int width, int height,
+					   Chunk::bloc *voxel)
+{
+	(void)bottomLeft, (void)bottomRight, (void)topLeft, (void)topRight;
+	(void)width, (void)height;
+	(void)voxel;
+}
+
+void Chunk::draw(Shader *shader)
 {
 	draw_safe.lock();
 	if (hardBloc == 0 || hardBlocVisible == 0 || !init)
@@ -514,14 +834,15 @@ void Chunk::draw(Shader* shader)
 	}
 	//updateVisibilityByCamera();
 	bool isThereNewData = Chunk::generatePosOffsets();
-	(void)isThereNewData; // might be usefull if we use multiple VAO
+	(void)isThereNewData; // might be useful if we use multiple VAO
 
 	//glBindTexture(GL_TEXTURE_CUBE_MAP, texture->getID());	// TODO : Modify in order to use more than one texture at once and those texture should not be loaded here but
-															// in ResourceManager.
+	// in ResourceManager.
 	//RectangularCuboid::drawInstance(shader, positionVBO, typeVBO, hardBlocVisible);
 	//RectangularCuboid::drawFace(shader, positionVBO, typeVBO, hardBlocVisible, facesToRender);
 	RectangularCuboid::drawFaceInstance(shader, positionVBO, typeVBO, hardBlocVisible, facesVBO);
-	
+	//RectangularCuboid::drawQuad(shader, positionVBO, typeVBO);
+
 	draw_safe.unlock();
 }
 

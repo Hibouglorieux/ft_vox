@@ -146,6 +146,11 @@ bool Vec2::isSmaller(const Vec2& rhs) const
 	return ((abs(x) + abs(y)) < (abs(rhs.x) + abs(rhs.y)));
 }
 
+float Vec2::dot(Vec2 rhs) const
+{
+	return (x * rhs.x + y * rhs.y);
+}
+
 bool Vec2::operator>(const Vec2& rhs) const
 {
 	return !(*this < rhs) && !(*this == rhs);
