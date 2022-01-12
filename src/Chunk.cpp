@@ -191,16 +191,18 @@ void Chunk::initChunk(void)
 			for (unsigned int y = 0; y < CHUNK_HEIGHT; y++)
 			{
 				bloc = &(blocs[y][z][x]);
-				bloc->type = NO_TYPE;
+				if (y == 0)
+				{
+					bloc->type = BLOCK_BEDROCK;
+					hardBloc++;
+				}
+				else
+					bloc->type = NO_TYPE;
 				bloc->visible = false;
 			}
-			bloc = &(blocs[0][z][x]);
-			bloc->type = BLOCK_BEDROCK;
-			bloc->visible = false; // will be updated after with updateVisibility
-			hardBloc++;
 
 			float blockValue = this->getBlockBiome(x, z);
-			(void)blockValue;
+
 			if (blockValue < min)
 				min = blockValue;
 			if (blockValue > max)
@@ -210,7 +212,7 @@ void Chunk::initChunk(void)
 			{
 				bloc = &(blocs[y][z][x]);
 
-				int bloc_type = bloc->type;
+				//int bloc_type = bloc->type;
 				if ((&(blocs[(int)blockValue][z][x]))->type == BLOCK_GRASS || (&(blocs[(int)blockValue][z][x]))->type == NO_TYPE)
 					bloc->type = BLOCK_DIRT;
 				else
@@ -255,49 +257,9 @@ void Chunk::initChunk(void)
 	updateChunk = true;
 
 	Vec2 myPos = worldCoordToChunk(getPos());
-	/*std::vector<std::thread> threads;
-	for (auto it : myNeighbours)
-	  {
-	  threadUseCount++;
-	  Vec2 neighbourPos = it.first;
-	  auto callBack = [this, neighbourPos]
-	  (const BlocData& neighbourBlocs)
-	  {this->updateVisibilityWithNeighbour(neighbourPos, neighbourBlocs, nullptr);
-	  };
-	  auto threadFunc = [myPos, callBack](const BlocData& bd, Chunk* neighbour){neighbour->updateVisibilityWithNeighbour(myPos, bd, callBack);};
-	  threads.push_back(std::thread(threadFunc, blocs, it.second));
-	//it.second->updateVisibilityWithNeighbour(myPos, blocs, callBack);
-	}
-	for (std::thread &worker : threads)
-	{
-		worker.join();
-	}*/
-	threadUseCount--;
-	//generateConnectedSpaces();
-	//greedyMesh();
+	threadUseCount = 0;
 }
 
-// Recursive version -> No Good too many call
-/*void Chunk::generateConnectedBlocList(int x, int y, int z, std::vector<Vec3> *connectedBlocPos)
-  {
-  if ((x < 0 || x >= CHUNK_WIDTH) || (y < 0 || y >= 60)
-  || (z < 0 || z >= CHUNK_DEPTH))
-  return;
-  if (blocs[y][z][x].type != NO_TYPE || std::find_if((*connectedBlocPos).begin(), (*connectedBlocPos).end(),
-  compare(Vec3(x, y, z)))  != (*connectedBlocPos).end())
-  return;
-  connectedBlocPos->push_back(Vec3(x, y, z));
-  generateConnectedBlocList(x - 1, y, z, connectedBlocPos);
-  generateConnectedBlocList(x + 1, y, z, connectedBlocPos);
-
-  generateConnectedBlocList(x, y - 1, z, connectedBlocPos);
-  generateConnectedBlocList(x, y + 1, z, connectedBlocPos);
-
-  generateConnectedBlocList(x, y, z - 1, connectedBlocPos);
-  generateConnectedBlocList(x, y, z + 1, connectedBlocPos);
-  }*/
-
-// Iterative version : Not so much better...
 void Chunk::generateConnectedBlocList(int ox, int oy, int oz, std::vector<Vec3> *connectedBlocPos)
 {
 	std::vector<Vec3> stack;
@@ -401,6 +363,7 @@ void Chunk::updateVisibilityWithNeighbour(Vec2 NeighbourPos, const BlocData &nei
 
 	while (!init) // this happens when a neighbours has finished initializing but the one being called to update hasnt finished yet
 	{
+		printf("I'm not ready yet !");
 		usleep(TMP_SLEEP_VALUE);
 	}
 	draw_safe.lock();

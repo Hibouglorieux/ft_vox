@@ -346,12 +346,8 @@ bool	World::shouldBeRendered(Vec2 chunkPos, const Chunk* chnk, Matrix& matrix)
 {
 	(void)chunkPos;
 	(void)matrix;
-	// Using direction and pos, we could elimate those behind us directly
-	Vec3 chunkToPlayer = (chnk->getPos() - camera.getPos()).getNormalized();
-	float value = chunkToPlayer.dot(camera.getDirection());
-	if (value > 0 || chunkPos == curPos)
-		return (chnk->boundingVolume.isOnFrustum(camera.getFrustum()));
-	return false;
+
+	return (chnk->boundingVolume.isOnFrustum(camera.getFrustum()));
 }
 
 void World::setCamera(Camera newCamera)
