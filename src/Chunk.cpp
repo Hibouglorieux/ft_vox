@@ -183,7 +183,7 @@ void Chunk::initChunk(void)
 
 	// Get height map for chunk
 	blocs = BlocData();		 // memset equivalent (needed)
-	blocs = {NO_TYPE, 0, -1}; // TODO : Check if correct
+	blocs = {NO_TYPE, 0, 0}; // TODO : Check if correct
 
 	int min, max;
 	min = CHUNK_HEIGHT + 1;
@@ -204,6 +204,7 @@ void Chunk::initChunk(void)
 				else
 					bloc->type = NO_TYPE;
 				bloc->visible = false;
+				bloc->spaceId = 0;
 			}
 
 			float blockValue = this->getBlockBiome(x, z);
@@ -541,9 +542,66 @@ static inline void updateBlockSpaceId(int x, int y, int z)
 	(void)y;
 }
 
+void Chunk::updateVisibilitySpaceAux(int ox, int oy, int oz)
+{
+	std::vector<Vec3> stack;
+	std::vector<Vec3> visitedBlocs;
+	Vec3	cur;
+	float	x, y, z;
+	int		spaceBlocCount;
+
+	// Clear the stack and the visited stack
+	stack.clear();
+	visitedBlocs.clear();
+	// Set the starting point
+	cur = Vec3(ox, oy, oz);
+	stack.push_back(cur);
+	spaceBlocCount = 0;
+
+	// While the stack is not empty, look for neighbors
+	while (!stack.empty())
+	{
+		// Get the current position
+		cur = stack.back();
+		x = cur.x;
+		y = cur.y;
+		z = cur.z;
+		stack.pop_back();
+
+		// Check if the bloc is of NO_TYPE type
+		// If not, add it to the current border space
+		if (blocs[cur.y][cur.z][cur.x].type != NO_TYPE)
+			continue;
+
+		// Check if we're looking at already visited positions
+		if (std::find_if(visitedBlocs.begin(), visitedBlocs.end(), compare(cur)) != visitedBlocs.end()) // TODO : add variable (to bloc struct) to check if visited instead of using stack
+			continue;
+		// Mark block as visited
+		visitedBlocs.push_back(cur);
+
+		if (x > 0)
+			stack.push_back(Vec3(x - 1, y, z));
+		if (x < CHUNK_WIDTH - 1)
+			stack.push_back(Vec3(x + 1, y, z));
+		if (y > 0)
+			stack.push_back(Vec3(x, y - 1, z));
+		if (y < CHUNK_HEIGHT - 1)
+			stack.push_back(Vec3(x, y + 1, z));
+		if (z > 0)
+			stack.push_back(Vec3(x, y, z - 1));
+		if (z < CHUNK_DEPTH - 1)
+			stack.push_back(Vec3(x, y, z + 1));
+
+		(&(blocs[z][y][x]))->spaceId = spaceCount;
+		spaceBlocCount++;
+	}
+	spaceESize[spaceCount] = spaceBlocCount;
+}
+
 void Chunk::updateVisibilitySpace(void)
 {
 	struct bloc *bloc;
+	bool inSpace = false;
 	
 	for (int y = CHUNK_HEIGHT; y > 0; y--)
 	{
@@ -552,12 +610,13 @@ void Chunk::updateVisibilitySpace(void)
 			for (int x = CHUNK_WIDTH; x > 0; x--)
 			{
 				bloc = &(blocs[y - 1][z - 1][x - 1]);
-				if (bloc->visible && bloc->type != NO_TYPE) // Add block to space border (which will be rendered if player is in this space)
+				if (inSpace && bloc->type != NO_TYPE) // Add block to space border (which will be rendered if player is in this space)
 				{
 					//
 				}
 				if (bloc->type == NO_TYPE)
 				{
+					inSpace = true;
 					if (bloc->spaceId != spaceCount && bloc->spaceId != -1) // Compare size of both space and keep the biggest one (merge ecount + borders (keep unique))
 					{
 						bool fbigger = spaceESize[spaceCount] > spaceESize[bloc->spaceId];
@@ -565,11 +624,17 @@ void Chunk::updateVisibilitySpace(void)
 					}
 					else if (bloc->spaceId == -1) // Set current spaceId and propagate it to neighbors then increase spaceId
 					{
-						bloc->spaceId = spaceCount;
-						spaceESize[spaceCount] = 1;
+						updateVisibilitySpaceAux(x - 1, y - 1, z - 1);
+						printf("Space count : %i\n", spaceESize[spaceCount]);
 						spaceCount++;
-						spaceESize[spaceCount] = 0;
 						//spaceESize.push_back(std::make_pair(spaceCount, 0));
+					}
+
+					if (x == 0 || x == CHUNK_WIDTH || z == 0 || z == CHUNK_DEPTH)
+					{
+						// The spaceId of the current bloc is connected to the next chunk
+						// x == 0 right chunk else left chunk
+						// z == 0 backward chunk else forward chunk
 					}
 				}
 			}

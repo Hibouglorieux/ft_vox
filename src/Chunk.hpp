@@ -79,6 +79,7 @@ private:
 	void	generateConnectedBlocList(int x, int y, int z, std::vector<Vec3> *connectedBlocPos, std::vector<Vec3> *visitedBlocsMaster);
 	void	generateConnectedSpaces(void);
 	
+	void	updateVisibilitySpaceAux(int x, int y, int z);
 	void	updateVisibilitySpace(void);
 	// End of Space Functions
 
