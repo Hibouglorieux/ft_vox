@@ -49,9 +49,11 @@ public:
 private:
 	struct bloc
 	{
-		GLint type;
-		bool visible;
-		GLint spaceId;
+		GLint 	type;
+		bool 	visible;
+		GLint 	spaceId;
+		bool 	visited;
+		GLuint	faces;
 	};
 
 	struct compare
@@ -66,7 +68,7 @@ private:
 
 	typedef std::array<std::array<std::array<struct bloc, CHUNK_WIDTH>, CHUNK_DEPTH>, CHUNK_HEIGHT> BlocData;
 	typedef std::array<std::array<std::array<int, CHUNK_WIDTH>, CHUNK_DEPTH>, CHUNK_HEIGHT> BlocSearchData;
-	typedef std::array<std::pair<GLint, std::vector<struct bloc *>>, CHUNK_SIZE> BlocSpaceBorder;
+	typedef std::array<std::vector<Vec3>, CHUNK_SIZE> BlocSpaceBorder;
 
 	void	updateVisibilityWithNeighbour(Vec2 NeighbourPos,
 			const BlocData& neighbourBlocs,
@@ -76,9 +78,8 @@ private:
 	GLuint	setVisibilityByNeighbors(int x, int y, int z);
 
 	// Space Functions
-	void	generateConnectedBlocList(int x, int y, int z, std::vector<Vec3> *connectedBlocPos, std::vector<Vec3> *visitedBlocsMaster);
-	void	generateConnectedSpaces(void);
-	
+	void	updateVisibilityBorder(int x, int y, int z, int xHeight = -1, int zHeight = -1, bool master = false);
+	void	updateVisibilitySpaceAux(int x, int y, int z);
 	void	updateVisibilitySpace(void);
 	// End of Space Functions
 
