@@ -44,6 +44,7 @@ public:
 	bool pause = false;
 	bool freeze = false;
 	bool blocFreeze = false;
+	bool wireframe = false;
 	std::vector<std::pair<Vec2, Chunk*>> chunksToRenderFix;
 
 private:

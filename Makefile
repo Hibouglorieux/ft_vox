@@ -51,16 +51,18 @@ OBJ = $(addprefix obj/,$(FILES:.cpp=.o))
 LIBS = -lglfw -lX11 -lXrandr -lXinerama -lXi -lXxf86vm -lXcursor -lGL -lpthread -ldl `pkg-config --libs glew` -lm #-pg #-fsanitize=address
 
 CXXFLAGS = -std=gnu++11 -Wall -Wextra -g #-pg #-fsanitize=address
+PROFILEFLAG = #-pg
+OFLAGS = -O3
 
 all: $(NAME)
 
 $(NAME): $(OBJ)
-	$(CXX) $^ -o $@ $(LIBS)
+	$(CXX) $(PROFILEFLAG) $(OFLAGS) $^ -o $@ $(LIBS)
 	@$(ECHOc) "Compilation of $(Cyan)$(NAME)$(End) :    $(Green)Done$(End)"
 
 obj/%.o:src/%.cpp includes/*.h src/*.hpp
 	@mkdir -p obj
-	$(CXX) $(CXXFLAGS) -c $< -o $@ -Iincludes -Ilibft -I$(HOME)/.brew/include
+	$(CXX) $(CXXFLAGS) $(PROFILEFLAG) $(OFLAGS) -c $< -o $@ -Iincludes -Ilibft -I$(HOME)/.brew/include
 	@$(ECHOc) "Compilation of $(Cyan)$@$(End) :    $(Green)Done$(End)"
 
 clean :

@@ -25,6 +25,10 @@ Chunk::Chunk(int x, int z, Camera *camera)
 	hardBlocVisible = 0;
 	init = false;
 	threadUseCount = 1;
+
+	spaceCount = 0;
+	//spaceBorder = { 0 };
+	spaceESize = { 0 };
 	
 	myNeighbours = {};
 	playerCamera = camera;
@@ -35,6 +39,7 @@ Chunk::Chunk(int x, int z, Camera *camera)
 
 Chunk::Chunk(int x, int z, Camera *camera, std::vector<std::pair<Vec2, Chunk *>> neighbours) : Chunk(x, z, camera)
 {
+	(void)neighbours;
 	//myNeighbours = neighbours;
 }
 
@@ -67,7 +72,7 @@ float Chunk::getBlockBiome(int x, int z, bool setBlocInChunk, bool superFlat)
 			heightValue = 80;
 		else
 			heightValue = mountainTerrain * (HEIGHT - 1);
-		/*float value = biomeSelector;
+		float value = biomeSelector;
 		//printf("%f\n", value);
 
 		if (value < 0)
@@ -178,7 +183,7 @@ void Chunk::initChunk(void)
 
 	// Get height map for chunk
 	blocs = BlocData();		 // memset equivalent (needed)
-	blocs = {NO_TYPE, 0, 0}; // TODO : Check if correct
+	blocs = {NO_TYPE, 0, -1}; // TODO : Check if correct
 
 	int min, max;
 	min = CHUNK_HEIGHT + 1;
@@ -211,20 +216,21 @@ void Chunk::initChunk(void)
 			for (int y = (int)blockValue - 1; y > 0; y--)
 			{
 				bloc = &(blocs[y][z][x]);
-
 				//int bloc_type = bloc->type;
+
 				if ((&(blocs[(int)blockValue][z][x]))->type == BLOCK_GRASS || (&(blocs[(int)blockValue][z][x]))->type == NO_TYPE)
 					bloc->type = BLOCK_DIRT;
 				else
 					bloc->type = BLOCK_STONE;
 				bloc->visible = 0;
 				hardBloc++;
+
 				/*if (bloc_type == NO_TYPE && y < blockValue - 3 && y > 0) // block exists // broken with type because lol
 				{
-					float xScaled = (x / (float)CHUNK_WIDTH + position.x / CHUNK_WIDTH) * ((float)WORLEY_SIZE / 512.0f);
-					float yScaled = y;
-					float zScaled = (z / (float)CHUNK_DEPTH + position.z / CHUNK_DEPTH) * ((float)WORLEY_SIZE / 512.0f);
-					if (VoxelGenerator::getWorleyValueAt(xScaled, yScaled, zScaled) >= 0.9f) // random value
+					float xScaled = (x + position.x) * (32.0 / 1024.0); //(x / (float)CHUNK_WIDTH + position.x / CHUNK_WIDTH);// * ((float)WORLEY_SIZE / 512.0f);
+					float yScaled = y * 0.5;//  * (32.0 / 1024.0);
+					float zScaled = (z + position.z)  * (32.0 / 1024.0); //(z / (float)CHUNK_DEPTH + position.z / CHUNK_DEPTH);// * ((float)WORLEY_SIZE / 512.0f);
+					if (VoxelGenerator::getWorleyValueAt(xScaled, yScaled, zScaled) >= 0.83f) // random value
 					{
 						bloc->type = NO_TYPE;
 						hardBloc--;
@@ -251,7 +257,9 @@ void Chunk::initChunk(void)
 	//std::cout << "Is on frustum : " << boundingVolume.isOnFrustum(playerCamera->getFrustum()) << std::endl;
 
 	updateVisibility();
+	updateVisibilitySpace();
 	//updateVisibilityByCamera();
+	//generateConnectedSpaces();
 
 	init = true;
 	updateChunk = true;
@@ -260,7 +268,18 @@ void Chunk::initChunk(void)
 	threadUseCount = 0;
 }
 
-void Chunk::generateConnectedBlocList(int ox, int oy, int oz, std::vector<Vec3> *connectedBlocPos)
+Chunk::~Chunk(void)
+{
+	//delete texture;
+	glBindBuffer(GL_ARRAY_BUFFER, typeVBO);
+	glDeleteBuffers(1, &typeVBO);
+	glBindBuffer(GL_ARRAY_BUFFER, positionVBO);
+	glDeleteBuffers(1, &positionVBO);
+	//delete heightMap;
+	totalChunks--;
+}
+
+void Chunk::generateConnectedBlocList(int ox, int oy, int oz, std::vector<Vec3> *connectedBlocPos, std::vector<Vec3> *visitedBlocsMaster)
 {
 	std::vector<Vec3> stack;
 	std::vector<Vec3> visitedBlocs;
@@ -280,7 +299,8 @@ void Chunk::generateConnectedBlocList(int ox, int oy, int oz, std::vector<Vec3> 
 		stack.pop_back();
 		if (blocs[cur.y][cur.z][cur.x].type != NO_TYPE)
 			continue;
-		if (std::find_if(visitedBlocs.begin(), visitedBlocs.end(), compare(cur)) != visitedBlocs.end())
+		if (std::find_if(visitedBlocs.begin(), visitedBlocs.end(), compare(cur)) != visitedBlocs.end()
+			|| std::find_if(visitedBlocsMaster->begin(), visitedBlocsMaster->end(), compare(cur)) != visitedBlocsMaster->end() )
 			continue;
 		visitedBlocs.push_back(cur);
 		connectedBlocPos->push_back(cur);
@@ -345,7 +365,7 @@ void Chunk::generateConnectedSpaces(void)
 				// Iterate to its neighbors (6 directions)
 				std::vector<Vec3> spaceX;
 				spaceX.clear();
-				generateConnectedBlocList(x, y, z, &spaceX);
+				generateConnectedBlocList(x, y, z, &spaceX, &visitedBlocs);
 				if (spaceX.size() > 0)
 				{
 					//printf("Space #%3i : %4li blocs\n", spaceId, spaceX.size());
@@ -403,17 +423,6 @@ void Chunk::updateVisibilityWithNeighbour(Vec2 NeighbourPos, const BlocData &nei
 	if (callBack)
 		callBack(blocs);
 	threadUseCount--;
-}
-
-Chunk::~Chunk(void)
-{
-	//delete texture;
-	glBindBuffer(GL_ARRAY_BUFFER, typeVBO);
-	glDeleteBuffers(1, &typeVBO);
-	glBindBuffer(GL_ARRAY_BUFFER, positionVBO);
-	glDeleteBuffers(1, &positionVBO);
-	//delete heightMap;
-	totalChunks--;
 }
 
 void Chunk::updateVisibilityByCamera(bool freeze)
@@ -513,6 +522,54 @@ void Chunk::updateVisibility(void)
 					{
 						hardBlocVisible += 1;
 						facesToRender.push_back(visibleFaces);
+					}
+				}
+				/*else
+				{
+					bloc->spaceId = spaceCount;
+					spaceCount++;
+				}*/
+			}
+		}
+	}
+}
+
+static inline void updateBlockSpaceId(int x, int y, int z)
+{
+	(void)x;
+	(void)x;
+	(void)y;
+}
+
+void Chunk::updateVisibilitySpace(void)
+{
+	struct bloc *bloc;
+	
+	for (int y = CHUNK_HEIGHT; y > 0; y--)
+	{
+		for (int z = CHUNK_DEPTH; z > 0; z--)
+		{
+			for (int x = CHUNK_WIDTH; x > 0; x--)
+			{
+				bloc = &(blocs[y - 1][z - 1][x - 1]);
+				if (bloc->visible && bloc->type != NO_TYPE) // Add block to space border (which will be rendered if player is in this space)
+				{
+					//
+				}
+				if (bloc->type == NO_TYPE)
+				{
+					if (bloc->spaceId != spaceCount && bloc->spaceId != -1) // Compare size of both space and keep the biggest one (merge ecount + borders (keep unique))
+					{
+						bool fbigger = spaceESize[spaceCount] > spaceESize[bloc->spaceId];
+						//
+					}
+					else if (bloc->spaceId == -1) // Set current spaceId and propagate it to neighbors then increase spaceId
+					{
+						bloc->spaceId = spaceCount;
+						spaceESize[spaceCount] = 1;
+						spaceCount++;
+						spaceESize[spaceCount] = 0;
+						//spaceESize.push_back(std::make_pair(spaceCount, 0));
 					}
 				}
 			}

@@ -36,7 +36,7 @@ enum blockType {
 #define HEIGHTMAP_SIZE BLOC_WIDTH_PER_CHUNK
 
 #define BIG_HEIGHT_MAP_SIZE 1024
-#define WORLEY_SIZE 32
+#define WORLEY_SIZE 64
 
 typedef std::array<std::array<std::array<unsigned char, WIDTH>, LENGTH>, HEIGHT> VoxelMap;
 typedef std::array<std::array<float, HEIGHTMAP_SIZE>, HEIGHTMAP_SIZE> HeightMap;

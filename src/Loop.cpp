@@ -43,7 +43,7 @@ void Loop::loop()
 		processInput();
 
 		if (!(world->pause))
-			glClear(/*GL_COLOR_BUFFER_BIT | */GL_DEPTH_BUFFER_BIT);
+			glClear((world->wireframe ? GL_COLOR_BUFFER_BIT : 0) | GL_DEPTH_BUFFER_BIT);
 
 
 		if (world && !(world->pause))
@@ -116,8 +116,6 @@ void Loop::processInput()
 
 void Loop::KeyCallbackProcess(bool keysPressed[389])
 {
-	static bool wireframe = false;
-
 	for (int i = 0; i < 389; i++)
 	{
 		if (!keysPressed[i])
@@ -151,8 +149,8 @@ void Loop::KeyCallbackProcess(bool keysPressed[389])
 		}
 		if (i == GLFW_KEY_Z)
 		{
-			wireframe = !wireframe;
-			if (wireframe)
+			world->wireframe = !world->wireframe;
+			if (world->wireframe)
 				glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 			else
 				glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
