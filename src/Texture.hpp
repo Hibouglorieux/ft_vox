@@ -27,7 +27,7 @@ class Texture {
 public:
 	Texture(std::string pathToFile = "cat.png");
 	Texture(std::vector<std::string> paths, std::string textureName);
-	Texture(std::vector<std::string> paths, BigHeightMap& heightMap);
+	Texture(std::vector<std::string> paths, BigHeightMap& heightMap, float freq = 1.0f, float amp = 1.0f, int octaves = 1, int depth = 0);
 	Texture(std::vector<std::string> paths, HeightMap& heightMap, bool smoll);
 	Texture(float NoiseTest = 42);
 	Texture(bool skybox);

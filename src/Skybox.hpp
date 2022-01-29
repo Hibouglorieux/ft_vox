@@ -22,7 +22,7 @@
 
 class Skybox {
 public:
-	static void initialize();
+	static void initialize(float freq = 1.0f, float amp = 1.0f, int octaves = 1, int depth = 0);
 	static void draw(Matrix& precalculatedMat);
 	static void clear();
 

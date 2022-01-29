@@ -29,6 +29,8 @@ Chunk::Chunk(int x, int z, Camera *camera)
 	spaceCount = 0;
 	//spaceBorder = { 0 };
 	spaceESize = { 0 };
+	ghostBorder = { };
+	ghostBorder.push_back({});
 	
 	myNeighbours = {};
 	playerCamera = camera;
@@ -138,6 +140,8 @@ float Chunk::getBlockBiome(int x, int z, bool setBlocInChunk)
 	int blocType = BLOCK_GRASS;
 
 	float heightValue = (flatTerrain * (HEIGHT - 1) * 0.66);
+	//terrainBiomeValue = 0.0;
+	//heightValue = 1;
 
 	if (terrainBiomeValue > 0.45)
 	{
@@ -196,29 +200,30 @@ void Chunk::initChunk(void)
 			for (unsigned int y = 0; y < CHUNK_HEIGHT; y++)
 			{
 				bloc = &(blocs[y][z][x]);
+				
 				if (y == 0)
-				{
 					bloc->type = BLOCK_BEDROCK;
-					hardBloc++;
-				}
 				else
 					bloc->type = NO_TYPE;
 				bloc->visible = false;
 				bloc->spaceId = -1;
 				bloc->visited = false;
 			}
-
+			
 			float blockValue = this->getBlockBiome(x, z);
+			
+			if (x == 0 || x == CHUNK_WIDTH - 1 || z == 0 || z == CHUNK_DEPTH - 1)	// TODO : Delete, this was to show chunk
+				(&(blocs[blockValue][z][x]))->type = BLOCK_SAND;
 
 			if (blockValue < min)
 				min = blockValue;
 			if (blockValue > max)
 				max = blockValue;
 
-			for (int y = (int)blockValue - 1; y > 0; y--)
+			for (int j = (int)blockValue - 1; j > 0; j--)
 			{
-				bloc = &(blocs[y][z][x]);
-				int bloc_type = bloc->type;
+				bloc = &(blocs[j][z][x]);
+				//int bloc_type = bloc->type;
 
 				if ((&(blocs[(int)blockValue][z][x]))->type == BLOCK_GRASS || (&(blocs[(int)blockValue][z][x]))->type == NO_TYPE)
 					bloc->type = BLOCK_DIRT;
@@ -227,27 +232,19 @@ void Chunk::initChunk(void)
 				bloc->visible = 0;
 				hardBloc++;
 
-				/*if (bloc_type == NO_TYPE && y < blockValue - 3 && y > 0) // block exists // broken with type because lol
+
+				if (true && j < blockValue && j > 0)
 				{
-					float xScaled = (x + position.x) * (32.0 / 1024.0); //(x / (float)CHUNK_WIDTH + position.x / CHUNK_WIDTH);// * ((float)WORLEY_SIZE / 512.0f);
-					float yScaled = y * 0.5;//  * (32.0 / 1024.0);
-					float zScaled = (z + position.z)  * (32.0 / 1024.0); //(z / (float)CHUNK_DEPTH + position.z / CHUNK_DEPTH);// * ((float)WORLEY_SIZE / 512.0f);
-					if (VoxelGenerator::getWorleyValueAt(xScaled, yScaled, zScaled) >= 0.83f) // random value
-					{
+					float noise = VoxelGenerator::Noise3D(position.x + x, j * 15.5, position.z + z, 0.25f, 0.0040f, 0.45f, 4, 0, 2.0, 0.5, true);
+					
+					if (noise > 0.6f)
 						bloc->type = NO_TYPE;
-						hardBloc--;
-						if (bloc->visible)
-						{
-							hardBlocVisible--;
-							bloc->visible = 0;
-						}
-					}
 					else
-					{
-						bloc->visible = true;
-						hardBlocVisible++;
-					}
-				}*/
+						bloc->type = BLOCK_DIRT;
+						//bloc->type = BLOCK_DIRT;
+				}
+				if ((x == 0 || x == CHUNK_WIDTH - 1 || z == 0 || z == CHUNK_DEPTH - 1) && bloc->type != NO_TYPE)	// TODO : Delete, this was to show chunk
+					(&(blocs[j][z][x]))->type = BLOCK_SAND;
 			}
 		}
 	}
@@ -260,8 +257,6 @@ void Chunk::initChunk(void)
 
 	updateVisibility();
 	updateVisibilitySpace();
-	//updateVisibilityByCamera();
-	//generateConnectedSpaces();
 
 	init = true;
 	updateChunk = true;
@@ -329,85 +324,6 @@ void Chunk::updateVisibilityWithNeighbour(Vec2 NeighbourPos, const BlocData &nei
 	threadUseCount--;
 }
 
-void Chunk::updateVisibilityByCamera(bool freeze)
-{
-	// Raycasting -> Bad idea
-	// This functions does not seems like a good idea.
-	// It is not working as intended and destroying perf for the moment
-	struct bloc *bloc;
-	if (freeze || !init)
-		return;
-
-	Frustum playerFrustum = playerCamera->getFrustum();
-	Vec3 playerSight = playerCamera->getDirection();
-	//float sightLen = playerSight.getLength();
-	Vec3 playerPos = playerCamera->getPos();
-	float half_fov = 1.0 / 180.0 * (FOV * 1.2);
-
-	for (int y = CHUNK_HEIGHT; y > 0; y--)
-	{
-		for (int z = CHUNK_DEPTH; z > 0; z--)
-		{
-			for (int x = CHUNK_WIDTH; x > 0; x--)
-			{
-				bloc = &(blocs[y - 1][z - 1][x - 1]);
-
-				// Compute line of sight from block to player.
-				if (bloc->type != NO_TYPE)
-				{
-					// Block position
-					Vec3 blockPosition = Vec3(position + Vec3(x - 1, y - 1, z - 1));
-					// Direction vector from block to camera
-					Vec3 dirToCamera = Vec3(playerPos - blockPosition).getNormalized();
-					//float dirToLength = dirToCamera.getLength();
-
-					// Angle between the camera direction and the direction
-					// vector of the block to camera
-					float value = dirToCamera.dot(playerSight);
-					//float cos = value / (dirToLength * sightLen);
-
-					/*Vec3 cross = dirToCamera.cross(playerSight);
-					  float sin = cross.getLength() / (dirToLength * sightLen);
-
-					  float angle = std::acos(cos) * 180.0 / M_PI;*/
-					float angle = value;
-					//if (sin < 0)
-					//	angle = -angle;
-					//printf("Sight value : %f\n", angle);
-					//printf("%f\n", half_fov);
-					if (angle <= -1 + half_fov && angle >= -1)
-					{
-						if (bloc->visible == false)
-						{
-							//printf("Value : %f >= %f >= %f\n", FOV, value, -FOV);
-							//printf("Showing block\n");
-							bloc->visible = true;
-							hardBlocVisible++;
-						}
-					}
-					else
-					{
-						if (bloc->visible)
-						{
-							//printf("Value : %f >= %f >= %f\n", FOV, value, -FOV);
-							//printf("Hiding block\n");
-							hardBlocVisible--;
-						}
-						bloc->visible = false;
-					}
-				}
-			}
-		}
-	}
-	//printf("\n");
-	//printf("Block visible : %i\n", hardBlocVisible);
-
-	updateChunk = true;
-	//if (hardBlocVisible > 0)
-	//	Chunk::generatePosOffsets();
-	//draw_safe.unlock();
-}
-
 void Chunk::updateVisibility(void)
 {
 	struct bloc *bloc;
@@ -421,18 +337,12 @@ void Chunk::updateVisibility(void)
 				bloc = &(blocs[y - 1][z - 1][x - 1]);
 				if (bloc->type != NO_TYPE)
 				{
-					GLuint visibleFaces = setVisibilityByNeighbors(x - 1, y - 1, z - 1);
+					GLuint faces = setVisibilityByNeighbors(x - 1, y - 1, z - 1);
 					if (bloc->visible == true)
 					{
 						hardBlocVisible += 1;
-						//facesToRender.push_back(visibleFaces);
 					}
 				}
-				/*else
-				{
-					bloc->spaceId = spaceCount;
-					spaceCount++;
-				}*/
 			}
 		}
 	}
@@ -443,9 +353,11 @@ void Chunk::updateVisibility(void)
  */
 void Chunk::updateVisibilityBorder(int x, int y, int z, int xHeight, int zHeight, bool master)
 {
-	struct bloc *bloc = &(blocs[y][z][x]);
-	std::vector<std::pair<float, GLuint>> border_neighbors = {};
 	int maxDiff = 0;
+	float noiseX = 0, noiseZ = 0;
+	struct bloc ghostBloc = {BLOCK_DIRT, 0, spaceCount, 0, 0};
+	bool ghost = false;
+	Vec3 pos;
 
 	// Get the neigbhors height once
 	if (xHeight == -1)
@@ -462,29 +374,53 @@ void Chunk::updateVisibilityBorder(int x, int y, int z, int xHeight, int zHeight
 		else if (z == CHUNK_DEPTH - 1)
 			zHeight = (int)(this->getBlockBiome(x, z + 1, false));
 	}
+	noiseX = VoxelGenerator::Noise3D(position.x + (x == 0 ? x - 1 : x + 1), y * 15.5, position.z + z, 0.25f, 0.0040f, 0.45f, 4, 0, 2.0, 0.5, true);
+	noiseZ = VoxelGenerator::Noise3D(position.x + x, y * 15.5, position.z + (z == 0 ? z - 1 : z + 1), 0.25f, 0.0040f, 0.45f, 4, 0, 2.0, 0.5, true);
+	// If noiseX or noiseZ is higher than 0.6f, it means that the bloc is empty
 
 	// If both height are superior to current y, no block under us need to be displayed
-	if (xHeight >= y && zHeight >= y)
+	if ((xHeight >= y && zHeight >= y) && (noiseX <= 0.6f && noiseZ <= 0.6f))
 		return;
-	
+
 	GLuint faces = 0;
-	if (xHeight > -1 && xHeight < y)
+	if ((xHeight > -1 && xHeight < y))
 		faces |= x == 0 ? LEFT_NEIGHBOUR : RIGHT_NEIGHBOUR;
-	if (zHeight > -1 && zHeight < y)
+	if ((zHeight > -1 && zHeight < y))
 		faces |= z == 0 ? BACK_NEIGHBOUR : FRONT_NEIGHBOUR;
+	if ((x == 0 || x == CHUNK_WIDTH - 1) && noiseX > 0.6f)	// Ghost border
+	{
+		ghostBloc.faces |= x == 0 ? LEFT_NEIGHBOUR : RIGHT_NEIGHBOUR;
+		ghost = true;
+	}
+	if ((z == 0 || z == CHUNK_DEPTH - 1) && noiseZ > 0.6f)	// Ghost border
+	{
+		ghostBloc.faces |= z == 0 ? BACK_NEIGHBOUR : FRONT_NEIGHBOUR;
+		ghost = true;
+	}
+	if (ghost)
+	{
+		while (ghostBorder.size() < (long unsigned int)(spaceCount + 1))
+			ghostBorder.push_back({});
+		//printf("%li\n", ghostBorder.size());
+		ghostBorder[spaceCount].push_back({ghostBloc, Vec3((x == 0 ? x : x ), y, (z == 0 ? z  : z ))});
+	}
 
 	if (faces == 0)
 		return;
 
-	facesToRender.push_back(faces);
-	spaceBorder[spaceCount].push_back(Vec3(x, y, z));
+	if (blocs[y][z][x].type != NO_TYPE)
+	{
+		facesToRender.push_back(faces);
+		spaceBorder[spaceCount].push_back(Vec3(x, y, z));
+	}
 
 	if (master)
 	{
 		if (xHeight > -1 && zHeight > -1)
 			maxDiff = xHeight > zHeight ? zHeight : xHeight;
-		if (xHeight > -1 || zHeight > -1)
+		else if (xHeight > -1 || zHeight > -1)
 			maxDiff = xHeight > -1 ? xHeight : zHeight;
+		maxDiff = 1;
 		for (int yDiff = 1; y - yDiff > maxDiff; yDiff++)
 			updateVisibilityBorder(x, y - yDiff, z, xHeight, zHeight);
 	}
@@ -548,7 +484,7 @@ void Chunk::updateVisibilitySpaceAux(int ox, int oy, int oz)
 		spaceBlocCount++;
 	}
 	//printf("%i\n", spaceBlocCount);
-	spaceESize[spaceCount] = spaceBlocCount;
+	spaceESize[spaceCount] += spaceBlocCount;
 }
 
 void Chunk::updateVisibilitySpace(void)
@@ -556,6 +492,7 @@ void Chunk::updateVisibilitySpace(void)
 	struct bloc *bloc;
 	bool inSpace = false;
 	
+	spaceESize[spaceCount] = 0;
 	for (int y = CHUNK_HEIGHT; y > 0; y--)
 	{
 		for (int z = CHUNK_DEPTH; z > 0; z--)
@@ -578,8 +515,7 @@ void Chunk::updateVisibilitySpace(void)
 					else if (bloc->spaceId == -1) // Set current spaceId and propagate it to neighbors then increase spaceId
 					{
 						updateVisibilitySpaceAux(x - 1, y - 1, z - 1);
-						//printf("Space border count : %li\n", spaceBorder[spaceCount].size());
-						spaceCount++;
+						//spaceCount++;
 					}
 
 					if (x == 0 || x == CHUNK_WIDTH || z == 0 || z == CHUNK_DEPTH)	// TODO : updateVisibilitySpaceAux should do it
@@ -592,6 +528,7 @@ void Chunk::updateVisibilitySpace(void)
 			}
 		}
 	}
+	//printf("%li\n", ghostBorder.size());
 	//printf("Number of space : %i\n", spaceCount);
 	//printf("Space border count : %5li | Visible blocs : %5i\n", spaceBorder[0].size(), hardBlocVisible);
 }
@@ -601,17 +538,30 @@ GLuint Chunk::setVisibilityByNeighbors(int x, int y, int z) // Activates visibil
 	struct bloc *bloc = &(blocs[y][z][x]);
 	std::vector<std::pair<struct bloc *, GLuint>> neighbors = {};
 	std::vector<std::pair<float, GLuint>> border_neighbors = {};
+	std::vector<Vec3> border_neighbors_vec = {};
 	GLuint visibleFaces = 0;
 
 	// Check with neighbors case using noise
 	if (x == 0)
+	{
 		border_neighbors.push_back({this->getBlockBiome(x - 1, z, false), LEFT_NEIGHBOUR});
+		border_neighbors_vec.push_back(Vec3(x - 1, y, z));
+	}
 	else if (x == CHUNK_WIDTH - 1)
+	{
 		border_neighbors.push_back({this->getBlockBiome(x + 1, z, false), RIGHT_NEIGHBOUR});
+		border_neighbors_vec.push_back(Vec3(x + 1, y, z));
+	}
 	if (z == 0)
+	{
 		border_neighbors.push_back({this->getBlockBiome(x, z - 1, false), BACK_NEIGHBOUR});
+		border_neighbors_vec.push_back(Vec3(x, y, z - 1));
+	}
 	else if (z == CHUNK_DEPTH - 1)
+	{
 		border_neighbors.push_back({this->getBlockBiome(x, z + 1, false), FRONT_NEIGHBOUR});
+		border_neighbors_vec.push_back(Vec3(x, y, z + 1));
+	}
 
 	if (y > 0)
 		neighbors.push_back({&(blocs[y - 1][z][x]), BOTTOM_NEIGHBOUR});
@@ -636,15 +586,18 @@ GLuint Chunk::setVisibilityByNeighbors(int x, int y, int z) // Activates visibil
 			visibleFaces |= currentFace;
 		}
 	}
+	int i = 0;
 	for (auto it : border_neighbors)
 	{
 		float max_height = it.first;
 		GLuint currentFace = it.second;
-		if (max_height < y)
+		float noise = VoxelGenerator::Noise3D(position.x + border_neighbors_vec[i].x, y * 15.5, position.z + border_neighbors_vec[i].z, 0.25f, 0.0040f, 0.45f, 4, 0, 2.0, 0.5, true);
+		if (max_height < y || noise > 0.6f) // TODO : Need to know if neighbors is cave or not (so generate noise...)
 		{
 			bloc->visible = true;
 			visibleFaces |= currentFace;
 		}
+		++i;
 	}
 
 	bloc->faces = visibleFaces;
@@ -661,35 +614,9 @@ bool Chunk::generatePosOffsets(void)
 	unsigned int i = 0;
 	if (updateChunk)
 	{
-		GLfloat *WIP_transform = new GLfloat[spaceBorder[0].size() * 3]; //CHUNK_HEIGHT * CHUNK_WIDTH * CHUNK_DEPTH * 3];
-		GLint *WIP_type = new GLint[spaceBorder[0].size()];
-		/*for (int y = CHUNK_HEIGHT - 1; y >= 0; y--) // Too big of a loop
-		{
-			for (int z = CHUNK_DEPTH - 1; z >= 0; z--)
-			{
-				for (int x = CHUNK_WIDTH - 1; x >= 0; x--)
-				{
-					unsigned int indexX = 0;
-					unsigned int indexY = 0;
-					unsigned int indexZ = 0;
-					if (blocs[y][z][x].visible == 1)
-					{
-						indexX = i * 3;
-						indexY = i * 3 + 1;
-						indexZ = i * 3 + 2;
-						WIP_type[i] = blocs[y][z][x].type;
-						i += 1;
-						//std::cout << indexX << " ; " << indexY << " ; " << indexZ << "\n\n";
-						WIP_transform[indexX] = position.x + x;
-						WIP_transform[indexY] = position.y + y;
-						WIP_transform[indexZ] = position.z + z;
-						//std::cout << WIP_transform[indexX] << ";";
-						//std::cout << WIP_transform[indexY] << ";";
-						//std::cout << WIP_transform[indexZ] << "\n";
-					}
-				}
-			}
-		}*/
+		//printf("%li\n", ghostBorder[0].size());
+		GLfloat *WIP_transform = new GLfloat[(spaceBorder[0].size() + ghostBorder[0].size()) * 3]; //CHUNK_HEIGHT * CHUNK_WIDTH * CHUNK_DEPTH * 3];
+		GLint *WIP_type = new GLint[spaceBorder[0].size() + ghostBorder[0].size()];
 		unsigned int indexX = 0;
 		unsigned int indexY = 0;
 		unsigned int indexZ = 0;
@@ -699,22 +626,44 @@ bool Chunk::generatePosOffsets(void)
 			indexY = i * 3 + 1;
 			indexZ = i * 3 + 2;
 			WIP_type[i] = blocs[blockVec.y][blockVec.z][blockVec.x].type;
+			if (WIP_type[i] == 99)
+				printf("ERROR, trying to display empty block\n");
+			else if (WIP_type[i] < 0 && WIP_type[i] > 7 && WIP_type[i] != 99)
+				printf("ERROR, trying to display unknown type\n");
 			i += 1;
 			WIP_transform[indexX] = position.x + blockVec.x;
 			WIP_transform[indexY] = position.y + blockVec.y;
 			WIP_transform[indexZ] = position.z + blockVec.z;
 		}
+		for (auto blockVec: ghostBorder[0])
+		{
+			indexX = i * 3;
+			indexY = i * 3 + 1;
+			indexZ = i * 3 + 2;
+			struct bloc ghostBloc = blockVec.first;
+			Vec3 ghostPos = blockVec.second;
+			facesToRender.push_back(ghostBloc.faces);
+			WIP_type[i] = ghostBloc.type;
+			if (WIP_type[i] == 99)
+				printf("ERROR, trying to display empty block\n");
+			else if (WIP_type[i] < 0 && WIP_type[i] > 7 && WIP_type[i] != 99)
+				printf("ERROR, trying to display unknown type\n");
+			i += 1;
+			WIP_transform[indexX] = position.x + ghostPos.x;
+			WIP_transform[indexY] = position.y + ghostPos.y;
+			WIP_transform[indexZ] = position.z + ghostPos.z;
+		}
 		glBindBuffer(GL_ARRAY_BUFFER, positionVBO);
-		glBufferData(GL_ARRAY_BUFFER, spaceBorder[0].size() * 3 * sizeof(float),
+		glBufferData(GL_ARRAY_BUFFER, (spaceBorder[0].size() + ghostBorder[0].size()) * 3 * sizeof(float),
 					 WIP_transform, GL_STATIC_DRAW);
 		delete[] WIP_transform;
 
 		glBindBuffer(GL_ARRAY_BUFFER, typeVBO);
-		glBufferData(GL_ARRAY_BUFFER, spaceBorder[0].size() * sizeof(GLint),
+		glBufferData(GL_ARRAY_BUFFER, (spaceBorder[0].size() + ghostBorder[0].size()) * sizeof(GLint),
 					 WIP_type, GL_STATIC_DRAW);
 		delete[] WIP_type;
 
-		if (spaceBorder[0].size() != facesToRender.size())
+		if ((spaceBorder[0].size() + ghostBorder[0].size()) != facesToRender.size())
 			std::cout << "Error : wtf problem with visible blocs and faces" << std::endl;
 		glBindBuffer(GL_ARRAY_BUFFER, facesVBO);
 		glBufferData(GL_ARRAY_BUFFER, facesToRender.size() * sizeof(GLuint),
@@ -897,7 +846,7 @@ void Chunk::draw(Shader *shader)
 	//RectangularCuboid::drawInstance(shader, positionVBO, typeVBO, hardBlocVisible);
 	//RectangularCuboid::drawFace(shader, positionVBO, typeVBO, hardBlocVisible, facesToRender);
 	//RectangularCuboid::drawFaceInstance(shader, positionVBO, typeVBO, hardBlocVisible, facesVBO);
-	RectangularCuboid::drawFaceInstance(shader, positionVBO, typeVBO, spaceBorder[0].size(), facesVBO);
+	RectangularCuboid::drawFaceInstance(shader, positionVBO, typeVBO, spaceBorder[0].size() + ghostBorder[0].size(), facesVBO);
 	//RectangularCuboid::drawQuad(shader, positionVBO, typeVBO);
 
 	draw_safe.unlock();

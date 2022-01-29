@@ -529,7 +529,7 @@ float	VoxelGenerator::Noise2D(float x, float z, float output, float frequency, f
 	return output;
 }
 
-float	VoxelGenerator::Noise3D(float x, float y, float z, float output, float frequency, float amplitude, int octaves, int tableId, float lacunarity, float gain)
+float	VoxelGenerator::Noise3D(float x, float y, float z, float output, float frequency, float amplitude, int octaves, int tableId, float lacunarity, float gain, bool clamp)
 {
 	for(int i = 0; i < octaves; ++i)
 	{
@@ -540,12 +540,14 @@ float	VoxelGenerator::Noise3D(float x, float y, float z, float output, float fre
 	}
 	output = (output + 1) * 0.5;
 
-	// We to cleave/clamp the cavern noise;
 	output = pow(output, 1.65);
-	if (output < 0)
-		output = 0;
-	else if (output >= 1.0)
-		output = 1;
+	if (clamp)
+	{
+		if (output < 0)
+			output = 0;
+		else if (output >= 1.0)
+			output = 1;
+	}
 	return output;
 }
 

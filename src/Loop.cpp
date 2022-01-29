@@ -155,6 +155,22 @@ void Loop::KeyCallbackProcess(bool keysPressed[389])
 			else
 				glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		}
+		if (i == GLFW_KEY_KP_1 || i == GLFW_KEY_KP_2)
+		{
+			world->updateSkyboxDEBUG(0, GLFW_KEY_KP_1 ? 0.1f : -0.1f, 0, 0);
+		}
+		if (i == GLFW_KEY_KP_4 || i == GLFW_KEY_KP_5)
+		{
+			world->updateSkyboxDEBUG(i == GLFW_KEY_KP_4 ? 0.001f : -0.001f, 0, 0, 0);
+		}
+		if (i == GLFW_KEY_KP_7 || i == GLFW_KEY_KP_8)
+		{
+			world->updateSkyboxDEBUG(0, 0, i == GLFW_KEY_KP_7 ? 1 : -1, 0);
+		}
+		if (i == GLFW_KEY_KP_9 || i == GLFW_KEY_KP_6)
+		{
+			world->updateSkyboxDEBUG(0, 0, 0, i == GLFW_KEY_KP_9 ? 1 : -1);
+		}
 	}
 }
 

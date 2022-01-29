@@ -28,7 +28,7 @@ World::World()
 	preLoadedChunks = {};
 	curPos = Chunk::worldCoordToChunk(camera.getPos());
 
-	Skybox::initialize();
+	Skybox::initialize(0.0013f, 1.2f, 1, 0);
 	auto positions = getPosInRange(Vec2(), 0, CHUNK_VIEW_DISTANCE);
 	for (auto pos : positions)
 	{
@@ -117,6 +117,17 @@ World::~World()
 	Skybox::clear();
 }
 
+void World::updateSkyboxDEBUG(float _freq, float _amp, int _octaves, int _y)
+{
+	amp += _amp;
+	freq += _freq;
+	octaves += _octaves;
+	y += _y;
+	printf("%f %f %i %i\n", _freq, _amp, _octaves, _y);
+	Skybox::clear();
+	Skybox::initialize(freq, amp, octaves, y);
+}
+
 void World::render()
 {
 	//std::cout << camera.getPos().x << "," << camera.getPos().z << std::endl;
@@ -156,12 +167,6 @@ void World::render()
 	std::vector<std::pair<Vec2, Chunk*>> chunksToRender;
 	if (!freeze)
 	{
-		/*std::vector<std::thread> threads;
-
-		auto chunkVisibilityUpdate = [](Chunk *chnk, bool freeze)
-		{
-			chnk->updateVisibilityByCamera(freeze);
-		};*/
 
 		for (auto it : visibleChunks)
 		{

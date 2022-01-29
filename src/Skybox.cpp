@@ -20,7 +20,7 @@ GLuint Skybox::VBO = 0;
 
 Vec3 Skybox::playerPos = Vec3(0, 0, 0);
 
-void Skybox::initialize()
+void Skybox::initialize(float freq, float amp, int octaves, int depth)
 {
 	std::vector<std::string> names = 
 	{{"skybox/right.jpg"},
@@ -31,15 +31,16 @@ void Skybox::initialize()
 	{"skybox/back.jpg"}};
 	
 	// heightmap call
-	//BigHeightMap *bigHeightMap = VoxelGenerator::createBigMap(6, 2, 0.5);
+	BigHeightMap *bigHeightMap = VoxelGenerator::createBigMap(6, 2, 0.5);
 	//HeightMap *heightmap = VoxelGenerator::createMap(1, 1);
-	//texture = new Texture(names, *bigHeightMap);
+	//texture = new Texture(names, *bigHeightMap, freq, amp, octaves, depth);
 
 	//texture = new Texture(names, *caveMap);
-	//texture = new Texture(false);// noiseTest
-	 
+	
+	//texture = new Texture(42.0f);// noiseTest 
 	//glActiveTexture(GL_TEXTURE0 + TEXTURECOUNT);// TODO this is a shortcut and is simply added as the last array of textures using, should be included in the enum or have a better variable name
 	//glBindTexture(GL_TEXTURE_CUBE_MAP, texture->getID());
+	
 	shader = new Shader("skybox.vert", "skybox.frag");
 
     glGenVertexArrays(1, &VAO);
@@ -151,7 +152,7 @@ void Skybox::draw(Matrix& precalculatedMat)
 
 void Skybox::clear()
 {
-	//delete texture;
+	delete texture;
 	delete shader;
 	glBindVertexArray(VAO);
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);

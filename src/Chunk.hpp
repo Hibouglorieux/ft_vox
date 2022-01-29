@@ -43,9 +43,6 @@ public:
 	static	Vec2 worldCoordToChunk(Vec3 worldPos);
 	static	int totalChunks;
 	AABB	boundingVolume = AABB(Vec3(0, 0, 0), Vec3(CHUNK_WIDTH, CHUNK_HEIGHT, CHUNK_DEPTH));
-
-	void	updateVisibilityByCamera(bool freeze);
-
 private:
 	struct bloc
 	{
@@ -97,9 +94,10 @@ private:
 	BlocData blocs;
 	BlocSearchData blocsTests;
 
-	int					spaceCount;
-	BlocSpaceBorder		spaceBorder;
-	std::array<int, CHUNK_SIZE> spaceESize;
+	int											spaceCount;
+	BlocSpaceBorder								spaceBorder;
+	std::array<int, CHUNK_SIZE> 				spaceESize;
+	std::vector<std::vector<std::pair<struct bloc, Vec3>>>	ghostBorder;
 
 	bool	updateChunk;
 	bool	init;

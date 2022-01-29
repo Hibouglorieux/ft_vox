@@ -25,9 +25,9 @@
 # define VIEW_DISTANCE 160
 # define ROW_OF_CHUNK 8
 //# define CHUNK_VIEW_DISTANCE (VIEW_DISTANCE / CHUNK_WIDTH + 1)
-# define CHUNK_VIEW_DISTANCE 15
-# define MAX_PRELOAD_DISTANCE ((float)CHUNK_VIEW_DISTANCE + 2)
-# define PRELOAD_DISTANCE_DEL ((float)CHUNK_VIEW_DISTANCE + 4)
+# define CHUNK_VIEW_DISTANCE 10
+# define MAX_PRELOAD_DISTANCE ((float)CHUNK_VIEW_DISTANCE + 1)
+# define PRELOAD_DISTANCE_DEL ((float)CHUNK_VIEW_DISTANCE + 2)
 
 class World {
 public:
@@ -37,6 +37,7 @@ public:
 	void setCamera(Camera newCamera);
 	Camera& getCamera();
 
+	void 	updateSkyboxDEBUG(float freq, float amp, int octaves, int y = 0);
 	void	update();
 	// Chunk Manager
 	void updateChunkBuffers(Vec2 newPos);
@@ -45,6 +46,12 @@ public:
 	bool freeze = false;
 	bool blocFreeze = false;
 	bool wireframe = false;
+
+	float freq = 0.0013f;
+	float amp = 1.2f;
+	int octaves = 1;
+	int y = 0;
+
 	std::vector<std::pair<Vec2, Chunk*>> chunksToRenderFix;
 
 private:

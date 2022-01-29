@@ -88,7 +88,7 @@ Texture::Texture(std::vector<std::string> paths, std::string textureName)
 	}
 }
 
-Texture::Texture(std::vector<std::string> paths, BigHeightMap& heightMap)
+Texture::Texture(std::vector<std::string> paths, BigHeightMap& heightMap, float freq, float amp, int octaves, int depth)
 {
 	name = paths[0];
 	if (textureLoaded.find(name) == textureLoaded.end())
@@ -112,15 +112,16 @@ Texture::Texture(std::vector<std::string> paths, BigHeightMap& heightMap)
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	std::cout << "added new texture: " << name << textureLoaded[name].ID << std::endl;
+	printf("%f %f %i %i\n", freq, amp, octaves, depth);
 	for (unsigned int i = 0; i < paths.size(); i++)
 	{
 		if (i < 10)
 		{
-			float* array = new float[heightMap.size() * heightMap.size()];
-			for (unsigned int y = 0; y < heightMap.size(); y++)
+			float* array = new float[1024*1024];//heightMap.size() * heightMap.size()];
+			for (unsigned int y = 0; y < 1024/*heightMap.size()*/; y++)
 			{
-				for (unsigned int x = 0; x < heightMap.size(); x++)
-					array[y * heightMap.size() + x] = heightMap[y][x];
+				for (unsigned int x = 0; x < 1024/*heightMap.size()*/; x++)
+					array[y * heightMap.size() + x] = VoxelGenerator::Noise3D(x, depth, y, 0.0f, freq, amp, octaves, 0, 2, 0.65);;//heightMap[y][x];
 			}
 			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, heightMap.size(), heightMap.size(), 0, GL_RED, GL_FLOAT, array);
 			delete [] array;
@@ -172,13 +173,13 @@ Texture::Texture(float noiseTest)
 		z = z / (32);
 		return VoxelGenerator::Noise3D(x, caveMapDepth, z, 0, frequency, amplitude, octaves, tableId, lacunarity, gain);};
 		*/
-#define NOISE_TEXTURE_WIDTH 1024
+#define NOISE_TEXTURE_WIDTH 4096
 	std::function<float(float x, float z)> f = [=](float x, float z)
 	{
-		//x = x * ((float)WORLEY_SIZE / (float)NOISE_TEXTURE_WIDTH);
-		//z = z * ((float)WORLEY_SIZE / (float)NOISE_TEXTURE_WIDTH);
-		x = x * ( 32.f / 1024.0f);
-		z = z * ( 32.f / 1024.f);
+		x = x * ((float)WORLEY_SIZE / (float)NOISE_TEXTURE_WIDTH);
+		z = z * ((float)WORLEY_SIZE / (float)NOISE_TEXTURE_WIDTH);
+		/*x = x * ( 32.f / 1024.0f);
+		z = z * ( 32.f / 1024.f);*/
 		float tmp = VoxelGenerator::getWorleyValueAt(x, 0, z);
 		//printf("for x:%f. z:%f i get:%f\n", x, z, tmp);
 		return tmp;
