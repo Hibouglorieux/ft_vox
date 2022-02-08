@@ -26,6 +26,10 @@ tags
 # Vscode folder
 .vscode
 
+biomes.md
+todo
+*.log
+
 obj
 obj/*.o
 ft_vox
