@@ -2,10 +2,9 @@
 #include <unistd.h>
 #include <thread>
 
-#define MAX(x, y) (x) //(x > y ? x : y)
 #define TMP_SLEEP_VALUE 0.05 * SEC_TO_MICROSEC
 
-//#define NO_TYPE 99
+#define CAVE_THRESHOLD 0.6f
 
 int Chunk::totalChunks = 0;
 
@@ -31,7 +30,7 @@ Chunk::Chunk(int x, int z, Camera *camera)
 	spaceESize = { 0 };
 	ghostBorder = { };
 	ghostBorder.push_back({});
-	
+
 	myNeighbours = {};
 	playerCamera = camera;
 	glGenBuffers(1, &typeVBO);
@@ -200,7 +199,7 @@ void Chunk::initChunk(void)
 			for (unsigned int y = 0; y < CHUNK_HEIGHT; y++)
 			{
 				bloc = &(blocs[y][z][x]);
-				
+
 				if (y == 0)
 					bloc->type = BLOCK_BEDROCK;
 				else
@@ -209,10 +208,10 @@ void Chunk::initChunk(void)
 				bloc->spaceId = -1;
 				bloc->visited = false;
 			}
-			
+
 			float blockValue = this->getBlockBiome(x, z);
-			
-			if (x == 0 || x == CHUNK_WIDTH - 1 || z == 0 || z == CHUNK_DEPTH - 1)	// TODO : Delete, this was to show chunk
+
+			if ((x == 0 || x == CHUNK_WIDTH - 1 || z == 0 || z == CHUNK_DEPTH - 1) && bloc->type != NO_TYPE)	// TODO : Delete, this was to show chunk
 				(&(blocs[blockValue][z][x]))->type = BLOCK_SAND;
 
 			if (blockValue < min)
@@ -236,8 +235,8 @@ void Chunk::initChunk(void)
 				if (true && j < blockValue && j > 0)
 				{
 					float noise = VoxelGenerator::Noise3D(position.x + x, j * 15.5, position.z + z, 0.25f, 0.0040f, 0.45f, 4, 0, 2.0, 0.5, true);
-					
-					if (noise > 0.6f)
+
+					if (noise > CAVE_THRESHOLD)
 						bloc->type = NO_TYPE;
 					else
 						bloc->type = BLOCK_DIRT;
@@ -338,6 +337,7 @@ void Chunk::updateVisibility(void)
 				if (bloc->type != NO_TYPE)
 				{
 					GLuint faces = setVisibilityByNeighbors(x - 1, y - 1, z - 1);
+					(void)faces;
 					if (bloc->visible == true)
 					{
 						hardBlocVisible += 1;
@@ -354,8 +354,8 @@ void Chunk::updateVisibility(void)
 void Chunk::updateVisibilityBorder(int x, int y, int z, int xHeight, int zHeight, bool master)
 {
 	int maxDiff = 0;
-	float noiseX = 0, noiseZ = 0;
-	struct bloc ghostBloc = {BLOCK_DIRT, 0, spaceCount, 0, 0};
+	float noiseX = 10, noiseZ = 10;
+	struct bloc ghostBloc = {BLOCK_DIRT, 0, spaceCount, 0, 0}, ghostBloc2 = {BLOCK_DIRT, 0, spaceCount, 0, 0};
 	bool ghost = false;
 	Vec3 pos;
 
@@ -374,41 +374,77 @@ void Chunk::updateVisibilityBorder(int x, int y, int z, int xHeight, int zHeight
 		else if (z == CHUNK_DEPTH - 1)
 			zHeight = (int)(this->getBlockBiome(x, z + 1, false));
 	}
+
+	// noiseX/Z get the noise of the 'outside' block
+	// If value >= CAVE_THRESHOLD, the 'outside' block is AIR (so no ghost ?)
+	/* To know if current block need ghost face we must know :
+	*		- current block is empty (NO_TYPE)
+	*		- 'outside'/border block is filled (!= NO_TYPE)
+	*
+	*	PROBLEMS :
+	*		- Might duplicate faces on already displayed blocks in neighbors
+	*		- Require more work to work correctly with player interactions 
+	*/
+
 	noiseX = VoxelGenerator::Noise3D(position.x + (x == 0 ? x - 1 : x + 1), y * 15.5, position.z + z, 0.25f, 0.0040f, 0.45f, 4, 0, 2.0, 0.5, true);
 	noiseZ = VoxelGenerator::Noise3D(position.x + x, y * 15.5, position.z + (z == 0 ? z - 1 : z + 1), 0.25f, 0.0040f, 0.45f, 4, 0, 2.0, 0.5, true);
-	// If noiseX or noiseZ is higher than 0.6f, it means that the bloc is empty
+	// If noiseX or noiseZ is higher than 0.6f, it means that the block is empty.
+	// If block is empty then no need for ghost faces.
 
 	// If both height are superior to current y, no block under us need to be displayed
-	if ((xHeight >= y && zHeight >= y) && (noiseX <= 0.6f && noiseZ <= 0.6f))
-		return;
+	/*if ((xHeight >= y && zHeight >= y) && (noiseX < CAVE_THRESHOLD && noiseZ < CAVE_THRESHOLD))
+		return;*/
 
+	/*
+	*	Each corner (0, 0), (1, 0), (0, 1), (1, 1) can have two ghost,
+	*   any other part of the boundary can have at most one ghost.
+	*/
+
+	if ((x == 0 || x == CHUNK_WIDTH - 1) && (z == 0 || z == CHUNK_DEPTH - 1)) // corners
+	{
+		if ((x == 0 || x == CHUNK_WIDTH - 1) && noiseX < CAVE_THRESHOLD && blocs[y][z][x].type == NO_TYPE)
+			ghostBloc.faces |= x != 0 ? LEFT_NEIGHBOUR : RIGHT_NEIGHBOUR;
+		if ((z == 0 || z == CHUNK_DEPTH - 1) && noiseZ < CAVE_THRESHOLD && blocs[y][z][x].type == NO_TYPE)
+			ghostBloc2.faces |= z != 0 ? BACK_NEIGHBOUR : FRONT_NEIGHBOUR;
+		if (ghostBloc.faces != 0 || ghostBloc2.faces != 0)
+		{
+			ghost = true;
+			while (ghostBorder.size() < (long unsigned)(spaceCount + 1))
+				ghostBorder.push_back({});
+		}
+		if (ghostBloc.faces != 0)
+			ghostBorder[spaceCount].push_back({ghostBloc, Vec3((x == 0 ? x - 1 : x + 1), y, z)});
+		if (ghostBloc2.faces != 0)
+			ghostBorder[spaceCount].push_back({ghostBloc2, Vec3(x, y, (z == 0 ? z - 1 : z + 1 ))});
+	}
+	else // the rest
+	{
+		if ((x == 0 || x == CHUNK_WIDTH - 1) && noiseX < CAVE_THRESHOLD && blocs[y][z][x].type == NO_TYPE)
+			ghostBloc.faces |= x != 0 ? LEFT_NEIGHBOUR : RIGHT_NEIGHBOUR;
+		else if ((z == 0 || z == CHUNK_DEPTH - 1) && noiseZ < CAVE_THRESHOLD && blocs[y][z][x].type == NO_TYPE)
+			ghostBloc.faces |= z != 0 ? BACK_NEIGHBOUR : FRONT_NEIGHBOUR;
+		if (ghostBloc.faces != 0)
+		{
+			while (ghostBorder.size() < (long unsigned)(spaceCount + 1))
+				ghostBorder.push_back({});
+			if (x == 0 || x == CHUNK_WIDTH - 1)
+				ghostBorder[spaceCount].push_back({ghostBloc, Vec3((x == 0 ? x - 1 : x + 1), y, z)});
+			else if (z == 0 || z == CHUNK_DEPTH - 1)
+				ghostBorder[spaceCount].push_back({ghostBloc, Vec3(x, y, (z == 0 ? z - 1 : z + 1 ))});
+			ghost = true;
+		}
+	}
+	
 	GLuint faces = 0;
 	if ((xHeight > -1 && xHeight < y))
 		faces |= x == 0 ? LEFT_NEIGHBOUR : RIGHT_NEIGHBOUR;
 	if ((zHeight > -1 && zHeight < y))
 		faces |= z == 0 ? BACK_NEIGHBOUR : FRONT_NEIGHBOUR;
-	if ((x == 0 || x == CHUNK_WIDTH - 1) && noiseX > 0.6f)	// Ghost border
-	{
-		ghostBloc.faces |= x == 0 ? LEFT_NEIGHBOUR : RIGHT_NEIGHBOUR;
-		ghost = true;
-	}
-	if ((z == 0 || z == CHUNK_DEPTH - 1) && noiseZ > 0.6f)	// Ghost border
-	{
-		ghostBloc.faces |= z == 0 ? BACK_NEIGHBOUR : FRONT_NEIGHBOUR;
-		ghost = true;
-	}
-	if (ghost)
-	{
-		while (ghostBorder.size() < (long unsigned int)(spaceCount + 1))
-			ghostBorder.push_back({});
-		//printf("%li\n", ghostBorder.size());
-		ghostBorder[spaceCount].push_back({ghostBloc, Vec3((x == 0 ? x : x ), y, (z == 0 ? z  : z ))});
-	}
 
-	if (faces == 0)
+	if (faces == 0 && !ghost && !master)
 		return;
 
-	if (blocs[y][z][x].type != NO_TYPE)
+	if (blocs[y][z][x].type != NO_TYPE && faces != 0)
 	{
 		facesToRender.push_back(faces);
 		spaceBorder[spaceCount].push_back(Vec3(x, y, z));
@@ -509,8 +545,8 @@ void Chunk::updateVisibilitySpace(void)
 					inSpace = true;
 					if (bloc->spaceId != spaceCount && bloc->spaceId != -1) // Compare size of both space and keep the biggest one (merge ecount + borders (keep unique))
 					{
-						bool fbigger = spaceESize[spaceCount] > spaceESize[bloc->spaceId];
-						//
+						//bool fbigger = spaceESize[spaceCount] > spaceESize[bloc->spaceId];
+						// TODO : implement that
 					}
 					else if (bloc->spaceId == -1) // Set current spaceId and propagate it to neighbors then increase spaceId
 					{
@@ -592,7 +628,7 @@ GLuint Chunk::setVisibilityByNeighbors(int x, int y, int z) // Activates visibil
 		float max_height = it.first;
 		GLuint currentFace = it.second;
 		float noise = VoxelGenerator::Noise3D(position.x + border_neighbors_vec[i].x, y * 15.5, position.z + border_neighbors_vec[i].z, 0.25f, 0.0040f, 0.45f, 4, 0, 2.0, 0.5, true);
-		if (max_height < y || noise > 0.6f) // TODO : Need to know if neighbors is cave or not (so generate noise...)
+		if (max_height < y || noise > CAVE_THRESHOLD) // TODO : Need to know if neighbors is cave or not (so generate noise...)
 		{
 			bloc->visible = true;
 			visibleFaces |= currentFace;

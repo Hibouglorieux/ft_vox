@@ -37,7 +37,7 @@ public:
 	static void drawInstance(Shader* shader, GLuint positionVBO, GLuint typeVBO, unsigned int count);
 	static void drawFace(Shader* shader, GLuint positionVBO, GLuint typeVBO, unsigned int count, const std::vector<char>& visibleFaces);
 	static void drawFaceInstance(Shader* shader, GLuint positionVBO, GLuint typeVBO, unsigned int count, GLuint facesVBO);
-	static void drawQuad(Shader* shader, GLuint positionVBO, GLuint typeVBO);
+	//static void drawQuad(Shader* shader, GLuint positionVBO, GLuint typeVBO);
 	static void	clear();
 
 private:
@@ -45,7 +45,7 @@ private:
     static GLuint VAO, VBO, texturePosBuf;
 };
 
-class Quad : public Object {
+/*class Quad : public Object {
 	public:
 		static void initialize(Vec3 bottomLeft, Vec3 topLeft, Vec3 topRight, Vec3 bottomRight, int _width, int _height);
 		static void drawQuad(Shader* shader);
@@ -53,6 +53,6 @@ class Quad : public Object {
 		static GLuint VAO, VBO, texturePosBuf;
 		static int width, height;
 		static float vertices[];
-};
+};*/
 
 #endif

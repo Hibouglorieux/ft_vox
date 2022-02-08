@@ -30,8 +30,12 @@ void Skybox::initialize(float freq, float amp, int octaves, int depth)
 	{"skybox/front.jpg"},
 	{"skybox/back.jpg"}};
 	
+	(void)freq;
+	(void)amp;
+	(void)octaves;
+	(void)depth;
 	// heightmap call
-	BigHeightMap *bigHeightMap = VoxelGenerator::createBigMap(6, 2, 0.5);
+	//BigHeightMap *bigHeightMap = VoxelGenerator::createBigMap(6, 2, 0.5);
 	//HeightMap *heightmap = VoxelGenerator::createMap(1, 1);
 	//texture = new Texture(names, *bigHeightMap, freq, amp, octaves, depth);
 

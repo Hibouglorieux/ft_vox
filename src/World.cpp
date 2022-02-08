@@ -29,7 +29,7 @@ World::World()
 	curPos = Chunk::worldCoordToChunk(camera.getPos());
 
 	Skybox::initialize(0.0013f, 1.2f, 1, 0);
-	auto positions = getPosInRange(Vec2(), 0, CHUNK_VIEW_DISTANCE);
+	auto positions = getPosInRange(curPos, 0, CHUNK_VIEW_DISTANCE);
 	for (auto pos : positions)
 	{
 			auto allocatedNeighbours = getAllocatedNeighbours(pos);
@@ -46,7 +46,7 @@ World::World()
 			worker.detach();
 	}
 	positions.clear();
-	positions = getPosInRange(Vec2(), CHUNK_VIEW_DISTANCE, MAX_PRELOAD_DISTANCE);
+	positions = getPosInRange(curPos, CHUNK_VIEW_DISTANCE, MAX_PRELOAD_DISTANCE);
 	for (auto pos : positions)
 	{
 		if (visibleChunks.find(pos) == visibleChunks.end())
@@ -167,7 +167,6 @@ void World::render()
 	std::vector<std::pair<Vec2, Chunk*>> chunksToRender;
 	if (!freeze)
 	{
-
 		for (auto it : visibleChunks)
 		{
 			Chunk* chnk = it.second;

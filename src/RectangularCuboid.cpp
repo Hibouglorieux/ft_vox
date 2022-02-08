@@ -236,7 +236,7 @@ void RectangularCuboid::drawFaceInstance(Shader* shader, GLuint positionVBO, GLu
 	glDrawArraysInstanced(GL_TRIANGLES, 0, 36, count);
 }
 
-void RectangularCuboid::drawQuad(Shader* shader, GLuint positionVBO, GLuint typeVBO)
+/*void RectangularCuboid::drawQuad(Shader* shader, GLuint positionVBO, GLuint typeVBO)
 {
 	glBindVertexArray(VAO);
 
@@ -252,8 +252,9 @@ void RectangularCuboid::drawQuad(Shader* shader, GLuint positionVBO, GLuint type
 
 //	glDrawArrays(GL_TRIANGLES, 0, 36);
 	glDrawArraysInstanced(GL_TRIANGLES, 0, 36, 2);
-}
+}*/
 
+/*
 void Quad::initialize(Vec3 bottomLeft, Vec3 topLeft, Vec3 topRight,
 		Vec3 bottomRight, int width, int height)
 {
@@ -263,4 +264,4 @@ void Quad::initialize(Vec3 bottomLeft, Vec3 topLeft, Vec3 topRight,
 
 	glBindVertexArray(0);
 }
-
+*/

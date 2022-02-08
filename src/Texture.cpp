@@ -158,9 +158,9 @@ Texture::Texture(float noiseTest)
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	std::cout << "added new texture: " << name << textureLoaded[name].ID << std::endl; 
-	int caveMapDepth = 16;
-	/*
+	std::cout << "added new texture: " << name << textureLoaded[name].ID << std::endl;
+
+	/*int caveMapDepth = 16;
 #define NOISE_TEXTURE_WIDTH 16
 	float frequency = 20;
 	float amplitude = 100;
@@ -203,6 +203,7 @@ Texture::Texture(float noiseTest)
 
 Texture::Texture(bool skybox)
 {
+	(void)skybox;
 	name = "skybox";
 	if (textureLoaded.find(name) == textureLoaded.end())
 		textureLoaded.insert(std::pair<std::string, TextureCommonData>(name, {0, 1, 0}));
