@@ -24,12 +24,19 @@
 
 # define CHUNK_SIZE CHUNK_HEIGHT * CHUNK_WIDTH * CHUNK_DEPTH
 
+# define NORTH	1
+# define EAST	2
+# define SOUTH	3
+# define WEST	4
+
 class Chunk : public Object{
 public:
 	Chunk(int x, int z, Camera *camera);
 	Chunk(int x, int z, Camera *camera, std::vector<std::pair<Vec2, Chunk*>> neighbours);
 
 	void	initChunk(void);
+	void	setNeighbors(std::vector<std::pair<Vec2, Chunk*>> neighbours) { myNeighbours = neighbours; }
+	std::vector<std::pair<Vec2, Chunk*>>	getNeighbors(void) { return myNeighbours; }
 
 	virtual ~Chunk(void);
 
@@ -64,7 +71,6 @@ private:
 	};
 
 	typedef std::array<std::array<std::array<struct bloc, CHUNK_WIDTH>, CHUNK_DEPTH>, CHUNK_HEIGHT> BlocData;
-	typedef std::array<std::array<std::array<int, CHUNK_WIDTH>, CHUNK_DEPTH>, CHUNK_HEIGHT> BlocSearchData;
 	typedef std::array<std::vector<Vec3>, CHUNK_SIZE> BlocSpaceBorder;
 
 	void	updateVisibilityWithNeighbour(Vec2 NeighbourPos,
@@ -76,8 +82,10 @@ private:
 
 	// Space Functions
 	void	updateVisibilityBorder(int x, int y, int z, int xHeight = -1, int zHeight = -1, bool master = false);
+	void	updateVisibilityBorderWithNeighbors(int x, int y, int z, int face);
 	void	updateVisibilitySpaceAux(int x, int y, int z);
 	void	updateVisibilitySpace(void);
+
 	// End of Space Functions
 
 	// Greedy Meshing Functions
@@ -92,27 +100,24 @@ private:
 
 	Vec3	position;
 	BlocData blocs;
-	BlocSearchData blocsTests;
 
 	int											spaceCount;
 	BlocSpaceBorder								spaceBorder;
 	std::array<int, CHUNK_SIZE> 				spaceESize;
 	std::vector<std::vector<std::pair<struct bloc, Vec3>>>	ghostBorder;
 
-	bool	updateChunk;
-	bool	init;
-	unsigned char	threadUseCount;
-	HeightMap*	heightMap;					// TODO : Delete, Not useful anymore
-	CaveMap*	caveMap;					// TODO : Delete, not useful
-	unsigned int hardBloc;
-	unsigned int hardBlocVisible;
-	std::mutex	draw_safe;
-	Texture* texture;						// TODO : Delete
+	bool			updateChunk = true;
+	bool			init		= false;
+	bool			merge_ready = false;
+	unsigned char 	threadUseCount;
+	unsigned int 	hardBloc;
+	unsigned int 	hardBlocVisible;
+	std::mutex		draw_safe;
 
 	GLuint typeVBO, positionVBO, facesVBO;
 	std::vector<GLuint>	facesToRender;
 
-	std::vector<std::pair<Vec2, Chunk*>> myNeighbours;
+	std::vector<std::pair<Vec2, Chunk*>> myNeighbours; // Should have at most 4 neigbhors
 
 	float	getBlockBiome(int x, int z, bool setBlocInChunk = true);
 	//float	getBlockBiome(int x, int z, bool setBlocInChunk = true, bool superFlat = false);

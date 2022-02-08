@@ -22,11 +22,11 @@ Chunk::Chunk(int x, int z, Camera *camera)
 	// How many solid bloc in chunk
 	hardBloc = 0;
 	hardBlocVisible = 0;
+	merge_ready = false;
 	init = false;
 	threadUseCount = 1;
 
 	spaceCount = 0;
-	//spaceBorder = { 0 };
 	spaceESize = { 0 };
 	ghostBorder = { };
 	ghostBorder.push_back({});
@@ -41,7 +41,7 @@ Chunk::Chunk(int x, int z, Camera *camera)
 Chunk::Chunk(int x, int z, Camera *camera, std::vector<std::pair<Vec2, Chunk *>> neighbours) : Chunk(x, z, camera)
 {
 	(void)neighbours;
-	//myNeighbours = neighbours;
+	myNeighbours = neighbours;
 }
 
 /*
@@ -184,6 +184,9 @@ void Chunk::initChunk(void)
 {
 	struct bloc *bloc;
 
+	if (init)
+		return;
+
 	// Get height map for chunk
 	blocs = BlocData();		 // memset equivalent (needed)
 	blocs = {NO_TYPE, 0, -1, 0, 0}; // TODO : Check if correct
@@ -211,7 +214,7 @@ void Chunk::initChunk(void)
 
 			float blockValue = this->getBlockBiome(x, z);
 
-			if ((x == 0 || x == CHUNK_WIDTH - 1 || z == 0 || z == CHUNK_DEPTH - 1) && bloc->type != NO_TYPE)	// TODO : Delete, this was to show chunk
+			if ((x == 0 || x == CHUNK_WIDTH - 1 || z == 0 || z == CHUNK_DEPTH - 1) && blocs[blockValue][z][x].type != NO_TYPE)	// TODO : Delete, this was to show chunk
 				(&(blocs[blockValue][z][x]))->type = BLOCK_SAND;
 
 			if (blockValue < min)
@@ -257,7 +260,27 @@ void Chunk::initChunk(void)
 	updateVisibility();
 	updateVisibilitySpace();
 
+	merge_ready = true; // see if really needed or if 'init' is enough
+
+	/*for (auto it : myNeighbours)
+	{
+		threadUseCount++;
+		Vec2 neighbourPos = it.first;
+		auto callBack = [this, neighbourPos]
+			(const BlocData& neighbourBlocs)
+			{this->updateVisibilityWithNeighbour(neighbourPos, neighbourBlocs, nullptr);
+			};
+		auto threadFunc = [myPos, callBack](const BlocData& bd, Chunk* neighbour){neighbour->updateVisibilityWithNeighbour(myPos, bd, callBack);};
+		threads.push_back(std::thread(threadFunc, blocs, it.second));
+		//it.second->updateVisibilityWithNeighbour(myPos, blocs, callBack);
+	}
+	for (std::thread& worker : threads)
+	{
+		worker.join();
+	}*/
+
 	init = true;
+
 	updateChunk = true;
 
 	Vec2 myPos = worldCoordToChunk(getPos());
@@ -348,15 +371,23 @@ void Chunk::updateVisibility(void)
 	}
 }
 
-/*
- * Function should only add bloc which are at the border of the chunk
+/**
+ * @brief Function to add blocks at the border of the chunk to the current space.
+ * Compute neighbors height to work.
+ * 
+ * @param x x coordinate (in chunk)
+ * @param y y coordinate (in chunk)
+ * @param z z coordinate (in chunk)
+ * @param xHeight getBlockBiome output for (x +- 1, y, z)
+ * @param zHeight getBlockBiome output for (x, y, z +- 1)
+ * @param master should the function be updating downward (y) blocks
  */
 void Chunk::updateVisibilityBorder(int x, int y, int z, int xHeight, int zHeight, bool master)
 {
-	int maxDiff = 0;
-	float noiseX = 10, noiseZ = 10;
+	int maxDiff = 0, face = 0;
+	/*float noiseX = 10, noiseZ = 10;
 	struct bloc ghostBloc = {BLOCK_DIRT, 0, spaceCount, 0, 0}, ghostBloc2 = {BLOCK_DIRT, 0, spaceCount, 0, 0};
-	bool ghost = false;
+	bool ghost = false;*/
 	Vec3 pos;
 
 	// Get the neigbhors height once
@@ -386,21 +417,51 @@ void Chunk::updateVisibilityBorder(int x, int y, int z, int xHeight, int zHeight
 	*		- Require more work to work correctly with player interactions 
 	*/
 
-	noiseX = VoxelGenerator::Noise3D(position.x + (x == 0 ? x - 1 : x + 1), y * 15.5, position.z + z, 0.25f, 0.0040f, 0.45f, 4, 0, 2.0, 0.5, true);
-	noiseZ = VoxelGenerator::Noise3D(position.x + x, y * 15.5, position.z + (z == 0 ? z - 1 : z + 1), 0.25f, 0.0040f, 0.45f, 4, 0, 2.0, 0.5, true);
+	//noiseX = VoxelGenerator::Noise3D(position.x + (x == 0 ? x - 1 : x + 1), y * 15.5, position.z + z, 0.25f, 0.0040f, 0.45f, 4, 0, 2.0, 0.5, true);
+	//noiseZ = VoxelGenerator::Noise3D(position.x + x, y * 15.5, position.z + (z == 0 ? z - 1 : z + 1), 0.25f, 0.0040f, 0.45f, 4, 0, 2.0, 0.5, true);
 	// If noiseX or noiseZ is higher than 0.6f, it means that the block is empty.
 	// If block is empty then no need for ghost faces.
 
 	// If both height are superior to current y, no block under us need to be displayed
-	/*if ((xHeight >= y && zHeight >= y) && (noiseX < CAVE_THRESHOLD && noiseZ < CAVE_THRESHOLD))
-		return;*/
+	//if ((xHeight >= y && zHeight >= y))// && (noiseX < CAVE_THRESHOLD && noiseZ < CAVE_THRESHOLD))
+	//	return;
 
 	/*
 	*	Each corner (0, 0), (1, 0), (0, 1), (1, 1) can have two ghost,
 	*   any other part of the boundary can have at most one ghost.
 	*/
 
-	if ((x == 0 || x == CHUNK_WIDTH - 1) && (z == 0 || z == CHUNK_DEPTH - 1)) // corners
+	struct bloc *currentBlock = &(blocs[y][z][x]);
+	/*	PROBLEM : This will create datarace on space merge ID.
+	*	Situation :
+	*		- let say we have chunk a, chunk b and chunk c
+	*		- chunk a call chunk b and both have a merge in progress
+	*		- chunk c is calling chunk a and find that he needs to merge space BUT
+	*		that space is currently being merged with b (a/b)
+	*/
+	if (currentBlock->type == NO_TYPE)
+	{
+		face = x == 0 ? WEST : x == CHUNK_WIDTH - 1 ? EAST : 0;
+		if (face != 0)
+		{
+			/*	Do something with the face based on X
+			* 	Call neighbors in the needed direction to check its block at :
+			*		x = x +- 1 | y = y | z = z +- 1
+			*	If neighbor block is solid, we must display it.
+			*	Though only displaying it won't be enough, we will have to link spaces.
+			*
+			*	Using face (NORTH/EAST/SOUTH/WEST) we are able to know which neighbor is needed.
+			*   We then send them the position of the block we are looking at, with that the neighbor will check its own block.
+			*	If the block is empty, the neighbor will have to link the block space with our space, for that we need to generate a Unique Identifier.
+			*/
+			updateVisibilityBorderWithNeighbors(x + (face == WEST ? -1 : face == EAST ? 1 : 0), y, z, face);
+		}
+		face = z == 0 ? SOUTH : z == CHUNK_DEPTH - 1 ? NORTH : 0;
+		if (face != 0)
+			updateVisibilityBorderWithNeighbors(x, y, z + (face == SOUTH ? -1 : face == NORTH ? 1 : 0), face);
+	}
+
+	/*if ((x == 0 || x == CHUNK_WIDTH - 1) && (z == 0 || z == CHUNK_DEPTH - 1)) // corners
 	{
 		if ((x == 0 || x == CHUNK_WIDTH - 1) && noiseX < CAVE_THRESHOLD && blocs[y][z][x].type == NO_TYPE)
 			ghostBloc.faces |= x != 0 ? LEFT_NEIGHBOUR : RIGHT_NEIGHBOUR;
@@ -433,7 +494,7 @@ void Chunk::updateVisibilityBorder(int x, int y, int z, int xHeight, int zHeight
 				ghostBorder[spaceCount].push_back({ghostBloc, Vec3(x, y, (z == 0 ? z - 1 : z + 1 ))});
 			ghost = true;
 		}
-	}
+	}*/
 	
 	GLuint faces = 0;
 	if ((xHeight > -1 && xHeight < y))
@@ -441,7 +502,7 @@ void Chunk::updateVisibilityBorder(int x, int y, int z, int xHeight, int zHeight
 	if ((zHeight > -1 && zHeight < y))
 		faces |= z == 0 ? BACK_NEIGHBOUR : FRONT_NEIGHBOUR;
 
-	if (faces == 0 && !ghost && !master)
+	if (faces == 0 /*&& !ghost */&& !master)
 		return;
 
 	if (blocs[y][z][x].type != NO_TYPE && faces != 0)
@@ -462,6 +523,37 @@ void Chunk::updateVisibilityBorder(int x, int y, int z, int xHeight, int zHeight
 	}
 }
 
+/**
+ * @brief Function which will ask the neighbor, selected using the face,
+ * the state of its block at x/y/z. Following state, we will update the spaces accordingly.
+ * 
+ * @param x x coordinate (in chunk)
+ * @param y y coordinate (in chunk)
+ * @param z z coordinate (in chunk)
+ */
+void Chunk::updateVisibilityBorderWithNeighbors(int x, int y, int z, int face)
+{
+	(void)x;
+	(void)y;
+	(void)z;
+	Chunk	*chnk = NULL;
+	Vec2	cur = Vec2();
+	if (myNeighbours.size() == 0)
+		return;	// Not good. I should not be here in the first place.
+	chnk = myNeighbours[0].second;
+	cur = myNeighbours[0].first;
+	for (auto it : myNeighbours)
+	{
+		if (face == NORTH || face == SOUTH)
+			chnk = face == NORTH ? (it.first.y > cur.y ? it.second : chnk) : (it.first.y < cur.y ? it.second : chnk);
+		else if (face == EAST || face == WEST)
+			chnk = face == EAST  ? (it.first.x > cur.x ? it.second : chnk) : (it.first.x < cur.x ? it.second : chnk);
+	}
+	if (!chnk)
+		return;
+	// Call the fateful neighbors for check.
+}
+
 void Chunk::updateVisibilitySpaceAux(int ox, int oy, int oz)
 {
 	std::vector<Vec3> stack;
@@ -476,8 +568,8 @@ void Chunk::updateVisibilitySpaceAux(int ox, int oy, int oz)
 	stack.push_back(cur);
 	spaceBlocCount = 0;
 
-	//printf("%i\n", spaceBlocCount);
 	// While the stack is not empty, look for neighbors
+	int p = 0;
 	while (!stack.empty())
 	{
 		// Get the current position
@@ -490,16 +582,17 @@ void Chunk::updateVisibilitySpaceAux(int ox, int oy, int oz)
 		// Check if we're looking at already visited positions
 		if (blocs[cur.y][cur.z][cur.x].visited)
 			continue;
+		p++;
 		(&(blocs[cur.y][cur.z][cur.x]))->visited = true;
 		// Check if the bloc is of NO_TYPE type
 		// If not, add it to the current border space
 		if (blocs[cur.y][cur.z][cur.x].type != NO_TYPE)
 		{
-			if (spaceCount == 0)
+			if (spaceCount == 0) // Why ? Because current var is incorrect if using multiple spaces. Must change that to have a facesToRender[spaceCount]
 				facesToRender.push_back(blocs[cur.y][cur.z][cur.x].faces);
 			spaceBorder[spaceCount].push_back(cur);
-			if (cur.y > 0 && (cur.x == 0 || cur.x == CHUNK_WIDTH - 1 || cur.z == 0 || cur.z == CHUNK_DEPTH - 1))
-				updateVisibilityBorder(cur.x, cur.y - 1, cur.z, -1, -1, true);
+			//if (cur.y > 0 && (cur.x == 0 || cur.x == CHUNK_WIDTH - 1 || cur.z == 0 || cur.z == CHUNK_DEPTH - 1))
+			//	updateVisibilityBorder(cur.x, cur.y - 1, cur.z, -1, -1, true);
 			continue;
 		}
 
@@ -519,14 +612,19 @@ void Chunk::updateVisibilitySpaceAux(int ox, int oy, int oz)
 		(&(blocs[y][z][x]))->spaceId = spaceCount;
 		spaceBlocCount++;
 	}
+	//printf("%i vs %i -> %s\n", p, CHUNK_SIZE, p == CHUNK_SIZE ? "True" : "False");
 	//printf("%i\n", spaceBlocCount);
 	spaceESize[spaceCount] += spaceBlocCount;
 }
 
+/**
+ * @brief Iterate through the NO_TYPE blocks to separate them in spaces.
+ * Each space will be composed of solid blocks which enclosing unconnected space.
+ * If two space where to be in contact, only the largest would be left after merging with the smallest.
+ */
 void Chunk::updateVisibilitySpace(void)
 {
 	struct bloc *bloc;
-	bool inSpace = false;
 	
 	spaceESize[spaceCount] = 0;
 	for (int y = CHUNK_HEIGHT; y > 0; y--)
@@ -536,13 +634,8 @@ void Chunk::updateVisibilitySpace(void)
 			for (int x = CHUNK_WIDTH; x > 0; x--)
 			{
 				bloc = &(blocs[y - 1][z - 1][x - 1]);
-				if (inSpace && bloc->type != NO_TYPE) // Add block to space border (which will be rendered if player is in this space)
-				{
-					//
-				}
 				if (bloc->type == NO_TYPE)
 				{
-					inSpace = true;
 					if (bloc->spaceId != spaceCount && bloc->spaceId != -1) // Compare size of both space and keep the biggest one (merge ecount + borders (keep unique))
 					{
 						//bool fbigger = spaceESize[spaceCount] > spaceESize[bloc->spaceId];
@@ -551,7 +644,7 @@ void Chunk::updateVisibilitySpace(void)
 					else if (bloc->spaceId == -1) // Set current spaceId and propagate it to neighbors then increase spaceId
 					{
 						updateVisibilitySpaceAux(x - 1, y - 1, z - 1);
-						//spaceCount++;
+						spaceCount++;
 					}
 
 					if (x == 0 || x == CHUNK_WIDTH || z == 0 || z == CHUNK_DEPTH)	// TODO : updateVisibilitySpaceAux should do it
