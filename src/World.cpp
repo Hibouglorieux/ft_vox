@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/07/21 18:11:30 by nathan            #+#    #+#             */
-/*   Updated: 2021/12/17 21:44:26 by nallani          ###   ########.fr       */
+/*   Updated: 2022/03/04 07:44:36 by nathan           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,7 @@
 #include <chrono>
 #include <unistd.h>
 #include <algorithm>
+#include "TextManager.hpp"
 
 #define WAITING_THREAD_TIME (0.1 * SEC_TO_MICROSEC)
 
@@ -110,12 +111,26 @@ void World::updateSkyboxDEBUG(float _freq, float _amp, int _octaves, int _y)
 	Skybox::initialize(freq, amp, octaves, y);
 }
 
+void World::printPos() const
+{
+	std::stringstream ss;
+	ss << "currentPos is chunk: {" << curPos.x <<  ", "<< curPos.y << "}";
+	Vec3 blocPos;
+	blocPos.x = (int)(camera.getPos().x + 0.5 - curPos.x * CHUNK_WIDTH);
+	blocPos.z = (int)(camera.getPos().z + 0.5 - curPos.y * CHUNK_DEPTH);
+	if (blocPos.x == CHUNK_WIDTH)
+		blocPos.x = 0;
+	if (blocPos.z == CHUNK_DEPTH)
+		blocPos.z = 0;
+	ss << " at block pos x: " << blocPos.x << " y: " << (int)(camera.getPos().y + 0.5) << " z: " << blocPos.z;
+	PRINT_TO_SCREEN(ss.str());
+}
+
 void World::render()
 {
 	//std::cout << camera.getPos().x << "," << camera.getPos().z << std::endl;
 
 	Matrix precalculatedMat = Object::getProjMat() * camera.getMatrix();
-
 
 	// draw skybox
 	glDisable(GL_DEPTH_TEST);
@@ -201,6 +216,8 @@ void World::update()
 		curPos = newChunkPos;
 		updateChunkBuffers(curPos);
 	}
+	printPos();
+
 }
 /**
  * @brief Function used to update the world buffers containing the visible and preloaded chunks.
@@ -255,7 +272,6 @@ void World::updateChunkBuffers(Vec2 newPos)
 		visibleChunks.erase(pos);
 	}
 
-	
 	// Add new chunk to be preloaded
 	posBuffer.clear();
 	posBuffer = getPosInRange(newPos, CHUNK_VIEW_DISTANCE, MAX_PRELOAD_DISTANCE);
@@ -272,9 +288,10 @@ void World::updateChunkBuffers(Vec2 newPos)
 	}
 	std::thread worker(initNewChunks, chunks);
 	worker.detach();
-
 	auto initNewChunk = [](Chunk *chnk) { chnk->initChunk(); };
 	Chunk *chnk = NULL;
+		
+	
 	//move from preloaded to visible // or load if thats not the case ?
 	posBuffer = getPosInRange(newPos, 0, CHUNK_VIEW_DISTANCE);
 	for (auto key : posBuffer)

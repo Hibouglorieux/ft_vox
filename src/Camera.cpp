@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/09/02 01:10:29 by nathan            #+#    #+#             */
-/*   Updated: 2021/12/10 17:33:57 by nallani          ###   ########.fr       */
+/*   Updated: 2022/03/04 06:28:18 by nathan           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -100,11 +100,11 @@ void Camera::move(bool forward, bool backward, bool right, bool left, float spee
 	if (backward)
 		realMovement -= moveDir;
 	moveDir.y = 0;
-	if (right)
+	if (right && !left)
 	{
 		realMovement += Matrix::createRotationMatrix(Matrix::RotationDirection::Y, 90) * moveDir;
 	}
-	if (left)
+	if (left && !right)
 	{
 		realMovement += Matrix::createRotationMatrix(Matrix::RotationDirection::Y, -90) * moveDir;
 	}

@@ -73,6 +73,9 @@ private:
 	typedef std::array<std::array<std::array<struct bloc, CHUNK_WIDTH>, CHUNK_DEPTH>, CHUNK_HEIGHT> BlocData;
 	typedef std::array<std::vector<Vec3>, CHUNK_SIZE> BlocSpaceBorder;
 
+	bool	isBlockEmptyAfterWorley(float x, float y, float z);
+	bool	isBlockEmptyAfterWorley(Vec3 coords) { return isBlockEmptyAfterWorley(coords.x, coords.y, coords.z);}
+	void	doWorleyCaves();
 	void	updateVisibilityWithNeighbour(Vec2 NeighbourPos,
 			const BlocData& neighbourBlocs,
 			std::function<void(const BlocData&)> callBack = nullptr);

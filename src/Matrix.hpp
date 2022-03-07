@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/05/25 11:07:43 by nathan            #+#    #+#             */
-/*   Updated: 2021/10/18 12:51:35 by nathan           ###   ########.fr       */
+/*   Updated: 2022/02/27 07:55:07 by nathan           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,6 +31,7 @@ public:
 	Matrix( std::vector<std::vector<float>> dataParam );
 	Matrix( const Matrix& copy );
 
+	static Matrix createOrthoMatrix(float left, float right, float bot, float top, float near, float far);
 	static Matrix createProjMatrix( float fov, float aspect, float near, float far );// takes fov as degree
 	static Matrix createTranslationMatrix( float x, float y, float z );
 	static Matrix createTranslationMatrix(Vec3 vec) {return createTranslationMatrix(vec.x, vec.y, vec.z);}

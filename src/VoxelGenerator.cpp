@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/10/15 13:08:40 by nathan            #+#    #+#             */
-/*   Updated: 2021/12/10 16:56:03 by nallani          ###   ########.fr       */
+/*   Updated: 2022/01/29 16:01:08 by nathan           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -135,14 +135,6 @@ WorleyGradient* VoxelGenerator::createWorleyGradient(unsigned int seed)
 				y = dice() - 0.5f;
 				z = dice() - 0.5f;
 			}
-	/*
-	for (int i = 0; i < 3; i++)
-		for (int j = 0; j < 3; j++)
-			for (int k = 0; k < 3; k++)
-			{
-				(*worley)[i][j][k].print();
-			}
-			*/
 	return worley;
 }
 
@@ -161,7 +153,7 @@ float	VoxelGenerator::getWorleyValueAt(float x, float y, float z)
 				int xClamp = (xx % WORLEY_SIZE + WORLEY_SIZE) % WORLEY_SIZE;
 				int yClamp = (yy % WORLEY_SIZE + WORLEY_SIZE) % WORLEY_SIZE;
 				int zClamp = (zz % WORLEY_SIZE + WORLEY_SIZE) % WORLEY_SIZE;
-				Vec3 worleyPos((*worleyGradient)[xClamp][yClamp][zClamp] + (Vec3(xx - (int)x, yy - (int)y, zz - (int)z))); //
+				Vec3 worleyPos((*worleyGradient)[xClamp][yClamp][zClamp] + (Vec3(xx - (int)x, yy - (int)y, zz - (int)z)));
 				float distance = (worleyPos - curPos).getLength();
 				if (min > distance)
 					min = distance;

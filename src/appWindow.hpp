@@ -6,7 +6,7 @@
 /*   By: nathan <nallani@student.s19.be>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/05/24 01:55:24 by nathan            #+#    #+#             */
-/*   Updated: 2021/10/18 15:36:08 by nathan           ###   ########.fr       */
+/*   Updated: 2022/02/25 23:40:23 by nathan           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,9 @@
 #include <GL/glew.h>
 #include <glfw3.h>
 
+#include <ft2build.h>
+#include FT_FREETYPE_H
+
 class appWindow {
 public:
 	static int init();
@@ -24,10 +27,15 @@ public:
 	static void getWindowSize(int* width, int* height);
 	static int getWindowWidth();
 	static int getWindowHeight();
+	static void resetPrintCalls();
+	static void	print(const char* str);
 private:
 	static bool initialized;
 	static GLFWwindow* window;
 	static const GLFWvidmode* mode;
+	static unsigned char printCalls;
+	static FT_Library ft;
+	static FT_Face face;
 };
 
 #endif

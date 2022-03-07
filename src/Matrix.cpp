@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/05/25 11:07:40 by nathan            #+#    #+#             */
-/*   Updated: 2021/10/18 12:52:35 by nathan           ###   ########.fr       */
+/*   Updated: 2022/02/27 09:28:44 by nathan           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -56,6 +56,23 @@ Matrix::Matrix( std::vector<std::vector<float>> dataParam )
 Matrix::Matrix( const Matrix& copy )
 {
 	data = copy.data;
+}
+
+Matrix Matrix::createOrthoMatrix(float left, float right, float bot, float top, float near, float far)
+{
+	Matrix orthoMatrix({
+		{2 / ( right - left ), 0 , 0, - (right + left) / (right - left)},
+		{0, 2 / (top - bot), 0, - (top + bot) / (top - bot)},
+		{0, 0 , -2 / (far - near), - (far + near) / (far - near)},
+		{0, 0 , 0, 1}});
+	/*
+	Matrix orthoMatrix({
+		{2 / ( right - left ), 0 , 0, 0},
+		{0, 2 / (top - bot), 0, 0},
+		{0, 0 , -2 / (far - near), 0},
+		{-(right + left) / (right - left), -(top + bot) / (top - bot), -(far + near) / (far - near), 1}});
+		*/
+	return orthoMatrix;
 }
 
 Matrix Matrix::createProjMatrix( float fov, float aspect, float near, float far )

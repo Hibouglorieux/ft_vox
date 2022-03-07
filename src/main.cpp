@@ -6,7 +6,7 @@
 /*   By: nathan <nallani@student.s19.be>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/05/24 01:52:59 by nathan            #+#    #+#             */
-/*   Updated: 2021/12/03 20:15:45 by nallani          ###   ########.fr       */
+/*   Updated: 2022/02/26 01:46:30 by nathan           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,7 @@
 #include "Matrix.hpp"
 #include "Chunk.hpp"
 #include "VoxelGenerator.hpp"
+#include "TextManager.hpp"
 
 #define DEFAULT_SEED 42
 
@@ -33,6 +34,7 @@ int	initialize()
 		return (0);
 	}
 	RectangularCuboid::initialize();
+	TextManager::init();
 
 	// openGL parameters
 	glClearColor(0.2, 0.2, 0.2, 1.0f);

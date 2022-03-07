@@ -36,6 +36,9 @@ void main()
 	else
 	{
 		float r = texture(skyboxTexture, texCoord).r;
+		if (r < 0.75)
 		FragColor = vec4(r, r, r, 1.0);
+		else
+		FragColor = vec4(0, 0, r, 1.0);
 	}
 }

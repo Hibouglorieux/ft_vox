@@ -41,18 +41,20 @@ FILES = main.cpp \
 		Texture.cpp \
 		Skybox.cpp \
 		appWindow.cpp \
-		Chunk.cpp
+		Chunk.cpp \
+		TextManager.cpp
 
 HEADERS = $(wildcard $(addprefix src/, $(FILES:.cpp=.hpp)))
 
 OBJ = $(addprefix obj/,$(FILES:.cpp=.o))
 
 #linkage
-LIBS = -lglfw -lX11 -lXrandr -lXinerama -lXi -lXxf86vm -lXcursor -lGL -lpthread -ldl `pkg-config --libs glew` -lm #-pg #-fsanitize=address
+LIBS = -lglfw -lX11 -lXrandr -lXinerama -lXi -lXxf86vm -lXcursor -lGL -lpthread -ldl `pkg-config --libs glew` -lm libfreetype.so#-pg #-fsanitize=address
 
 CXXFLAGS = -std=gnu++11 -Wall -Wextra -g #-pg #-fsanitize=address
 PROFILEFLAG = #-pg
 OFLAGS = -O3
+INCLUDE_DIRS = -Iincludes -Ilibft -I$(HOME)/.brew/include
 
 all: $(NAME)
 
@@ -62,7 +64,7 @@ $(NAME): $(OBJ)
 
 obj/%.o:src/%.cpp includes/*.h src/*.hpp
 	@mkdir -p obj
-	$(CXX) $(CXXFLAGS) $(PROFILEFLAG) $(OFLAGS) -c $< -o $@ -Iincludes -Ilibft -I$(HOME)/.brew/include
+	$(CXX) $(CXXFLAGS) $(PROFILEFLAG) $(OFLAGS) -c $< -o $@ $(INCLUDE_DIRS)
 	@$(ECHOc) "Compilation of $(Cyan)$@$(End) :    $(Green)Done$(End)"
 
 clean :

@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/05/24 15:40:30 by nathan            #+#    #+#             */
-/*   Updated: 2021/10/19 14:55:39 by nathan           ###   ########.fr       */
+/*   Updated: 2022/02/26 01:33:54 by nathan           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,7 @@
 
 #include <vector>
 #include "World.hpp"
+#include "TextManager.hpp"
 
 class Loop {
 public:

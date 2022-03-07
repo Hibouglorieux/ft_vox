@@ -1,8 +1,11 @@
 #include "Chunk.hpp"
 #include <unistd.h>
 #include <thread>
+#include "TextManager.hpp"
 
 #define TMP_SLEEP_VALUE 0.05 * SEC_TO_MICROSEC
+
+#define CHUNK_CONDITION (position == Vec3(0 * CHUNK_WIDTH, 0, -2 * CHUNK_DEPTH))
 
 #define CAVE_THRESHOLD 0.6f
 
@@ -234,7 +237,9 @@ void Chunk::initChunk(void)
 				bloc->visible = 0;
 				hardBloc++;
 
-
+				if (CHUNK_CONDITION && j == 3 && z == 0 && x == 1)
+					printf("My block has type: %d\n", bloc->type);
+				/*
 				if (true && j < blockValue && j > 0)
 				{
 					float noise = VoxelGenerator::Noise3D(position.x + x, j * 15.5, position.z + z, 0.25f, 0.0040f, 0.45f, 4, 0, 2.0, 0.5, true);
@@ -245,11 +250,13 @@ void Chunk::initChunk(void)
 						bloc->type = BLOCK_DIRT;
 						//bloc->type = BLOCK_DIRT;
 				}
+				*/
 				if ((x == 0 || x == CHUNK_WIDTH - 1 || z == 0 || z == CHUNK_DEPTH - 1) && bloc->type != NO_TYPE)	// TODO : Delete, this was to show chunk
 					(&(blocs[j][z][x]))->type = BLOCK_SAND;
 			}
 		}
 	}
+	doWorleyCaves();
 	//std::cout << max << std::endl;
 	if (max < CHUNK_HEIGHT)
 		max = max + 30;
@@ -287,14 +294,54 @@ void Chunk::initChunk(void)
 	threadUseCount = 0;
 }
 
+#define MAX_DEPTH_FOR_CAVED 3
+#define TMP_FLOOR_LEVEL 40
+#define TMP_WORLEY_Y_DIVISOR (float)(TMP_FLOOR_LEVEL - MAX_DEPTH_FOR_CAVED)
+bool	Chunk::isBlockEmptyAfterWorley(float x, float y, float z)
+{
+	float xScaled = x / (float)(CHUNK_WIDTH - 1) + position.x / CHUNK_WIDTH;
+	float yScaled = y / TMP_WORLEY_Y_DIVISOR;
+	float zScaled = z / (float)(CHUNK_DEPTH - 1) + position.z / CHUNK_DEPTH;
+	float worleyValue = VoxelGenerator::getWorleyValueAt(xScaled, yScaled, zScaled);
+	/*
+	if (position == Vec3(0 * CHUNK_WIDTH, 0, -1 * CHUNK_DEPTH) || position == Vec3(0, 0, -2 * CHUNK_DEPTH))
+		printf("%f\n", worleyValue);
+		*/
+	if (worleyValue >= 0.75f)
+		return true;
+	return false;
+}
+
+void	Chunk::doWorleyCaves()
+{
+	struct bloc	*bloc;
+	for(unsigned int y = MAX_DEPTH_FOR_CAVED; y < TMP_FLOOR_LEVEL; y++)// random number, can't dig lower than floor_level, cant dig higher than floor // TODO replace with FLOOR_LEVEL
+		for(unsigned int x = 0; x < CHUNK_WIDTH; x++)
+			for(unsigned int z = 0; z < CHUNK_DEPTH; z++)
+			{
+				//if (y >= )// TODO add condition here to make it not being able to make a hole through a mountain (keep it below floor/water level ?). Also needs coherent noise that doesnt start at 0.6f of CHUNK_HEIGHT as minimum result
+					//continue;
+				bloc = &(blocs[y][z][x]);
+				/*
+				if (bloc->type != NO_TYPE && (position == Vec3(0 * CHUNK_WIDTH, 0, -1 * CHUNK_DEPTH) || position == Vec3(0, 0, -2 * CHUNK_DEPTH)))
+					printf("for Chunk at x: %d z: %d worley value at x:%d y:%d z:%d => ", (int)position.x / CHUNK_WIDTH, (int)position.z / CHUNK_DEPTH, x, y, z);
+					*/
+				if (bloc->type != NO_TYPE && isBlockEmptyAfterWorley(x, y, z))
+					{
+						// destroy the block
+						bloc->type = NO_TYPE;
+						bloc->visible = false;
+						hardBloc--;
+					}
+			}
+}
+
 Chunk::~Chunk(void)
 {
-	//delete texture;
 	glBindBuffer(GL_ARRAY_BUFFER, typeVBO);
 	glDeleteBuffers(1, &typeVBO);
 	glBindBuffer(GL_ARRAY_BUFFER, positionVBO);
 	glDeleteBuffers(1, &positionVBO);
-	//delete heightMap;
 	totalChunks--;
 }
 
@@ -357,15 +404,18 @@ void Chunk::updateVisibility(void)
 			for (int x = CHUNK_WIDTH; x > 0; x--)
 			{
 				bloc = &(blocs[y - 1][z - 1][x - 1]);
+				GLint oldType = bloc->type;
+				/*
 				if (bloc->type != NO_TYPE)
 				{
+				*/
 					GLuint faces = setVisibilityByNeighbors(x - 1, y - 1, z - 1);
 					(void)faces;
-					if (bloc->visible == true)
+					if (bloc->visible == true && oldType != NO_TYPE)
 					{
 						hardBlocVisible += 1;
 					}
-				}
+//				}
 			}
 		}
 	}
@@ -676,34 +726,37 @@ GLuint Chunk::setVisibilityByNeighbors(int x, int y, int z) // Activates visibil
 		border_neighbors.push_back({this->getBlockBiome(x - 1, z, false), LEFT_NEIGHBOUR});
 		border_neighbors_vec.push_back(Vec3(x - 1, y, z));
 	}
-	else if (x == CHUNK_WIDTH - 1)
+	else
+		neighbors.push_back({&(blocs[y][z][x - 1]), LEFT_NEIGHBOUR});
+
+	if (x == CHUNK_WIDTH - 1)
 	{
 		border_neighbors.push_back({this->getBlockBiome(x + 1, z, false), RIGHT_NEIGHBOUR});
 		border_neighbors_vec.push_back(Vec3(x + 1, y, z));
 	}
+	else
+		neighbors.push_back({&(blocs[y][z][x + 1]), RIGHT_NEIGHBOUR});
+
 	if (z == 0)
 	{
 		border_neighbors.push_back({this->getBlockBiome(x, z - 1, false), BACK_NEIGHBOUR});
 		border_neighbors_vec.push_back(Vec3(x, y, z - 1));
 	}
-	else if (z == CHUNK_DEPTH - 1)
+	else
+		neighbors.push_back({&(blocs[y][z - 1][x]), BACK_NEIGHBOUR});
+
+	if (z == CHUNK_DEPTH - 1)
 	{
 		border_neighbors.push_back({this->getBlockBiome(x, z + 1, false), FRONT_NEIGHBOUR});
 		border_neighbors_vec.push_back(Vec3(x, y, z + 1));
 	}
+	else
+		neighbors.push_back({&(blocs[y][z + 1][x]), FRONT_NEIGHBOUR});
 
 	if (y > 0)
 		neighbors.push_back({&(blocs[y - 1][z][x]), BOTTOM_NEIGHBOUR});
 	if (y < CHUNK_HEIGHT - 1)
 		neighbors.push_back({&(blocs[y + 1][z][x]), UP_NEIGHBOUR});
-	if (x > 0)
-		neighbors.push_back({&(blocs[y][z][x - 1]), LEFT_NEIGHBOUR});
-	if (x < CHUNK_WIDTH - 1)
-		neighbors.push_back({&(blocs[y][z][x + 1]), RIGHT_NEIGHBOUR});
-	if (z > 0)
-		neighbors.push_back({&(blocs[y][z - 1][x]), BACK_NEIGHBOUR});
-	if (z < CHUNK_DEPTH - 1)
-		neighbors.push_back({&(blocs[y][z + 1][x]), FRONT_NEIGHBOUR});
 
 	for (auto it : neighbors)
 	{
@@ -715,21 +768,33 @@ GLuint Chunk::setVisibilityByNeighbors(int x, int y, int z) // Activates visibil
 			visibleFaces |= currentFace;
 		}
 	}
+	if (position == Vec3(0 * CHUNK_WIDTH, 0, -2 * CHUNK_DEPTH) && x == 1 && y == 3 && z == 15)
+	{
+		std::cout << "for x == 1 and z == " << z << " i have " << border_neighbors.size() << " neighbours" << std::endl;
+	}
+	
 	int i = 0;
 	for (auto it : border_neighbors)
 	{
 		float max_height = it.first;
 		GLuint currentFace = it.second;
-		float noise = VoxelGenerator::Noise3D(position.x + border_neighbors_vec[i].x, y * 15.5, position.z + border_neighbors_vec[i].z, 0.25f, 0.0040f, 0.45f, 4, 0, 2.0, 0.5, true);
-		if (max_height < y || noise > CAVE_THRESHOLD) // TODO : Need to know if neighbors is cave or not (so generate noise...)
+		bool isBlockEmpty = isBlockEmptyAfterWorley(border_neighbors_vec[i]);
+		if (isBlockEmpty || max_height < y)
 		{
 			bloc->visible = true;
 			visibleFaces |= currentFace;
 		}
 		++i;
+		if (x == 1 && y == 2 && z == 15 && (position == Vec3(0 * CHUNK_WIDTH, 0, -2 * CHUNK_DEPTH)))
+		{
+			std::cout << "for z == " << z << " i get blockempty: " << isBlockEmpty << " and maxheight == " << max_height << " and y == " << y << std::endl;
+		}
 	}
+	if (x == 1 && y == 2 && z == 15 && (position == Vec3(0 * CHUNK_WIDTH, 0, -2 * CHUNK_DEPTH)))
+		printf("value for block:%d, visibility:%d, faces:%d\n", bloc->type, (int)bloc->visible, visibleFaces);
 
-	bloc->faces = visibleFaces;
+
+	bloc->faces |= visibleFaces;
 
 	return visibleFaces; // 127 or 63 ?
 }
@@ -966,12 +1031,14 @@ void Chunk::draw(Shader *shader)
 		draw_safe.unlock();
 		return;
 	}
+	/*
+	if (position == Vec3(1 * CHUNK_WIDTH, 0, 1 * CHUNK_DEPTH))
+		std::cout << "in interesting chunk i have " << hardBlocVisible << " hardbloc visible" << std::endl;
+		*/
 	//updateVisibilityByCamera();
 	bool isThereNewData = Chunk::generatePosOffsets();
 	(void)isThereNewData; // might be useful if we use multiple VAO
 
-	//glBindTexture(GL_TEXTURE_CUBE_MAP, texture->getID());	// TODO : Modify in order to use more than one texture at once and those texture should not be loaded here but
-	// in ResourceManager.
 	//RectangularCuboid::drawInstance(shader, positionVBO, typeVBO, hardBlocVisible);
 	//RectangularCuboid::drawFace(shader, positionVBO, typeVBO, hardBlocVisible, facesToRender);
 	//RectangularCuboid::drawFaceInstance(shader, positionVBO, typeVBO, hardBlocVisible, facesVBO);
@@ -984,7 +1051,7 @@ void Chunk::draw(Shader *shader)
 Vec2 Chunk::worldCoordToChunk(Vec3 worldPos)
 {
 	Vec2 pos;
-	pos.x = floor(worldPos.x / CHUNK_WIDTH);
-	pos.y = floor(worldPos.z / CHUNK_DEPTH);
+	pos.x = floor((worldPos.x + 0.5)/ CHUNK_WIDTH);
+	pos.y = floor((worldPos.z + 0.5)/ CHUNK_DEPTH);
 	return pos;
 }

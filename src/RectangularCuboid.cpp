@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/08/08 17:52:01 by nathan            #+#    #+#             */
-/*   Updated: 2021/12/17 21:40:07 by nallani          ###   ########.fr       */
+/*   Updated: 2022/02/25 22:38:00 by nathan           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -160,6 +160,7 @@ void RectangularCuboid::draw(Vec3& pos, Shader* shader, Texture* texture)
 	glUniform1i(glGetUniformLocation(shader->getID(), "instanced"), 0);
 	Matrix modelMat = Matrix::createTranslationMatrix(pos);
 	glUniformMatrix4fv(glGetUniformLocation(shader->getID(), "model"), 1, GL_TRUE, modelMat.exportForGL());
+	(void)texture;
 	//glBindTexture(GL_TEXTURE_2D, texture->getID());
 	//glUniform1i(glGetUniformLocation(shader->getID(), "texture0"), 0);
 	glBindVertexArray(VAO);

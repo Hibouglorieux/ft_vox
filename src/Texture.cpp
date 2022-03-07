@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/10/15 16:41:40 by nathan            #+#    #+#             */
-/*   Updated: 2021/12/10 16:23:21 by nallani          ###   ########.fr       */
+/*   Updated: 2022/02/11 16:16:33 by nathan           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -173,11 +173,21 @@ Texture::Texture(float noiseTest)
 		z = z / (32);
 		return VoxelGenerator::Noise3D(x, caveMapDepth, z, 0, frequency, amplitude, octaves, tableId, lacunarity, gain);};
 		*/
-#define NOISE_TEXTURE_WIDTH 4096
+#define NOISE_TEXTURE_WIDTH 1024
 	std::function<float(float x, float z)> f = [=](float x, float z)
 	{
+		//Scale to whole worley
 		x = x * ((float)WORLEY_SIZE / (float)NOISE_TEXTURE_WIDTH);
 		z = z * ((float)WORLEY_SIZE / (float)NOISE_TEXTURE_WIDTH);
+
+		//view from 1 chunk
+		x = x / ((float)WIDTH / (float)BLOC_WIDTH_PER_CHUNK);
+		z = z / ((float)WIDTH / (float)BLOC_WIDTH_PER_CHUNK);
+	
+		//view from X chunk
+		x *= 16;
+		z *= 16;
+
 		/*x = x * ( 32.f / 1024.0f);
 		z = z * ( 32.f / 1024.f);*/
 		float tmp = VoxelGenerator::getWorleyValueAt(x, 0, z);
@@ -199,7 +209,6 @@ Texture::Texture(float noiseTest)
 	delete [] array;
 	//glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
 }
-
 
 Texture::Texture(bool skybox)
 {

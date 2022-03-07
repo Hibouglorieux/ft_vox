@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/05/24 15:40:25 by nathan            #+#    #+#             */
-/*   Updated: 2021/12/03 16:47:00 by nallani          ###   ########.fr       */
+/*   Updated: 2022/03/04 06:26:47 by nathan           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,8 +42,9 @@ void Loop::loop()
 		frameCount++;
 		processInput();
 
-		if (!(world->pause))
-			glClear((world->wireframe ? GL_COLOR_BUFFER_BIT : 0) | GL_DEPTH_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		//if (!(world->pause))
+			//glClear((world->wireframe ? GL_COLOR_BUFFER_BIT : 0) | GL_DEPTH_BUFFER_BIT);
 
 
 		if (world && !(world->pause))
@@ -51,6 +52,9 @@ void Loop::loop()
 			world->update();
 			world->render();
 		}
+		PRINT_TO_SCREEN("Hello World!");
+		//TextManager::print("Hello World!");
+		TextManager::tickPrint();
 		glFinish();
 
 		glfwSwapBuffers(appWindow::getWindow());
@@ -94,9 +98,9 @@ void Loop::processInput()
 	{
 		world->getCamera().move(forward, backward, left, right, (shift == true ? 100 : 10) * CAMERA_MOUVEMENT_SPEED * frameTime);
 		if (glfwGetKey(appWindow::getWindow(), GLFW_KEY_SPACE) == GLFW_PRESS)
-			world->getCamera().moveUp();
+			world->getCamera().moveUp(frameTime * 10.0f);
 		if (glfwGetKey(appWindow::getWindow(), GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
-			world->getCamera().moveDown();
+			world->getCamera().moveDown(frameTime * 10.0f);
 	}
 
 	if (glfwGetWindowAttrib(appWindow::getWindow(), GLFW_FOCUSED) && !(world->pause))

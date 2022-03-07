@@ -6,7 +6,7 @@
 /*   By: nathan <nallani@student.s19.be>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/05/24 01:55:16 by nathan            #+#    #+#             */
-/*   Updated: 2021/12/03 16:49:51 by nallani          ###   ########.fr       */
+/*   Updated: 2022/03/04 06:30:54 by nathan           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,7 +48,7 @@ int appWindow::init()
 		}
 
 		glfwMakeContextCurrent(window);
-		glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE); // enable sticky keys
+		//glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE); // enable sticky keys
 	}
 	initialized = true;
 	return (1);
