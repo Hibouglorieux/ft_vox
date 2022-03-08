@@ -17,9 +17,13 @@
 
 #define X_ROTATION_SPEED 1
 #define Y_ROTATION_SPEED 1
-#define DEFAULT_CAMERA_POS Vec3(0.f, 90.f, 0.f)
-#define DEFAULT_CAMERA_ROT Vec3(0.f, 90.f, 0.f)
-//#define DEFAULT_CAMERA_POS Vec3(88.08f, 43.01f, -69.01f)
+//#define DEFAULT_CAMERA_POS Vec3(0.f, 90.f, 0.f)
+//#define DEFAULT_CAMERA_ROT Vec3(0.f, 90.f, 0.f)
+#define DEFAULT_CAMERA_POS Vec3(88.08f, 43.01f, -69.01f)
+#define DEFAULT_CAMERA_ROT Vec3(0.f, 0.f, 0.f)
+//#define DEFAULT_CAMERA_POS Vec3(-43.28f, 41.15f, -44.17f)
+//#define DEFAULT_CAMERA_ROT Vec3(90.f, 90.f, 0.f)
+//#define DEFAULT_CAMERA_POS Vec3(-43.28f, 260.15f, -44.17f)
 
 Camera::Camera() : Camera(DEFAULT_CAMERA_POS)
 {
@@ -109,6 +113,7 @@ void Camera::move(bool forward, bool backward, bool right, bool left, float spee
 		realMovement += Matrix::createRotationMatrix(Matrix::RotationDirection::Y, -90) * moveDir;
 	}
 	pos += realMovement.getNormalized() * speedFactor;
+	//printf("Position : %3f %3f %3f | %3f %3f %3f\n", pos.x, pos.y, pos.z, dir.x, dir.y, dir.z);
 }
 
 Vec3 Camera::getDirection() const

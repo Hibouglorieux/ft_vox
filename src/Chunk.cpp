@@ -1,6 +1,7 @@
 #include "Chunk.hpp"
 #include <unistd.h>
 #include <thread>
+#include <algorithm>
 
 #define TMP_SLEEP_VALUE 0.05 * SEC_TO_MICROSEC
 
@@ -32,6 +33,7 @@ Chunk::Chunk(int x, int z, Camera *camera)
 	ghostBorder.push_back({});
 
 	myNeighbours = {};
+	myNeighboursFace = {};
 	playerCamera = camera;
 	glGenBuffers(1, &typeVBO);
 	glGenBuffers(1, &positionVBO);
@@ -40,8 +42,57 @@ Chunk::Chunk(int x, int z, Camera *camera)
 
 Chunk::Chunk(int x, int z, Camera *camera, std::vector<std::pair<Vec2, Chunk *>> neighbours) : Chunk(x, z, camera)
 {
-	(void)neighbours;
+	std::vector<std::pair<Vec2, Chunk *>> _removed;
+	std::vector<std::pair<Vec2, Chunk *>> _new;
+
+	thread_safe.lock();
 	myNeighbours = neighbours;
+	myNeighboursFace.clear();
+	thread_safe.unlock();
+	updateNeighbors();
+}
+
+void Chunk::updateNeighbors(void)
+{
+	thread_safe.lock();
+	myNeighboursFace.clear();
+	Vec2 ourPos = worldCoordToChunk(position);
+	Vec2 _pos;
+	Chunk *chnk;
+	for (auto it : myNeighbours)
+	{
+		_pos = it.first;
+		chnk = it.second;
+		//_pos.print();
+		if (_pos.x != ourPos.x && _pos.y != ourPos.y)
+		{
+			printf("Shouldn't be");
+			continue;
+		}
+		chnk->addNeighbor(std::make_pair(getChunkPos(), this));
+		if (_pos.y != ourPos.y)
+			myNeighboursFace.push_back(std::make_pair<int, Chunk*>(_pos.y < ourPos.y ? WEST : EAST, std::move(chnk))); // What does std::move imply ?
+		if (_pos.x != ourPos.x)
+			myNeighboursFace.push_back(std::make_pair<int, Chunk*>(_pos.x < ourPos.x ? SOUTH : NORTH, std::move(chnk)));
+		/*while (!chnk->merge_ready)
+			usleep(TMP_SLEEP_VALUE);*/
+	}
+	if (myNeighboursFace.size() > 4)
+		printf("HOW COULD THIS BE, too many face neighbors, shouldn't be possible\n");
+	//if (ourPos.x == -3 && ourPos.y == -3)
+	//{
+		/*printf("Chunk Pos : (%3i,%3i)\n", worldCoordToChunk(position).x,  worldCoordToChunk(position).y);
+		for (auto it : myNeighboursFace)
+		{
+			const char *face = it.first == WEST ? "WEST" : it.first == EAST ? "EAST" : it.first == NORTH ? "NORTH" : "SOUTH";
+			Vec2 chnk_pos = worldCoordToChunk(it.second->position);
+			printf("\tFace : %s | Pos : (%3i,%3i) : %s\n", face, chnk_pos.x, chnk_pos.y, it.second->merge_ready ? "TRUE" : "FALSE");
+		}*/
+	//}
+	
+	/*if (myNeighboursFace.size() > 0 && merge_ready)
+		updateVisibilityBorderWithNeighbors();*/
+	thread_safe.unlock();
 }
 
 /*
@@ -186,6 +237,8 @@ void Chunk::initChunk(void)
 
 	if (init)
 		return;
+	Vec2 _pos = getChunkPos();
+	//printf("Chunk (%3i, %3i) starting init\n", _pos.x, _pos.y);
 
 	// Get height map for chunk
 	blocs = BlocData();		 // memset equivalent (needed)
@@ -216,6 +269,12 @@ void Chunk::initChunk(void)
 
 			if ((x == 0 || x == CHUNK_WIDTH - 1 || z == 0 || z == CHUNK_DEPTH - 1) && blocs[blockValue][z][x].type != NO_TYPE)	// TODO : Delete, this was to show chunk
 				(&(blocs[blockValue][z][x]))->type = BLOCK_SAND;
+			/*if ((x == 0 || x == CHUNK_WIDTH - 1) && (z == 0 || z == CHUNK_DEPTH - 1))	// TODO : Delete, this was to show chunk
+				(&(blocs[blockValue][z][x]))->type = BLOCK_BEDROCK;
+			if ((x == 0 && z == 0))	// TODO : Delete, this was to show chunk
+				(&(blocs[blockValue][z][x]))->type = BLOCK_WATER;
+			if ((x == CHUNK_WIDTH - 1 && z == CHUNK_DEPTH - 1))	// TODO : Delete, this was to show chunk
+				(&(blocs[blockValue][z][x]))->type = BLOCK_SNOW;*/
 
 			if (blockValue < min)
 				min = blockValue;
@@ -247,6 +306,12 @@ void Chunk::initChunk(void)
 				}
 				if ((x == 0 || x == CHUNK_WIDTH - 1 || z == 0 || z == CHUNK_DEPTH - 1) && bloc->type != NO_TYPE)	// TODO : Delete, this was to show chunk
 					(&(blocs[j][z][x]))->type = BLOCK_SAND;
+				/*if ((x == 0 || x == CHUNK_WIDTH - 1) && (z == 0 || z == CHUNK_DEPTH - 1))	// TODO : Delete, this was to show chunk
+					(&(blocs[j][z][x]))->type = BLOCK_BEDROCK;
+				if ((x == 0 && z == 0))	// TODO : Delete, this was to show chunk
+					(&(blocs[j][z][x]))->type = BLOCK_WATER;
+				if ((x == CHUNK_WIDTH - 1 && z == CHUNK_DEPTH - 1))	// TODO : Delete, this was to show chunk
+					(&(blocs[j][z][x]))->type = BLOCK_SNOW;*/
 			}
 		}
 	}
@@ -262,33 +327,95 @@ void Chunk::initChunk(void)
 
 	merge_ready = true; // see if really needed or if 'init' is enough
 
-	/*for (auto it : myNeighbours)
-	{
-		threadUseCount++;
-		Vec2 neighbourPos = it.first;
-		auto callBack = [this, neighbourPos]
-			(const BlocData& neighbourBlocs)
-			{this->updateVisibilityWithNeighbour(neighbourPos, neighbourBlocs, nullptr);
-			};
-		auto threadFunc = [myPos, callBack](const BlocData& bd, Chunk* neighbour){neighbour->updateVisibilityWithNeighbour(myPos, bd, callBack);};
-		threads.push_back(std::thread(threadFunc, blocs, it.second));
-		//it.second->updateVisibilityWithNeighbour(myPos, blocs, callBack);
-	}
-	for (std::thread& worker : threads)
-	{
-		worker.join();
-	}*/
+	/*printf("Chunk (%3i,%3i) merge ready\n", worldCoordToChunk(position).x,  worldCoordToChunk(position).y);
+	if (myNeighboursFace.size() > 0)
+		updateVisibilityBorderWithNeighbors();
+	printf("Chunk (%3i,%3i) initiated\n", worldCoordToChunk(position).x,  worldCoordToChunk(position).y);*/
 
 	init = true;
 
 	updateChunk = true;
 
-	Vec2 myPos = worldCoordToChunk(getPos());
-	threadUseCount = 0;
+	//Vec2 myPos = worldCoordToChunk(getPos());
+	//threadUseCount = 0;
+	decreaseThreadCount();
+	//printf("Chunk (%3i, %3i) initiated\n", _pos.x, _pos.y);
+}
+
+void	Chunk::addNeighbor(std::pair<Vec2, Chunk*> newNeighbour)
+{
+	Vec2 bob = getChunkPos();
+	//printf("Adding new neighbors ! (%3i,%3i) - (%3i,%3i)\n", bob.x, bob.y, newNeighbour.first.x, newNeighbour.first.y);
+	//thread_safe.lock();
+	std::vector<std::pair<Vec2, Chunk *>>::iterator index = find(myNeighbours.begin(), myNeighbours.end(), newNeighbour);
+	if (index != myNeighbours.end())
+	{
+		//printf("Neighbors already present ! (%3i,%3i) - (%3i,%3i)\n", bob.x, bob.y, newNeighbour.first.x, newNeighbour.first.y);
+		//thread_safe.unlock();
+		return;
+	}
+	myNeighbours.push_back(newNeighbour);
+	//thread_safe.unlock();
+	//printf("Done adding new neighbors ! (%3i,%3i) - (%3i,%3i)\n", bob.x, bob.y, newNeighbour.first.x, newNeighbour.first.y);
+	updateNeighbors(); // Update neighbors faces
+	// Then update space with new neighbors
+}
+
+void	Chunk::deleteNeighbor(std::pair<Vec2, Chunk*> neighbour)
+{
+	thread_safe.lock();
+	if (myNeighbours.size() == 0)
+	{
+		thread_safe.unlock();
+		return;
+	}
+	std::vector<std::pair<Vec2, Chunk *>>::iterator index = find(myNeighbours.begin(), myNeighbours.end(), neighbour);
+	if (index == myNeighbours.end())
+	{
+		thread_safe.unlock();
+		return;
+	}
+	myNeighbours.erase(index);
+	if (myNeighboursFace.size() == 0)
+	{
+		thread_safe.unlock();
+		return;
+	}
+	std::vector<std::pair<int, Chunk *>>::iterator index2 = myNeighboursFace.end();
+	for (auto it : myNeighboursFace)
+	{
+		if (it.second == neighbour.second)
+			break;
+		index2 = index2++;
+	}
+	if (index2 == myNeighboursFace.end())
+	{
+		thread_safe.unlock();
+		return;
+	}
+	myNeighboursFace.erase(index2);
+	thread_safe.unlock();
 }
 
 Chunk::~Chunk(void)
 {
+	// Before deleting object, we must delete the chunk from its neighbors list,
+	// before deletion, object must have empty neighbors list.
+	thread_safe.lock();
+	for (auto it : myNeighbours)
+	{
+		Vec2 pos = it.first;
+		Chunk *chnk = it.second;
+		//printf("Deleting neighbor : (%3i,%3i)\n", pos.x, pos.y);
+		chnk->deleteNeighbor(std::make_pair(this->getChunkPos(), this));
+	}
+	myNeighbours.clear();
+	myNeighboursFace.clear();
+	thread_safe.unlock();
+
+	while (!hasThreadFinished()) { usleep(TMP_SLEEP_VALUE); } // Check if something is using our object.
+
+	facesToRender.clear();
 	//delete texture;
 	glBindBuffer(GL_ARRAY_BUFFER, typeVBO);
 	glDeleteBuffers(1, &typeVBO);
@@ -343,7 +470,7 @@ void Chunk::updateVisibilityWithNeighbour(Vec2 NeighbourPos, const BlocData &nei
 	draw_safe.unlock();
 	if (callBack)
 		callBack(blocs);
-	threadUseCount--;
+	decreaseThreadCount();
 }
 
 void Chunk::updateVisibility(void)
@@ -384,7 +511,7 @@ void Chunk::updateVisibility(void)
  */
 void Chunk::updateVisibilityBorder(int x, int y, int z, int xHeight, int zHeight, bool master)
 {
-	int maxDiff = 0, face = 0;
+	int maxDiff = 0;
 	/*float noiseX = 10, noiseZ = 10;
 	struct bloc ghostBloc = {BLOCK_DIRT, 0, spaceCount, 0, 0}, ghostBloc2 = {BLOCK_DIRT, 0, spaceCount, 0, 0};
 	bool ghost = false;*/
@@ -431,7 +558,7 @@ void Chunk::updateVisibilityBorder(int x, int y, int z, int xHeight, int zHeight
 	*   any other part of the boundary can have at most one ghost.
 	*/
 
-	struct bloc *currentBlock = &(blocs[y][z][x]);
+	//struct bloc *currentBlock = &(blocs[y][z][x]);
 	/*	PROBLEM : This will create datarace on space merge ID.
 	*	Situation :
 	*		- let say we have chunk a, chunk b and chunk c
@@ -439,12 +566,12 @@ void Chunk::updateVisibilityBorder(int x, int y, int z, int xHeight, int zHeight
 	*		- chunk c is calling chunk a and find that he needs to merge space BUT
 	*		that space is currently being merged with b (a/b)
 	*/
-	if (currentBlock->type == NO_TYPE)
+	/*if (currentBlock->type == NO_TYPE)
 	{
 		face = x == 0 ? WEST : x == CHUNK_WIDTH - 1 ? EAST : 0;
 		if (face != 0)
 		{
-			/*	Do something with the face based on X
+			*	Do something with the face based on X
 			* 	Call neighbors in the needed direction to check its block at :
 			*		x = x +- 1 | y = y | z = z +- 1
 			*	If neighbor block is solid, we must display it.
@@ -453,13 +580,21 @@ void Chunk::updateVisibilityBorder(int x, int y, int z, int xHeight, int zHeight
 			*	Using face (NORTH/EAST/SOUTH/WEST) we are able to know which neighbor is needed.
 			*   We then send them the position of the block we are looking at, with that the neighbor will check its own block.
 			*	If the block is empty, the neighbor will have to link the block space with our space, for that we need to generate a Unique Identifier.
-			*/
-			updateVisibilityBorderWithNeighbors(x + (face == WEST ? -1 : face == EAST ? 1 : 0), y, z, face);
+			*
+			auto neighborCall = [this](int x, int y, int z, int face) { this->updateVisibilityBorderWithNeighbors(x, y, z, face); };
+			std::thread worker(neighborCall, x + (face == WEST ? -1 : face == EAST ? 1 : 0), y, z, face);
+			worker.detach();
+			//updateVisibilityBorderWithNeighbors(x + (face == WEST ? -1 : face == EAST ? 1 : 0), y, z, face);
 		}
 		face = z == 0 ? SOUTH : z == CHUNK_DEPTH - 1 ? NORTH : 0;
 		if (face != 0)
-			updateVisibilityBorderWithNeighbors(x, y, z + (face == SOUTH ? -1 : face == NORTH ? 1 : 0), face);
-	}
+		{
+			auto neighborCall = [this](int x, int y, int z, int face) { this->updateVisibilityBorderWithNeighbors(x, y, z, face); };
+			std::thread worker(neighborCall, x, y, z + (face == SOUTH ? -1 : face == NORTH ? 1 : 0), face);
+			worker.detach();
+			//updateVisibilityBorderWithNeighbors(x, y, z + (face == SOUTH ? -1 : face == NORTH ? 1 : 0), face);
+		}
+	}*/
 
 	/*if ((x == 0 || x == CHUNK_WIDTH - 1) && (z == 0 || z == CHUNK_DEPTH - 1)) // corners
 	{
@@ -495,6 +630,12 @@ void Chunk::updateVisibilityBorder(int x, int y, int z, int xHeight, int zHeight
 			ghost = true;
 		}
 	}*/
+
+	/*if (blocs[y][z][x].type == NO_TYPE)
+	{
+		(&(blocs[y][z][x]))->spaceId = spaceCount;
+		spaceBlocCount++;
+	}*/
 	
 	GLuint faces = 0;
 	if ((xHeight > -1 && xHeight < y))
@@ -505,9 +646,13 @@ void Chunk::updateVisibilityBorder(int x, int y, int z, int xHeight, int zHeight
 	if (faces == 0 /*&& !ghost */&& !master)
 		return;
 
+
 	if (blocs[y][z][x].type != NO_TYPE && faces != 0)
 	{
-		facesToRender.push_back(faces);
+		/**
+		 * If the block is filled and some faces are visible, add it to the render buffer 
+		 */
+		facesToRender.push_back(faces); // TODO : add only if in current space
 		spaceBorder[spaceCount].push_back(Vec3(x, y, z));
 	}
 
@@ -517,7 +662,8 @@ void Chunk::updateVisibilityBorder(int x, int y, int z, int xHeight, int zHeight
 			maxDiff = xHeight > zHeight ? zHeight : xHeight;
 		else if (xHeight > -1 || zHeight > -1)
 			maxDiff = xHeight > -1 ? xHeight : zHeight;
-		maxDiff = 1;
+		//printf("Diff : %i (%i, %i / %i)\n", maxDiff, xHeight, zHeight, y);
+		//maxDiff = 1;
 		for (int yDiff = 1; y - yDiff > maxDiff; yDiff++)
 			updateVisibilityBorder(x, y - yDiff, z, xHeight, zHeight);
 	}
@@ -531,27 +677,187 @@ void Chunk::updateVisibilityBorder(int x, int y, int z, int xHeight, int zHeight
  * @param y y coordinate (in chunk)
  * @param z z coordinate (in chunk)
  */
-void Chunk::updateVisibilityBorderWithNeighbors(int x, int y, int z, int face)
+void Chunk::updateVisibilityBorderWithNeighbors(void)
 {
-	(void)x;
-	(void)y;
-	(void)z;
+	int face;
+	std::vector<int> done_spaces = {};
+	struct bloc *block;
 	Chunk	*chnk = NULL;
 	Vec2	cur = Vec2();
-	if (myNeighbours.size() == 0)
-		return;	// Not good. I should not be here in the first place.
-	chnk = myNeighbours[0].second;
-	cur = myNeighbours[0].first;
-	for (auto it : myNeighbours)
+	Vec2	_cpos = getChunkPos();
+	
+	//increaseThreadCount();
+
+	if (myNeighboursFace.size() == 0)
 	{
-		if (face == NORTH || face == SOUTH)
-			chnk = face == NORTH ? (it.first.y > cur.y ? it.second : chnk) : (it.first.y < cur.y ? it.second : chnk);
-		else if (face == EAST || face == WEST)
-			chnk = face == EAST  ? (it.first.x > cur.x ? it.second : chnk) : (it.first.x < cur.x ? it.second : chnk);
+		decreaseThreadCount();
+		return;	// Not good. I should not be here in the first place.
 	}
-	if (!chnk)
+	else
+	{
+		//printf("Chunk (%3i, %3i) checking neigbhors states\n", _cpos.x, _cpos.y);
+		unsigned long int i = 0;
+		std::vector<bool> states;
+		while(true) // TODO : What could possibly happens when neighbors dies and you're still here ? :P
+		{
+			thread_safe.lock();
+			i = 0;
+			for (auto it : myNeighboursFace)
+			{
+				if (i >= myNeighboursFace.size())
+					i = 0;
+				if (states.size() < (unsigned long int)(i + 1))
+					states.push_back(false);
+				if (states[i])
+				{
+					++i;
+					continue;
+				}
+				if (it.second->merge_ready)
+					states[i] = true;
+				//else
+				//	printf("(%3i,%3i) Not ready : %i\n", it.second->getChunkPos().x, it.second->getChunkPos().y, it.second->init);
+				++i;
+			}
+			int ready = true;
+			for (bool state : states)
+			{
+				if (!state)
+				{
+					ready = false;
+					break;
+				}
+			}
+			if (ready)
+			{
+				thread_safe.unlock();
+				break;
+			}
+			thread_safe.unlock();
+			//printf("Not ready\n");
+		}
+		//printf("Chunk (%3i, %3i) done checking\n", _cpos.x, _cpos.y);
+	}
+	/**
+	 * Should iterate through block at the chunk boundary.
+	 * Corners being :
+	 * 		- (0) (0, 0)
+	 * 		- (1) (0, CHUNK_DEPTH - 1)
+	 * 		- (2) (CHUNK_WIDTH - 1, CHUNK_DEPTH - 1)
+	 * 		- (3) (CHUNK_WIDTH - 1, 0)
+	 * Boundary is all block from (0) to (1) to (2) to (3) to (0).
+	 * Boundary block are at most CHUNK_WIDTH * 2 + CHUNK_DEPTH * 2.
+	 */
+	thread_safe.lock();
+	//printf("Chunk (%3i, %3i) starting border correction\n", _cpos.x, _cpos.y);
+	for (int x = 0; x < CHUNK_WIDTH; x++)
+		for (int z = 0; z < CHUNK_DEPTH; z++)
+		{
+			if (z != 0 && z != CHUNK_DEPTH - 1 && x != 0 && x != CHUNK_WIDTH - 1)
+				continue;
+			for (int y = CHUNK_HEIGHT - 1; y > -1; y--)
+			{
+				face = 0;
+				if ((blocs[y][z][x].type != NO_TYPE))// || (z != 0 && z != CHUNK_DEPTH - 1 && x != 0 && x != CHUNK_WIDTH - 1))
+					continue;
+				//Vec3(x,y,z).print();
+				block = &(blocs[y][z][x]);
+
+				if (x == 0)
+					face |= 1 << (SOUTH - 1);
+				else if (x == CHUNK_WIDTH - 1)
+					face |= 1 << (NORTH - 1);
+				if (z == 0)
+					face |= 1 << (EAST - 1);
+				else if (z == CHUNK_DEPTH - 1)
+					face |= 1 << (WEST - 1);
+
+				if (face == 0)// || block->spaceId != 0)
+				{
+					//printf("HOW COULD FACE BE ZERO ???\n");
+					continue;
+				}
+
+				for (auto it : myNeighboursFace)
+				{
+					int neiFace = it.first;
+					if (face & (1 << (neiFace - 1))) // Check if face is enabled, if yes do the spaceMerging
+					{
+						//printf("(%i) %i vs %i (%i %i %i %i)\n", neiFace, face, face & (1 << (neiFace - 1)), face & (1 << (NORTH - 1)), face & (1 << (EAST - 1)), face & (1 << (SOUTH - 1)), face & (1 << (WEST - 1)));
+						chnk = it.second;
+						//chnk->spaceMergingQuery(CHUNK_WIDTH - 1, y, z, block->spaceId, this, neiFace);
+
+						if (neiFace == WEST || neiFace == EAST)
+							chnk->spaceMergingQuery(x, y, neiFace == WEST ? CHUNK_DEPTH - 1 : 0, block->spaceId, this, neiFace);
+						if (neiFace == NORTH || neiFace == SOUTH)
+							chnk->spaceMergingQuery(neiFace == SOUTH ? CHUNK_WIDTH - 1 : 0, y, z, block->spaceId, this, neiFace);
+							//chnk->spaceMergingQuery(x, y, neiFace == SOUTH ? CHUNK_DEPTH - 1 : 0, block->spaceId, this, neiFace);
+					}
+				}
+			}
+		}
+	//printf("Chunk (%3i, %3i) done with border correction\n", _cpos.x, _cpos.y);
+	thread_safe.unlock();
+
+	decreaseThreadCount();
+}
+
+void Chunk::spaceMergingQuery(int x, int y, int z, int caller_spaceId, Chunk *caller, int face)
+{
+	/*Vec3 callerPos = caller->getPos();				// For fun
+	Vec2 chunkPos = worldCoordToChunk(callerPos);
+	printf("Hello from (%i, %i)\n", chunkPos.x, chunkPos.y);*/
+
+	if (!init)
 		return;
-	// Call the fateful neighbors for check.
+	
+	//printf("Chunk (%3i, %3i) starting spaceMergingQuery\n", _cpos.x, _cpos.y);
+	merge_safe.lock();
+	draw_safe.lock();
+	//thread_safe.lock();
+	struct bloc *block = &(blocs[y][z][x]);
+	Vec2	_cpos = getChunkPos();
+
+	//int r = 0;
+	/*while (!merge_ready) {
+		usleep(TMP_SLEEP_VALUE);
+		/*printf("NOT READY : (%3i,%3i)\n", worldCoordToChunk(position).x,  worldCoordToChunk(position).y);
+		r = 1;*
+	}*/
+	/*if (r == 1)
+		printf("READY\n");*/
+
+	Vec3 cur = Vec3(x, y, z);
+	if (block->type != NO_TYPE)
+	{
+		//block->type = BLOCK_WATER;
+		//printf("Face : %s | %5f %5f %5f\n", face == WEST ? "WEST" : face == EAST ? "EAST" : face == NORTH ? "NORTH" : "SOUTH", cur.x, cur.y, cur.z);
+		//printf("%i\n", find(spaceBorder[0].begin(), spaceBorder[0].end(), cur) == spaceBorder[0].end());
+		if (find(spaceBorder[0].begin(), spaceBorder[0].end(), cur) == spaceBorder[0].end())
+		{
+			int faces = 127;
+			facesToRender.push_back(faces);
+			spaceBorder[0].push_back(cur);
+		}
+		else
+		{
+			// The block we want to display already exist.
+			// We might need to update its faces. Set corresponding bit according to the face direction.
+			int index = find(spaceBorder[0].begin(), spaceBorder[0].end(), cur) - spaceBorder[0].begin();
+			facesToRender[index] = 127;
+			//facesToRender.push_back(127);
+			//spaceBorder[0].push_back(cur);
+		}
+		updateChunk = true;
+	}
+	else
+	{
+		// Merge space and display blocks
+	}
+	draw_safe.unlock();
+	merge_safe.unlock();
+	//thread_safe.unlock();
+	//printf("Chunk (%3i, %3i) done spaceMergingQuery\n", _cpos.x, _cpos.y);
 }
 
 void Chunk::updateVisibilitySpaceAux(int ox, int oy, int oz)
@@ -569,7 +875,6 @@ void Chunk::updateVisibilitySpaceAux(int ox, int oy, int oz)
 	spaceBlocCount = 0;
 
 	// While the stack is not empty, look for neighbors
-	int p = 0;
 	while (!stack.empty())
 	{
 		// Get the current position
@@ -582,17 +887,24 @@ void Chunk::updateVisibilitySpaceAux(int ox, int oy, int oz)
 		// Check if we're looking at already visited positions
 		if (blocs[cur.y][cur.z][cur.x].visited)
 			continue;
-		p++;
 		(&(blocs[cur.y][cur.z][cur.x]))->visited = true;
 		// Check if the bloc is of NO_TYPE type
-		// If not, add it to the current border space
+		// If not, add it to the current border space (meaning visible filled block)
 		if (blocs[cur.y][cur.z][cur.x].type != NO_TYPE)
 		{
 			if (spaceCount == 0) // Why ? Because current var is incorrect if using multiple spaces. Must change that to have a facesToRender[spaceCount]
 				facesToRender.push_back(blocs[cur.y][cur.z][cur.x].faces);
+			/*if (spaceCount == 0) // Why ? Because current var is incorrect if using multiple spaces. Must change that to have a facesToRender[spaceCount]
+				facesToRender.push_back(127);*/
 			spaceBorder[spaceCount].push_back(cur);
-			//if (cur.y > 0 && (cur.x == 0 || cur.x == CHUNK_WIDTH - 1 || cur.z == 0 || cur.z == CHUNK_DEPTH - 1))
-			//	updateVisibilityBorder(cur.x, cur.y - 1, cur.z, -1, -1, true);
+			if (cur.y > 0 && (cur.x == 0 || cur.x == CHUNK_WIDTH - 1 || cur.z == 0 || cur.z == CHUNK_DEPTH - 1))
+				updateVisibilityBorder(cur.x, cur.y - 1, cur.z, -1, -1, true); // PROBLEM MIGHT BE HERE.
+				/**
+				 * We should not be going downward till y > -1, spaceId won't be respected if we do that.
+				 * Moreover, updateVisibilityBorder did work in the assumpation that the block were filled,
+				 * what happens when a block is empty ?
+				 * Should not be a probleme since this function will process it later.
+				 */
 			continue;
 		}
 
@@ -609,10 +921,12 @@ void Chunk::updateVisibilitySpaceAux(int ox, int oy, int oz)
 		if (y < CHUNK_HEIGHT - 1)
 			stack.push_back(Vec3(x, y + 1, z));
 
-		(&(blocs[y][z][x]))->spaceId = spaceCount;
-		spaceBlocCount++;
+		if (blocs[y][z][x].spaceId == -1)
+		{
+			(&(blocs[y][z][x]))->spaceId = spaceCount;
+			spaceBlocCount++;
+		}
 	}
-	//printf("%i vs %i -> %s\n", p, CHUNK_SIZE, p == CHUNK_SIZE ? "True" : "False");
 	//printf("%i\n", spaceBlocCount);
 	spaceESize[spaceCount] += spaceBlocCount;
 }
@@ -640,18 +954,12 @@ void Chunk::updateVisibilitySpace(void)
 					{
 						//bool fbigger = spaceESize[spaceCount] > spaceESize[bloc->spaceId];
 						// TODO : implement that
+						printf("WHY ARE WE HERE\n");
 					}
 					else if (bloc->spaceId == -1) // Set current spaceId and propagate it to neighbors then increase spaceId
 					{
 						updateVisibilitySpaceAux(x - 1, y - 1, z - 1);
-						spaceCount++;
-					}
-
-					if (x == 0 || x == CHUNK_WIDTH || z == 0 || z == CHUNK_DEPTH)	// TODO : updateVisibilitySpaceAux should do it
-					{
-						// The spaceId of the current bloc is connected to the next chunk
-						// x == 0 right chunk else left chunk
-						// z == 0 backward chunk else forward chunk
+						//spaceCount++;
 					}
 				}
 			}

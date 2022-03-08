@@ -29,9 +29,10 @@ World::World()
 	curPos = Chunk::worldCoordToChunk(camera.getPos());
 
 	Skybox::initialize(0.0013f, 1.2f, 1, 0);
-	
+
 	auto initNewChunk = [](Chunk *chnk) {
 		chnk->initChunk();
+		chnk->updateTestMultiThread();
 	};
 	auto positions = getPosInRange(curPos, 0, CHUNK_VIEW_DISTANCE);
 	for (auto pos : positions)
@@ -70,27 +71,43 @@ World::World()
 World::~World()
 {
 	auto it = visibleChunks.begin();
+	auto old = visibleChunks.end();
+	//printf("Visible Chunks\n");
 	while (it != visibleChunks.end())
 	{
 		if (!(*it).second->hasThreadFinished())
 		{
 			usleep(WAITING_THREAD_TIME);
+			if (it != old)
+			{
+				//printf("Waiting for chunk : (%3i,%3i) | ThreadCount : %i\n", (*it).first.x, (*it).first.y, (*it).second->getThreadCount());
+				old = it;
+			}
 		}
 		else
 		{
+			//printf("Deleting chunk : (%3i,%3i) | ThreadCount : %i\n", (*it).first.x, (*it).first.y, (*it).second->getThreadCount());
 			delete (*it).second;
 			it++;
 		}
 	}
 	it = preLoadedChunks.begin();
+	old = preLoadedChunks.end();
+	//printf("Preloaded Chunks\n");
 	while (it != preLoadedChunks.end())
 	{
 		if (!(*it).second->hasThreadFinished())
 		{
 			usleep(WAITING_THREAD_TIME);
+			if (it != old)
+			{
+				//printf("Waiting for chunk : (%3i,%3i) | ThreadCount : %i\n", (*it).first.x, (*it).first.y, (*it).second->getThreadCount());
+				old = it;
+			}
 		}
 		else
 		{
+			//printf("Deleting chunk : (%3i,%3i) | ThreadCount : %i\n", (*it).first.x, (*it).first.y, (*it).second->getThreadCount());
 			delete (*it).second;
 			it++;
 		}
@@ -189,17 +206,20 @@ void World::render()
 		//it.second->updateVisibilityByCamera(blocFreeze);
 		it.second->draw(shader);
 	}
-
+	//Chunk::worldCoordToChunk(camera.getPos()).print();
 	//std::cout << "rendered: " << chunksToRender.size() << "on total visible chunk: " << visibleChunks.size() << std::endl;
 }
 
 void World::update()
 {
 	Vec2 newChunkPos = Chunk::worldCoordToChunk(camera.getPos());
-	if (curPos != newChunkPos && !freeze)
+	if (curPos != newChunkPos)
 	{
 		curPos = newChunkPos;
-		updateChunkBuffers(curPos);
+		if (!freeze)
+			updateChunkBuffers(curPos);
+		//camera.getPos().print();
+		//curPos.print();
 	}
 }
 /**
@@ -259,24 +279,31 @@ void World::updateChunkBuffers(Vec2 newPos)
 	// Add new chunk to be preloaded
 	posBuffer.clear();
 	posBuffer = getPosInRange(newPos, CHUNK_VIEW_DISTANCE, MAX_PRELOAD_DISTANCE);
-	auto initNewChunks = [](std::vector<Chunk*> chunks) { for (auto it : chunks) it->initChunk();};
+	auto initNewChunks = [](std::vector<Chunk*> chunks) { for (auto it : chunks) { it->initChunk(); }};
+	auto initNewChunks2 = [](std::vector<Chunk*> chunks) { for (auto it : chunks) { it->updateTestMultiThread(); }};
 	std::vector<Chunk*> chunks;
 	for (Vec2& preloadedPositions : posBuffer) // TODO Load those in front first, who cares about the chunk behind us
 	{
 		if (preLoadedChunks.find(preloadedPositions) == preLoadedChunks.end())
 		{
-			auto allocatedNeighbours = getAllocatedNeighbours(preloadedPositions);
-			chunks.push_back(new Chunk(preloadedPositions.x, preloadedPositions.y, &camera, allocatedNeighbours));
+			//auto allocatedNeighbours = getAllocatedNeighbours(preloadedPositions);
+			chunks.push_back(new Chunk(preloadedPositions.x, preloadedPositions.y, &camera));
 			preLoadedChunks.insert(std::pair<Vec2, Chunk*>(preloadedPositions, chunks.back()));
 		}
 	}
+	/*for (Chunk* chnk : chunks)
+	{
+		auto allocatedNeighbours = getAllocatedNeighbours(Chunk::worldCoordToChunk(chnk->getPos()));
+		chnk->setNeighbors(allocatedNeighbours);
+	}
 	std::thread worker(initNewChunks, chunks);
 	worker.detach();
+	std::thread worker2(initNewChunks2, chunks);
+	worker2.detach();*/
 
-	auto initNewChunk = [](Chunk *chnk) { chnk->initChunk(); };
-	Chunk *chnk = NULL;
 	//move from preloaded to visible // or load if thats not the case ?
 	posBuffer = getPosInRange(newPos, 0, CHUNK_VIEW_DISTANCE);
+	//chunks.clear();
 	for (auto key : posBuffer)
 	{
 		if (visibleChunks.find(key) == visibleChunks.end())
@@ -284,12 +311,10 @@ void World::updateChunkBuffers(Vec2 newPos)
 			if (preLoadedChunks.find(key) == preLoadedChunks.end())
 			{
 				//std::cerr << "SHOULDNT HAPPEN, tried to moved from preloaded to visible but it wasnt preloaded" << std::endl;
-				auto allocatedNeighbours = getAllocatedNeighbours(key);
-				chnk = new Chunk(key.x, key.y, &camera, allocatedNeighbours);
+				//auto allocatedNeighbours = getAllocatedNeighbours(key);
+				auto chnk = new Chunk(key.x, key.y, &camera);
 				visibleChunks.insert(std::pair<Vec2, Chunk*>(key, chnk));
-				
-				std::thread worker(initNewChunk, chnk);
-				worker.detach();
+				chunks.push_back(chnk);
 			}
 			else 
 			{
@@ -299,6 +324,16 @@ void World::updateChunkBuffers(Vec2 newPos)
 			}
 		}
 	}
+	for (Chunk * chnk : chunks)
+	{
+		auto allocatedNeighbours = getAllocatedNeighbours(Chunk::worldCoordToChunk(chnk->getPos()));
+		chnk->setNeighbors(allocatedNeighbours);
+	}
+	std::thread worker3(initNewChunks, chunks);
+	worker3.detach();
+	std::thread worker4(initNewChunks2, chunks);
+	worker4.detach();
+	chunks.clear();
 }
 
 std::vector<Vec2> World::getPosInRange(Vec2 center, float minDistance, float maxDistance)

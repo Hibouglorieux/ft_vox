@@ -35,16 +35,22 @@ public:
 	Chunk(int x, int z, Camera *camera, std::vector<std::pair<Vec2, Chunk*>> neighbours);
 
 	void	initChunk(void);
-	void	setNeighbors(std::vector<std::pair<Vec2, Chunk*>> neighbours) { myNeighbours = neighbours; }
+	void	setNeighbors(std::vector<std::pair<Vec2, Chunk*>> neighbours) { myNeighbours = neighbours; updateNeighbors(); }
+	void	addNeighbor(std::pair<Vec2, Chunk*> newNeighbour);
+	void	deleteNeighbor(std::pair<Vec2, Chunk*> neighbour);
+	void	updateTestMultiThread() { updateVisibilityBorderWithNeighbors(); };
 	std::vector<std::pair<Vec2, Chunk*>>	getNeighbors(void) { return myNeighbours; }
 
 	virtual ~Chunk(void);
 
 	bool	hasThreadFinished(void) {return threadUseCount == 0;}
-	void	increaseThreadCount(void) {threadUseCount++;}
+	bool	getThreadCount(void) {return threadUseCount;}
+	void	increaseThreadCount(void) { thread_safe.lock(); threadUseCount++; /*Vec2 bob = getChunkPos(); printf("(%3i,%3i) %i UP\n", bob.x, bob.y, threadUseCount);*/ thread_safe.unlock(); }
+	void	decreaseThreadCount(void) { thread_safe.lock(); threadUseCount > 0 ? threadUseCount-- : threadUseCount = 0; /*Vec2 bob = getChunkPos(); printf("(%3i,%3i) %i DN\n", bob.x, bob.y, threadUseCount);*/ thread_safe.unlock(); }
 	virtual void	draw(Shader* shader) override;
 
 	Vec3	getPos() const { return position; }
+	Vec2	getChunkPos() const { return worldCoordToChunk(position); }
 	Vec3	getChunkCenterPos() const { return (position + Vec3(CHUNK_WIDTH / 2, 0, CHUNK_DEPTH / 2)); }
 
 	static	Vec2 worldCoordToChunk(Vec3 worldPos);
@@ -73,6 +79,8 @@ private:
 	typedef std::array<std::array<std::array<struct bloc, CHUNK_WIDTH>, CHUNK_DEPTH>, CHUNK_HEIGHT> BlocData;
 	typedef std::array<std::vector<Vec3>, CHUNK_SIZE> BlocSpaceBorder;
 
+	void	updateNeighbors(void);
+
 	void	updateVisibilityWithNeighbour(Vec2 NeighbourPos,
 			const BlocData& neighbourBlocs,
 			std::function<void(const BlocData&)> callBack = nullptr);
@@ -82,9 +90,11 @@ private:
 
 	// Space Functions
 	void	updateVisibilityBorder(int x, int y, int z, int xHeight = -1, int zHeight = -1, bool master = false);
-	void	updateVisibilityBorderWithNeighbors(int x, int y, int z, int face);
+	void	updateVisibilityBorderWithNeighbors(void);
 	void	updateVisibilitySpaceAux(int x, int y, int z);
 	void	updateVisibilitySpace(void);
+
+	void 	spaceMergingQuery(int x, int y, int z, int caller_spaceId, Chunk *caller, int face);
 
 	// End of Space Functions
 
@@ -113,11 +123,14 @@ private:
 	unsigned int 	hardBloc;
 	unsigned int 	hardBlocVisible;
 	std::mutex		draw_safe;
+	std::mutex		merge_safe;
+	std::mutex		thread_safe;
 
 	GLuint typeVBO, positionVBO, facesVBO;
 	std::vector<GLuint>	facesToRender;
 
 	std::vector<std::pair<Vec2, Chunk*>> myNeighbours; // Should have at most 4 neigbhors
+	std::vector<std::pair<int, Chunk*>> myNeighboursFace; // Should have at most 4 neigbhors
 
 	float	getBlockBiome(int x, int z, bool setBlocInChunk = true);
 	//float	getBlockBiome(int x, int z, bool setBlocInChunk = true, bool superFlat = false);

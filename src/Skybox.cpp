@@ -151,7 +151,7 @@ void Skybox::draw(Matrix& precalculatedMat)
 	glUniform4f(glGetUniformLocation(shader->getID(), "sunColor"), 1, 1, 1, 1.0);
 	glUniform4f(glGetUniformLocation(shader->getID(), "moonColor"), 0.15, 0, 0.15+0.07, 1.0);
     glBindVertexArray(VAO);
-    glDrawArrays(GL_TRIANGLES, 0, 36);
+    glDrawArrays(GL_TRIANGLES, 0, 36); // leaks in here ?
 }
 
 void Skybox::clear()
