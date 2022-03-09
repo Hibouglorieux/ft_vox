@@ -217,8 +217,8 @@ void Chunk::initChunk(void)
 
 			float blockValue = this->getBlockBiome(x, z);
 
-			if ((x == 0 || x == CHUNK_WIDTH - 1 || z == 0 || z == CHUNK_DEPTH - 1) && blocs[blockValue][z][x].type != NO_TYPE)	// TODO : Delete, this was to show chunk
-				(&(blocs[blockValue][z][x]))->type = BLOCK_SAND;
+			//if ((x == 0 || x == CHUNK_WIDTH - 1 || z == 0 || z == CHUNK_DEPTH - 1) && blocs[blockValue][z][x].type != NO_TYPE)	// TODO : Delete, this was to show chunk
+			//	(&(blocs[blockValue][z][x]))->type = BLOCK_SAND;
 
 			if (blockValue < min)
 				min = blockValue;
@@ -251,8 +251,8 @@ void Chunk::initChunk(void)
 						//bloc->type = BLOCK_DIRT;
 				}
 				*/
-				if ((x == 0 || x == CHUNK_WIDTH - 1 || z == 0 || z == CHUNK_DEPTH - 1) && bloc->type != NO_TYPE)	// TODO : Delete, this was to show chunk
-					(&(blocs[j][z][x]))->type = BLOCK_SAND;
+				//if ((x == 0 || x == CHUNK_WIDTH - 1 || z == 0 || z == CHUNK_DEPTH - 1) && bloc->type != NO_TYPE)	// TODO : Delete, this was to show chunk
+				//	(&(blocs[j][z][x]))->type = BLOCK_SAND;
 			}
 		}
 	}
@@ -265,7 +265,7 @@ void Chunk::initChunk(void)
 	//std::cout << "Is on frustum : " << boundingVolume.isOnFrustum(playerCamera->getFrustum()) << std::endl;
 
 	updateVisibility();
-	updateVisibilitySpace();
+	//updateVisibilitySpace();
 
 	merge_ready = true; // see if really needed or if 'init' is enough
 
@@ -404,18 +404,14 @@ void Chunk::updateVisibility(void)
 			for (int x = CHUNK_WIDTH; x > 0; x--)
 			{
 				bloc = &(blocs[y - 1][z - 1][x - 1]);
-				GLint oldType = bloc->type;
-				/*
-				if (bloc->type != NO_TYPE)
+				if (bloc->type == NO_TYPE)
+					continue;
+				GLuint faces = setVisibilityByNeighbors(x - 1, y - 1, z - 1);
+				if (faces != 0)
 				{
-				*/
-					GLuint faces = setVisibilityByNeighbors(x - 1, y - 1, z - 1);
-					(void)faces;
-					if (bloc->visible == true && oldType != NO_TYPE)
-					{
-						hardBlocVisible += 1;
-					}
-//				}
+					facesToRender.push_back(faces);
+					spaceBorder[0].push_back(Vec3(x - 1, y - 1, z - 1));
+				}
 			}
 		}
 	}
@@ -1026,7 +1022,7 @@ void Chunk::createQuad(Vec3 bottomLeft, Vec3 topLeft, Vec3 topRight, Vec3 bottom
 void Chunk::draw(Shader *shader)
 {
 	draw_safe.lock();
-	if (hardBloc == 0 || hardBlocVisible == 0 || !init)
+	if (spaceBorder[0].size() == 0 || !init)
 	{
 		draw_safe.unlock();
 		return;
