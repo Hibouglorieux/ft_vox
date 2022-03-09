@@ -17,10 +17,10 @@
 
 #define X_ROTATION_SPEED 1
 #define Y_ROTATION_SPEED 1
-//#define DEFAULT_CAMERA_POS Vec3(0.f, 90.f, 0.f)
-//#define DEFAULT_CAMERA_ROT Vec3(0.f, 90.f, 0.f)
-#define DEFAULT_CAMERA_POS Vec3(88.08f, 43.01f, -69.01f)
-#define DEFAULT_CAMERA_ROT Vec3(0.f, 0.f, 0.f)
+#define DEFAULT_CAMERA_POS Vec3(0.f, 90.f, 0.f)
+#define DEFAULT_CAMERA_ROT Vec3(0.f, 90.f, 0.f)
+//#define DEFAULT_CAMERA_POS Vec3(88.08f, 43.01f, -69.01f)
+//#define DEFAULT_CAMERA_ROT Vec3(0.f, 0.f, 0.f)
 //#define DEFAULT_CAMERA_POS Vec3(-43.28f, 41.15f, -44.17f)
 //#define DEFAULT_CAMERA_ROT Vec3(90.f, 90.f, 0.f)
 //#define DEFAULT_CAMERA_POS Vec3(-43.28f, 260.15f, -44.17f)
