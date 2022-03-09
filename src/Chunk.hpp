@@ -24,10 +24,10 @@
 
 # define CHUNK_SIZE CHUNK_HEIGHT * CHUNK_WIDTH * CHUNK_DEPTH
 
-# define NORTH	1
-# define EAST	2
-# define SOUTH	3
-# define WEST	4
+# define NORTH	0
+# define EAST	1
+# define SOUTH	2
+# define WEST	3
 
 class Chunk : public Object{
 public:
@@ -35,10 +35,9 @@ public:
 	Chunk(int x, int z, Camera *camera, std::vector<std::pair<Vec2, Chunk*>> neighbours);
 
 	void	initChunk(void);
-	void	setNeighbors(std::vector<std::pair<Vec2, Chunk*>> neighbours) { myNeighbours = neighbours; updateNeighbors(); }
+	void	setNeighbors(std::vector<std::pair<Vec2, Chunk*>> neighbours);// { myNeighbours = neighbours; }
 	void	addNeighbor(std::pair<Vec2, Chunk*> newNeighbour);
-	void	deleteNeighbor(std::pair<Vec2, Chunk*> neighbour);
-	void	updateTestMultiThread() { updateVisibilityBorderWithNeighbors(); };
+	void	deleteNeighbor(std::pair<Vec2, Chunk*> neighbor);
 	std::vector<std::pair<Vec2, Chunk*>>	getNeighbors(void) { return myNeighbours; }
 
 	virtual ~Chunk(void);
@@ -78,62 +77,44 @@ private:
 
 	typedef std::array<std::array<std::array<struct bloc, CHUNK_WIDTH>, CHUNK_DEPTH>, CHUNK_HEIGHT> BlocData;
 	typedef std::array<std::vector<Vec3>, CHUNK_SIZE> BlocSpaceBorder;
+	typedef std::array<std::vector<std::pair<int, int>>, CHUNK_SIZE> SpaceConnectedness;
+	typedef std::array<std::vector<int>, 4> ChunkSpaceFaces;
 
-	void	updateNeighbors(void);
+	Chunk	*getNeighborByFace(int face);
 
-	void	updateVisibilityWithNeighbour(Vec2 NeighbourPos,
-			const BlocData& neighbourBlocs,
-			std::function<void(const BlocData&)> callBack = nullptr);
-	bool	updateVis = false;
-	void	updateVisibility(void);
+
+	std::vector<int>	connectSpaceCall(int x, int y, int z, int face);
+	void	connectSpace();
+	void	setBlocsVisibility();
 	GLuint	setVisibilityByNeighbors(int x, int y, int z);
+	void	setBlocSpace(int x, int y, int z);
+	void	setBlocsSpace();
 
-	// Space Functions
-	void	updateVisibilityBorder(int x, int y, int z, int xHeight = -1, int zHeight = -1, bool master = false);
-	void	updateVisibilityBorderWithNeighbors(void);
-	void	updateVisibilitySpaceAux(int x, int y, int z);
-	void	updateVisibilitySpace(void);
+	void	addFaceLink(int spaceId, int face);
 
-	void 	spaceMergingQuery(int x, int y, int z, int caller_spaceId, Chunk *caller, int face);
-
-	// End of Space Functions
-
-	// Greedy Meshing Functions
-	bool		compareBlocs(const struct bloc *b1, const struct bloc *b2);
-	struct bloc *getVoxel(int x, int y, int z);
-	void		greedyMesh();
-	void		createQuad(Vec3 bottomLeft, Vec3 topLeft, Vec3 topRight, Vec3 bottomRight, int width, int height, Chunk::bloc *voxel);
-	// End of GM Functions
-
-	void	getQuads();
 	bool	generatePosOffsets();
 
-	Vec3	position;
-	BlocData blocs;
-
-	int											spaceCount;
-	BlocSpaceBorder								spaceBorder;
-	std::array<int, CHUNK_SIZE> 				spaceESize;
-	std::vector<std::vector<std::pair<struct bloc, Vec3>>>	ghostBorder;
+	Vec3			position;
+	BlocData		blocs;
 
 	bool			updateChunk = true;
 	bool			init		= false;
-	bool			merge_ready = false;
 	unsigned char 	threadUseCount;
-	unsigned int 	hardBloc;
-	unsigned int 	hardBlocVisible;
 	std::mutex		draw_safe;
-	std::mutex		merge_safe;
 	std::mutex		thread_safe;
+
+	int					spaceCount;
+	BlocSpaceBorder		spaceBorder;
+	SpaceConnectedness	spaceLinks;
+	ChunkSpaceFaces		chunkFaces;
 
 	GLuint typeVBO, positionVBO, facesVBO;
 	std::vector<GLuint>	facesToRender;
 
 	std::vector<std::pair<Vec2, Chunk*>> myNeighbours; // Should have at most 4 neigbhors
-	std::vector<std::pair<int, Chunk*>> myNeighboursFace; // Should have at most 4 neigbhors
+	std::vector<std::pair<int, Chunk*>> faceNeighbor;
 
 	float	getBlockBiome(int x, int z, bool setBlocInChunk = true);
-	//float	getBlockBiome(int x, int z, bool setBlocInChunk = true, bool superFlat = false);
 
 	Camera	*playerCamera;
 };

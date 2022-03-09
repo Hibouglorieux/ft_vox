@@ -32,7 +32,6 @@ World::World()
 
 	auto initNewChunk = [](Chunk *chnk) {
 		chnk->initChunk();
-		chnk->updateTestMultiThread();
 	};
 	auto positions = getPosInRange(curPos, 0, CHUNK_VIEW_DISTANCE);
 	for (auto pos : positions)
@@ -280,7 +279,7 @@ void World::updateChunkBuffers(Vec2 newPos)
 	posBuffer.clear();
 	posBuffer = getPosInRange(newPos, CHUNK_VIEW_DISTANCE, MAX_PRELOAD_DISTANCE);
 	auto initNewChunks = [](std::vector<Chunk*> chunks) { for (auto it : chunks) { it->initChunk(); }};
-	auto initNewChunks2 = [](std::vector<Chunk*> chunks) { for (auto it : chunks) { it->updateTestMultiThread(); }};
+	//auto initNewChunkOnce = [](Chunk *chnk) { chnk->initChunk(); };
 	std::vector<Chunk*> chunks;
 	for (Vec2& preloadedPositions : posBuffer) // TODO Load those in front first, who cares about the chunk behind us
 	{
@@ -328,11 +327,11 @@ void World::updateChunkBuffers(Vec2 newPos)
 	{
 		auto allocatedNeighbours = getAllocatedNeighbours(Chunk::worldCoordToChunk(chnk->getPos()));
 		chnk->setNeighbors(allocatedNeighbours);
+		/*std::thread workerOnce(initNewChunkOnce, chnk);
+		workerOnce.detach();*/
 	}
 	std::thread worker3(initNewChunks, chunks);
 	worker3.detach();
-	std::thread worker4(initNewChunks2, chunks);
-	worker4.detach();
 	chunks.clear();
 }
 

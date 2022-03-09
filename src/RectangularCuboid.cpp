@@ -155,6 +155,7 @@ void RectangularCuboid::clear()
 //  unused, drawInstance is called instead
 void RectangularCuboid::draw(Vec3& pos, Shader* shader, Texture* texture)
 {
+	(void)texture;
 	initialize();
 	shader->use();
 	glUniform1i(glGetUniformLocation(shader->getID(), "instanced"), 0);
