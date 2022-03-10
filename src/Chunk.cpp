@@ -139,6 +139,7 @@ void 	Chunk::initChunk(void)
 				else
 					bloc->type = NO_TYPE;
 				bloc->visible = false;
+				bloc->faces = 999;
 				bloc->spaceId = -1;
 				bloc->visited = false;
 			}
@@ -212,8 +213,8 @@ void 	Chunk::initChunk(void)
 void 	Chunk::setNeighbors(std::vector<std::pair<Vec2, Chunk*>> neighbours)
 {
 	myNeighbours = neighbours;
-	for (auto it = neighbours.begin(); it != neighbours.end(); ++it)
-		addNeighbor((*it));
+	//for (auto it = neighbours.begin(); it != neighbours.end(); ++it)
+	//	addNeighbor((*it));
 	//printf("N : %3li | F : %3li\n", myNeighbours.size(), faceNeighbor.size());
 }
 
@@ -341,15 +342,16 @@ void	Chunk::setBlocSpace(int x, int y, int z)
 		if (current_block->type != NO_TYPE)
 		{
 			current_block->visible = true;
-			//if (spaceCount == 0)
-			//{
+			if (current_block->faces == 999)
+				setVisibilityByNeighbors(cur.x, cur.y, cur.z);
+
+			/*if (cur.x == 0 || cur.x == CHUNK_WIDTH - 1)
+				addFaceLink(spaceCount, cur.x == 0 ? WEST : EAST);
+			if (cur.z == 0 || cur.z == CHUNK_DEPTH - 1)
+				addFaceLink(spaceCount, cur.z == 0 ? SOUTH : NORTH);*/
+			if (spaceCount == 0)
 				facesToRender.push_back(current_block->faces);
-				spaceBorder[0].push_back(cur);
-				if (cur.x == 0 || cur.x == CHUNK_WIDTH - 1)
-					addFaceLink(spaceCount, cur.x == 0 ? WEST : EAST);
-				if (cur.z == 0 || cur.z == CHUNK_DEPTH - 1)
-					addFaceLink(spaceCount, cur.z == 0 ? SOUTH : NORTH);
-			//}
+			spaceBorder[spaceCount].push_back(cur);
 			continue;
 		}
 
@@ -370,6 +372,20 @@ void	Chunk::setBlocSpace(int x, int y, int z)
 
 void	Chunk::setBlocsSpace(void)
 {
+	/*for (unsigned int z = 0; z < CHUNK_DEPTH; z++)
+	{
+		for (unsigned int x = 0; x < CHUNK_WIDTH; x++)
+		{
+			for (unsigned int y = 0; y < CHUNK_HEIGHT; y++)
+			{
+				if (blocs[y][z][x].type != NO_TYPE)
+					setVisibilityByNeighbors(x, y, z);
+				else
+					continue;
+				//(&(blocs[y][z][x]))->visited = false;
+			}
+		}
+	}*/
 	for (int z = CHUNK_DEPTH - 1; z > -1; z--)
 	{
 		for (int x = CHUNK_WIDTH - 1; x > -1; x--)
@@ -379,23 +395,13 @@ void	Chunk::setBlocsSpace(void)
 				if (blocs[y][z][x].type == NO_TYPE)
 				{
 					setBlocSpace(x, y, z);
-					//spaceCount++;
+					spaceCount++;
 				}
 				if (blocs[y][z][x].type != NO_TYPE)
 					continue;
 			}
 		}
 	}
-	/*for (unsigned int z = 0; z < CHUNK_DEPTH; z++)
-	{
-		for (unsigned int x = 0; x < CHUNK_WIDTH; x++)
-		{
-			for (unsigned int y = 0; y < CHUNK_HEIGHT; y++)
-			{
-				(&(blocs[y][z][x]))->visited = false;
-			}
-		}
-	}*/
 }
 
 void	Chunk::setBlocsVisibility(void)
