@@ -33,6 +33,7 @@ Chunk::Chunk(int x, int z, Camera *camera)
 
 	myNeighbours = {};
 	playerCamera = camera;
+	
 	glGenBuffers(1, &typeVBO);
 	glGenBuffers(1, &positionVBO);
 	glGenBuffers(1, &facesVBO);

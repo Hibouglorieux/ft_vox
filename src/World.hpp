@@ -21,6 +21,7 @@
 # include "Skybox.hpp"
 # include "Vec2.hpp"
 # include <map>
+# include "ctpl_stl.h"
 
 # define VIEW_DISTANCE 160
 # define ROW_OF_CHUNK 8
@@ -66,6 +67,8 @@ private:
 	// Chunk Managers
 	std::map<Vec2, Chunk*> visibleChunks;
 	std::map<Vec2, Chunk*> preLoadedChunks;
+
+	ctpl::thread_pool thread_pool;
 };
 
 #endif

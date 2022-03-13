@@ -56,10 +56,10 @@ void Loop::loop()
 		glfwSwapBuffers(appWindow::getWindow());
 
 		frameTime = glfwGetTime() - currentTimer;
-		if (frameTime < refreshingRate)
+		/*if (frameTime < refreshingRate)
 		{
 			usleep((refreshingRate - frameTime) * SEC_TO_MICROSEC);
-		}
+		}*/
 		if (fpsRefreshTime + 0.5 < currentTimer)
 		{
 			std::stringstream ss;

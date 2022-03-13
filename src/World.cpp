@@ -30,7 +30,17 @@ World::World()
 
 	Skybox::initialize(0.0013f, 1.2f, 1, 0);
 
-	auto initNewChunk = [](Chunk *chnk) {
+	//delete thread_pool;
+	unsigned int thread_max = std::thread::hardware_concurrency();
+	if (thread_max > 2)	 // See if relevent
+		thread_max = thread_max - 2;
+	std::cout << "Thread concurrent : " << thread_max << std::endl;
+	std::cout << "Thread pool size : " << thread_pool.size() << std::endl;
+	thread_pool.resize(thread_max);
+	std::cout << "Thread pool size : " << thread_pool.size() << std::endl;
+
+	auto initNewChunk = [](int id, Chunk *chnk) {
+		(void)id;
 		chnk->initChunk();
 	};
 	auto positions = getPosInRange(curPos, 0, CHUNK_VIEW_DISTANCE);
@@ -38,6 +48,7 @@ World::World()
 	{
 			Chunk* chnk = new Chunk(pos.x, pos.y, &camera);
 			visibleChunks.insert(std::pair<Vec2, Chunk*>(pos, chnk));
+			thread_pool.push(initNewChunk, chnk);
 	}
 	positions.clear();
 	positions = getPosInRange(curPos, CHUNK_VIEW_DISTANCE, MAX_PRELOAD_DISTANCE);
@@ -47,14 +58,14 @@ World::World()
 		{
 			Chunk* chnk = new Chunk(pos.x, pos.y, &camera);
 			preLoadedChunks.insert(std::pair<Vec2, Chunk*>(pos, chnk));
+			thread_pool.push(initNewChunk, chnk);
 		}
 	}
-	for (auto it : visibleChunks)
+	/*for (auto it : visibleChunks)
 	{
 		auto allocatedNeighbors = getAllocatedNeighbours(it.first);
 		it.second->setNeighbors(allocatedNeighbors);
-
-		std::thread worker(initNewChunk, it.second);
+				/*std::thread worker(initNewChunk, it.second);
 		worker.detach();
 	}
 	for (auto it : preLoadedChunks)
@@ -62,9 +73,9 @@ World::World()
 		auto allocatedNeighbors = getAllocatedNeighbours(it.first);
 		it.second->setNeighbors(allocatedNeighbors);
 
-		std::thread worker(initNewChunk, it.second);
+		/*std::thread worker(initNewChunk, it.second);
 		worker.detach();
-	}
+	}*/
 }
 
 World::~World()
@@ -275,7 +286,7 @@ void World::updateChunkBuffers(Vec2 newPos)
 	// Add new chunk to be preloaded
 	posBuffer.clear();
 	posBuffer = getPosInRange(newPos, CHUNK_VIEW_DISTANCE, MAX_PRELOAD_DISTANCE);
-	auto initNewChunkOnce = [](Chunk *chnk) { chnk->initChunk(); };
+	auto initNewChunk = [](int id, Chunk *chnk) { (void)id; chnk->initChunk(); };
 	Chunk *chnk;
 	for (Vec2& preloadedPositions : posBuffer) // TODO Load those in front first, who cares about the chunk behind us
 	{
@@ -284,8 +295,9 @@ void World::updateChunkBuffers(Vec2 newPos)
 			//auto allocatedNeighbours = getAllocatedNeighbours(preloadedPositions);
 			chnk = new Chunk(preloadedPositions.x, preloadedPositions.y, &camera);
 			preLoadedChunks.insert(std::pair<Vec2, Chunk*>(preloadedPositions, chnk));
-			std::thread worker(initNewChunkOnce, chnk);
-			worker.detach();
+			thread_pool.push(initNewChunk, chnk);
+			/*std::thread worker(initNewChunkOnce, chnk);
+			worker.detach();*/
 		}
 	}
 
@@ -301,8 +313,9 @@ void World::updateChunkBuffers(Vec2 newPos)
 				//auto allocatedNeighbours = getAllocatedNeighbours(key);
 				auto chnk = new Chunk(key.x, key.y, &camera);
 				visibleChunks.insert(std::pair<Vec2, Chunk*>(key, chnk));
-				std::thread worker(initNewChunkOnce, chnk);
-				worker.detach();
+				thread_pool.push(initNewChunk, chnk);
+				/*std::thread worker(initNewChunkOnce, chnk);
+				worker.detach();*/
 			}
 			else 
 			{
