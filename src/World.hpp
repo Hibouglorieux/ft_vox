@@ -21,13 +21,14 @@
 # include "Skybox.hpp"
 # include "Vec2.hpp"
 # include <map>
+# include <algorithm>
 # include "ctpl_stl.h"
 
 # define VIEW_DISTANCE 160
 # define ROW_OF_CHUNK 8
 //# define CHUNK_VIEW_DISTANCE (VIEW_DISTANCE / CHUNK_WIDTH + 1)
 # define CHUNK_VIEW_DISTANCE 10
-# define MAX_PRELOAD_DISTANCE ((float)CHUNK_VIEW_DISTANCE + 2)
+# define MAX_PRELOAD_DISTANCE ((float)CHUNK_VIEW_DISTANCE + 3)
 # define PRELOAD_DISTANCE_DEL ((float)CHUNK_VIEW_DISTANCE + 10)
 
 class World {
@@ -70,6 +71,7 @@ private:
 	std::map<Vec2, Chunk*> preLoadedChunks;
 
 	ctpl::thread_pool thread_pool;
+	bool update_locked;
 };
 
 #endif

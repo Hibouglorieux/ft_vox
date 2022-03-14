@@ -32,6 +32,7 @@ World::World()
 	Skybox::initialize(0.0013f, 1.2f, 1, 0);
 
 	thread_pool.resize(8);
+	update_locked = false;
 	
 	auto initNewChunk = [](int id, Chunk *chnk) {
 		(void)id;
@@ -215,15 +216,18 @@ void World::render()
 
 void World::update()
 {
+	if (update_locked)
+		return;
 	Vec2 newChunkPos = Chunk::worldCoordToChunk(camera.getPos());
 	if (curPos != newChunkPos && !freeze)
 	{
 		curPos = newChunkPos;
 		updateChunkBuffers(curPos);
+		//thread_pool.push([this](int id, Vec2 curPos){ (void)id; updateChunkBuffers(curPos); }, curPos);
 	}
 	printPos();
-
 }
+
 /**
  * @brief Function used to update the world buffers containing the visible and preloaded chunks.
  * 
@@ -231,6 +235,9 @@ void World::update()
  */
 void World::updateChunkBuffers(Vec2 newPos)
 {
+	if (update_locked)
+		return;
+	update_locked = true;
 	std::vector<Vec2> posBuffer = {};
 
 	// Clean chunks that are too far from the camera (save RAM)
@@ -290,13 +297,13 @@ void World::updateChunkBuffers(Vec2 newPos)
 			auto allocatedNeighbours = getAllocatedNeighbours(preloadedPositions);
 			chunks.push_back(new Chunk(preloadedPositions.x, preloadedPositions.y, &camera, allocatedNeighbours));
 			preLoadedChunks.insert(std::pair<Vec2, Chunk*>(preloadedPositions, chunks.back()));
-			thread_pool.push(initNewChunk, it.second);
+			thread_pool.push(initNewChunk, chunks.back());
 		}
 	}
 	/*std::thread worker(initNewChunks, chunks);
 	worker.detach();
-	auto initNewChunk = [](Chunk *chnk) { chnk->initChunk(); };
-	Chunk *chnk = NULL;*/
+	auto initNewChunk = [](Chunk *chnk) { chnk->initChunk(); };*/
+	Chunk *chnk = NULL;
 		
 	
 	//move from preloaded to visible // or load if thats not the case ?
@@ -324,10 +331,13 @@ void World::updateChunkBuffers(Vec2 newPos)
 			}
 		}
 	}
+	update_locked = false;
 }
 
 std::vector<Vec2> World::getPosInRange(Vec2 center, float minDistance, float maxDistance)
 {
+	//Vec3 camdir = camera.getDirection();
+
 	std::vector<Vec2> Positions;
 	for (int y = -maxDistance; y < maxDistance; y++)
 		for (int x = -maxDistance; x < maxDistance; x++)
@@ -341,6 +351,7 @@ std::vector<Vec2> World::getPosInRange(Vec2 center, float minDistance, float max
 					Positions.push_back(absolute);
 			}
 		}
+	std::sort(Positions.begin(), Positions.end(), [](Vec2 i, Vec2 j){ return i.getLength() < j.getLength(); });
 	return Positions;
 }
 
@@ -371,7 +382,6 @@ bool	World::shouldBeRendered(Vec2 chunkPos, const Chunk* chnk, Matrix& matrix)
 {
 	(void)chunkPos;
 	(void)matrix;
-
 	return (chnk->boundingVolume.isOnFrustum(camera.getFrustum()));
 }
 

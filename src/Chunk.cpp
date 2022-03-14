@@ -256,7 +256,7 @@ void Chunk::initChunk(void)
 			}
 		}
 	}
-	doWorleyCaves();
+	//doWorleyCaves();
 	//std::cout << max << std::endl;
 	if (max < CHUNK_HEIGHT)
 		max = max + 30;

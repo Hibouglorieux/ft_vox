@@ -124,7 +124,7 @@ void Skybox::draw(Matrix& precalculatedMat)
 	shader->use();
 	glUniformMatrix4fv(glGetUniformLocation(shader->getID(), "precalcMat"), 1, GL_TRUE, precalculatedMat.exportForGL());
 	glUniform1i(glGetUniformLocation(shader->getID(), "skyboxTexture"), TEXTURECOUNT);
-	glUniform1i(glGetUniformLocation(shader->getID(), "textureActive"), true);
+	glUniform1i(glGetUniformLocation(shader->getID(), "textureActive"), false);
 
 	//  TODO :	Keep the sun/moon update move outside of this file (put it in world)
 	//			And make the sun displacment stable (unrelated to framerate)
