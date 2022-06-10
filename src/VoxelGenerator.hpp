@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/10/15 13:08:43 by nathan            #+#    #+#             */
-/*   Updated: 2021/12/10 16:55:23 by nallani          ###   ########.fr       */
+/*   Updated: 2022/06/10 18:25:00 by nallani          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,11 +37,12 @@ enum blockType {
 
 #define BIG_HEIGHT_MAP_SIZE 1024
 #define WORLEY_SIZE 256
+#define WORLEY_Y_SIZE 128
 
 typedef std::array<std::array<std::array<unsigned char, WIDTH>, LENGTH>, HEIGHT> VoxelMap;
 typedef std::array<std::array<float, HEIGHTMAP_SIZE>, HEIGHTMAP_SIZE> HeightMap;
 typedef std::array<std::array<std::array<float, HEIGHTMAP_SIZE>, HEIGHTMAP_SIZE>, 64> CaveMap;
-typedef std::array<std::array<std::array<Vec3, WORLEY_SIZE>, WORLEY_SIZE>, WORLEY_SIZE> WorleyGradient;
+typedef std::array<std::array<std::array<Vec3, WORLEY_SIZE>, WORLEY_SIZE>, WORLEY_Y_SIZE> WorleyGradient;
 typedef std::array<std::array<float, BIG_HEIGHT_MAP_SIZE>, BIG_HEIGHT_MAP_SIZE> BigHeightMap;
 typedef std::array<std::array<std::array<float, 2>, GRADIENT_SIZE>, GRADIENT_SIZE> Gradients;
 //typedef std::array<std::array<std::array<float, HEIGHTMAP_SIZE>, HEIGHTMAP_SIZE>, HEIGHTMAP_SIZE> 3DHeightMap;

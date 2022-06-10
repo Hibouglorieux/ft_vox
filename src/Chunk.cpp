@@ -295,13 +295,15 @@ void Chunk::initChunk(void)
 }
 
 #define MAX_DEPTH_FOR_CAVED 3
-#define TMP_FLOOR_LEVEL 40
+#define TMP_FLOOR_LEVEL 20
 #define TMP_WORLEY_Y_DIVISOR (float)(TMP_FLOOR_LEVEL - MAX_DEPTH_FOR_CAVED)
 bool	Chunk::isBlockEmptyAfterWorley(float x, float y, float z)
 {
 	float xScaled = x / (float)(CHUNK_WIDTH - 1) + position.x / CHUNK_WIDTH;
 	float yScaled = y / TMP_WORLEY_Y_DIVISOR;
 	float zScaled = z / (float)(CHUNK_DEPTH - 1) + position.z / CHUNK_DEPTH;
+	//xScaled *= 0.5f;
+	//zScaled *= 0.5f;
 	float worleyValue = VoxelGenerator::getWorleyValueAt(xScaled, yScaled, zScaled);
 	/*
 	if (position == Vec3(0 * CHUNK_WIDTH, 0, -1 * CHUNK_DEPTH) || position == Vec3(0, 0, -2 * CHUNK_DEPTH))

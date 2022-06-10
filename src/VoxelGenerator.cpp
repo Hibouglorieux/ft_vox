@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/10/15 13:08:40 by nathan            #+#    #+#             */
-/*   Updated: 2022/01/29 16:01:08 by nathan           ###   ########.fr       */
+/*   Updated: 2022/06/10 17:53:55 by nallani          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,7 @@
 #include <iomanip>
 #include <cmath>
 #include <random>
+#include <algorithm>
 
 #define SCALE_HEIGHTMAP_TO_FRACTION_OF_NOISE ((float)1.0 / HEIGHTMAP_SIZE * GRADIENT_SIZE / (float)MAX_NB_OF_CHUNK)
 
@@ -126,7 +127,7 @@ WorleyGradient* VoxelGenerator::createWorleyGradient(unsigned int seed)
 	WorleyGradient* worley = new WorleyGradient;
 	for (int i = 0; i < WORLEY_SIZE; i++)
 		for (int j = 0; j < WORLEY_SIZE; j++)
-			for (int k = 0; k < WORLEY_SIZE; k++)
+			for (int k = 0; k < WORLEY_Y_SIZE; k++)
 			{
 				float& x = (*worley)[k][i][j][0];
 				float& y = (*worley)[k][i][j][1];
@@ -141,23 +142,28 @@ WorleyGradient* VoxelGenerator::createWorleyGradient(unsigned int seed)
 float	VoxelGenerator::getWorleyValueAt(float x, float y, float z)
 {
 	x = fmod((fmod(x, WORLEY_SIZE) + WORLEY_SIZE), WORLEY_SIZE);
-	y = fmod((fmod(y, WORLEY_SIZE) + WORLEY_SIZE), WORLEY_SIZE);
+	y = fmod((fmod(y, WORLEY_Y_SIZE) + WORLEY_Y_SIZE), WORLEY_Y_SIZE);
 	z = fmod((fmod(z, WORLEY_SIZE) + WORLEY_SIZE), WORLEY_SIZE);
 	float	unused;
 	Vec3 curPos(std::modf(x, &unused) - 0.5, std::modf(y, &unused) - 0.5, std::modf(z, &unused) - 0.5);// where is that point in the cube
+	std::vector<float> distances;
 	float min = 100.f;
 	for (int yy = y -1; yy < y + 2; yy++)
 		for (int zz = z -1; zz < z + 2; zz++)
 			for (int xx = x -1; xx < x + 2; xx++)
 			{
 				int xClamp = (xx % WORLEY_SIZE + WORLEY_SIZE) % WORLEY_SIZE;
-				int yClamp = (yy % WORLEY_SIZE + WORLEY_SIZE) % WORLEY_SIZE;
+				int yClamp = (yy % WORLEY_Y_SIZE + WORLEY_Y_SIZE) % WORLEY_Y_SIZE;
 				int zClamp = (zz % WORLEY_SIZE + WORLEY_SIZE) % WORLEY_SIZE;
-				Vec3 worleyPos((*worleyGradient)[xClamp][yClamp][zClamp] + (Vec3(xx - (int)x, yy - (int)y, zz - (int)z)));
+				Vec3 worleyPos((*worleyGradient)[yClamp][zClamp][xClamp] + (Vec3(xx - (int)x, yy - (int)y, zz - (int)z)));
 				float distance = (worleyPos - curPos).getLength();
+				distances.push_back(distance);
 				if (min > distance)
 					min = distance;
 			}
+	std::sort(distances.begin(), distances.end());
+	return (distances[0] / distances[2]);
+	return (distances[0] + distances[1] + distances[2]) / 3;
 	return min;
 }
 
