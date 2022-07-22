@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/07/21 18:11:30 by nathan            #+#    #+#             */
-/*   Updated: 2022/03/04 07:44:36 by nathan           ###   ########.fr       */
+/*   Updated: 2022/07/22 18:45:01 by nallani          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -123,7 +123,7 @@ void World::printPos() const
 	if (blocPos.z == CHUNK_DEPTH)
 		blocPos.z = 0;
 	ss << " at block pos x: " << blocPos.x << " y: " << (int)(camera.getPos().y + 0.5) << " z: " << blocPos.z;
-	PRINT_TO_SCREEN(ss.str());
+	//PRINT_TO_SCREEN(ss.str());
 }
 
 void World::render()
@@ -157,10 +157,6 @@ void World::render()
 	glUniform1i(glGetUniformLocation(shader->getID(), "bedrock"), BLOCK_BEDROCK);
 
 	ResourceManager::bindTextures();
-	/*
-	Vec3 tmpToDel;
-	RectangularCuboid::draw(tmpToDel, shader, nullptr);// One cube for test
-	*/
 	std::vector<std::pair<Vec2, Chunk*>> chunksToRender;
 	if (!freeze)
 	{
@@ -171,7 +167,7 @@ void World::render()
 			if (shouldBeRendered(pos, chnk, precalculatedMat))// TODO not working properly because it only takes 4 points on the same Y axis, either complexify it or keep it only for Z < 1
 			{
 				//printf("Rendering : (%i, %i)\n", pos.x, pos.y);
-				std::pair<Vec2, Chunk*> tmpPair(pos - curPos, chnk);
+				std::pair<Vec2, Chunk*> tmpPair(pos - curPos, chnk); // relative to playerPos
 				chunksToRender.push_back(tmpPair);
 
 				//threads.push_back(std::thread(chunkVisibilityUpdate, chnk, blocFreeze));
@@ -300,7 +296,6 @@ void World::updateChunkBuffers(Vec2 newPos)
 		{
 			if (preLoadedChunks.find(key) == preLoadedChunks.end())
 			{
-				//std::cerr << "SHOULDNT HAPPEN, tried to moved from preloaded to visible but it wasnt preloaded" << std::endl;
 				auto allocatedNeighbours = getAllocatedNeighbours(key);
 				chnk = new Chunk(key.x, key.y, &camera, allocatedNeighbours);
 				visibleChunks.insert(std::pair<Vec2, Chunk*>(key, chnk));

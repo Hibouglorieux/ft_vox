@@ -1,6 +1,5 @@
 #include "Chunk.hpp"
 #include <unistd.h>
-#include <thread>
 #include "TextManager.hpp"
 
 #define TMP_SLEEP_VALUE 0.05 * SEC_TO_MICROSEC
@@ -25,7 +24,6 @@ Chunk::Chunk(int x, int z, Camera *camera)
 	// How many solid bloc in chunk
 	hardBloc = 0;
 	hardBlocVisible = 0;
-	merge_ready = false;
 	init = false;
 	threadUseCount = 1;
 
@@ -267,25 +265,6 @@ void Chunk::initChunk(void)
 	updateVisibility();
 	//updateVisibilitySpace();
 
-	merge_ready = true; // see if really needed or if 'init' is enough
-
-	/*for (auto it : myNeighbours)
-	{
-		threadUseCount++;
-		Vec2 neighbourPos = it.first;
-		auto callBack = [this, neighbourPos]
-			(const BlocData& neighbourBlocs)
-			{this->updateVisibilityWithNeighbour(neighbourPos, neighbourBlocs, nullptr);
-			};
-		auto threadFunc = [myPos, callBack](const BlocData& bd, Chunk* neighbour){neighbour->updateVisibilityWithNeighbour(myPos, bd, callBack);};
-		threads.push_back(std::thread(threadFunc, blocs, it.second));
-		//it.second->updateVisibilityWithNeighbour(myPos, blocs, callBack);
-	}
-	for (std::thread& worker : threads)
-	{
-		worker.join();
-	}*/
-
 	init = true;
 
 	updateChunk = true;
@@ -345,54 +324,6 @@ Chunk::~Chunk(void)
 	glBindBuffer(GL_ARRAY_BUFFER, positionVBO);
 	glDeleteBuffers(1, &positionVBO);
 	totalChunks--;
-}
-
-void Chunk::updateVisibilityWithNeighbour(Vec2 NeighbourPos, const BlocData &neighbourBlocs, std::function<void(const BlocData &)> callBack)
-{
-	Vec2 relativePos = NeighbourPos - worldCoordToChunk(getPos());
-
-	while (!init) // this happens when a neighbours has finished initializing but the one being called to update hasnt finished yet
-	{
-		printf("I'm not ready yet !");
-		usleep(TMP_SLEEP_VALUE);
-	}
-	draw_safe.lock();
-	if (relativePos.x != 0)
-	{
-		int x = relativePos.x == -1 ? 0 : CHUNK_WIDTH - 1;
-		int neighbourX = x == 0 ? CHUNK_WIDTH - 1 : 0;
-		for (int y = 0; y < CHUNK_HEIGHT; y++)
-			for (int z = 0; z < CHUNK_DEPTH; z++)
-			{
-				struct bloc &bloc = blocs[y][z][x];
-				if (bloc.type != NO_TYPE && !bloc.visible && neighbourBlocs[y][z][neighbourX].type == NO_TYPE)
-				{
-					hardBlocVisible++;
-					bloc.visible = true;
-					updateChunk = true;
-				}
-			}
-	}
-	else // relativePos.y != 0
-	{
-		int z = relativePos.y == -1 ? 0 : CHUNK_DEPTH - 1;
-		int neighbourZ = z == 0 ? CHUNK_DEPTH - 1 : 0;
-		for (int y = 0; y < CHUNK_HEIGHT; y++)
-			for (int x = 0; x < CHUNK_WIDTH; x++)
-			{
-				struct bloc &bloc = blocs[y][z][x];
-				if (bloc.type != NO_TYPE && !bloc.visible && neighbourBlocs[y][neighbourZ][x].type == NO_TYPE)
-				{
-					hardBlocVisible++;
-					bloc.visible = true;
-					updateChunk = true;
-				}
-			}
-	}
-	draw_safe.unlock();
-	if (callBack)
-		callBack(blocs);
-	threadUseCount--;
 }
 
 void Chunk::updateVisibility(void)
@@ -1023,12 +954,8 @@ void Chunk::createQuad(Vec3 bottomLeft, Vec3 topLeft, Vec3 topRight, Vec3 bottom
 
 void Chunk::draw(Shader *shader)
 {
-	draw_safe.lock();
 	if (spaceBorder[0].size() == 0 || !init)
-	{
-		draw_safe.unlock();
 		return;
-	}
 	/*
 	if (position == Vec3(1 * CHUNK_WIDTH, 0, 1 * CHUNK_DEPTH))
 		std::cout << "in interesting chunk i have " << hardBlocVisible << " hardbloc visible" << std::endl;
@@ -1042,8 +969,6 @@ void Chunk::draw(Shader *shader)
 	//RectangularCuboid::drawFaceInstance(shader, positionVBO, typeVBO, hardBlocVisible, facesVBO);
 	RectangularCuboid::drawFaceInstance(shader, positionVBO, typeVBO, spaceBorder[0].size() + ghostBorder[0].size(), facesVBO);
 	//RectangularCuboid::drawQuad(shader, positionVBO, typeVBO);
-
-	draw_safe.unlock();
 }
 
 Vec2 Chunk::worldCoordToChunk(Vec3 worldPos)

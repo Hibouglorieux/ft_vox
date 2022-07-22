@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/05/24 15:40:30 by nathan            #+#    #+#             */
-/*   Updated: 2022/02/26 01:33:54 by nathan           ###   ########.fr       */
+/*   Updated: 2022/07/22 18:24:49 by nallani          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,6 +29,7 @@ private:
 	static void processInput();
 	static bool shouldStop;
 	static double frameTime;
+	static std::string lastFps;
 	static double fpsRefreshTime;
 	static unsigned char frameCount;
 	static double mouseX, mouseY;

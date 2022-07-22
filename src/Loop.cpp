@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/05/24 15:40:25 by nathan            #+#    #+#             */
-/*   Updated: 2022/03/04 06:26:47 by nathan           ###   ########.fr       */
+/*   Updated: 2022/07/22 18:26:42 by nallani          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,6 +19,7 @@
 
 bool Loop::shouldStop = false;
 double Loop::frameTime = 0.0f;
+std::string Loop::lastFps;
 const double Loop::refreshingRate = 1.0 / 60.0;
 std::vector<Object*> Loop::objects = {};
 World* Loop::world = nullptr;
@@ -52,27 +53,20 @@ void Loop::loop()
 			world->update();
 			world->render();
 		}
-		PRINT_TO_SCREEN("Hello World!");
-		//TextManager::print("Hello World!");
+		if (fpsRefreshTime + 1.f < currentTimer)
+		{
+			double fps = (float)frameCount / (currentTimer - fpsRefreshTime);
+			frameCount = 0;
+			fpsRefreshTime = currentTimer;
+			lastFps = "FPS: " + std::to_string(fps).substr(0, 4);
+		}
+		PRINT_TO_SCREEN(lastFps);
 		TextManager::tickPrint();
 		glFinish();
 
 		glfwSwapBuffers(appWindow::getWindow());
 
 		frameTime = glfwGetTime() - currentTimer;
-		if (frameTime < refreshingRate)
-		{
-			usleep((refreshingRate - frameTime) * SEC_TO_MICROSEC);
-		}
-		if (fpsRefreshTime + 0.5 < currentTimer)
-		{
-			std::stringstream ss;
-			double fps = (float)frameCount / (currentTimer - fpsRefreshTime);
-			ss << std::fixed << std::setprecision(1) << fps;
-			glfwSetWindowTitle(appWindow::getWindow(), std::string(PROJECT_NAME + std::string(" ") + std::to_string((int)round(fps)) + std::string(" fps")).c_str());
-			frameCount = 0;
-			fpsRefreshTime = currentTimer;
-		}
 	}
 }
 

@@ -41,7 +41,6 @@ public:
 	virtual ~Chunk(void);
 
 	bool	hasThreadFinished(void) {return threadUseCount == 0;}
-	void	increaseThreadCount(void) {threadUseCount++;}
 	virtual void	draw(Shader* shader) override;
 
 	Vec3	getPos() const { return position; }
@@ -111,11 +110,9 @@ private:
 
 	bool			updateChunk = true;
 	bool			init		= false;
-	bool			merge_ready = false;
 	unsigned char 	threadUseCount;
 	unsigned int 	hardBloc;
 	unsigned int 	hardBlocVisible;
-	std::mutex		draw_safe;
 
 	GLuint typeVBO, positionVBO, facesVBO;
 	std::vector<GLuint>	facesToRender;
@@ -126,6 +123,9 @@ private:
 	//float	getBlockBiome(int x, int z, bool setBlocInChunk = true, bool superFlat = false);
 
 	Camera	*playerCamera;
+
+
+
 };
 
 #endif
