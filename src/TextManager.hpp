@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/25 23:41:53 by nathan            #+#    #+#             */
-/*   Updated: 2022/02/27 10:22:37 by nathan           ###   ########.fr       */
+/*   Updated: 2022/08/25 16:45:32 by nathan           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,6 +36,7 @@ public:
 	static bool	init();
 	static void	print(const char* caller, std::string str, double duration = 1.0f);
 	static void tickPrint();// call only after draws have been made
+	static void clear();
 private:
 	static void	renderText(std::string stringToDraw, float x, float y, float scale, Vec3 color);
 

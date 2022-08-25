@@ -6,7 +6,7 @@
 /*   By: nathan <nallani@student.s19.be>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/05/24 01:52:59 by nathan            #+#    #+#             */
-/*   Updated: 2022/02/26 01:46:30 by nathan           ###   ########.fr       */
+/*   Updated: 2022/08/25 17:19:47 by nathan           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -72,8 +72,11 @@ int		main( int argc, char *argv[] )
 	Loop::loop();
 	std::cout << glGetError() << std::endl;
 	delete world;
+	TextManager::clear();
 	VoxelGenerator::clear();
 	RectangularCuboid::clear();
+	ResourceManager::deletePack();
 
+	glfwTerminate();
 	return 1;
 }

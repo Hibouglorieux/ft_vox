@@ -138,7 +138,7 @@ GreedyMesh::GreedyMesh(void)
 			}
 		}
 	}
-	delete mask;
+	delete[] mask;
 }
 
 void GreedyMesh::convertDataToRegion()

@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/25 23:41:51 by nathan            #+#    #+#             */
-/*   Updated: 2022/03/04 07:35:01 by nathan           ###   ########.fr       */
+/*   Updated: 2022/08/25 16:52:28 by nathan           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -97,6 +97,20 @@ bool	TextManager::init()
 	Matrix orthoMatrix = Matrix::createOrthoMatrix(0, appWindow::getWindowWidth(), 0, appWindow::getWindowHeight(), NEAR, FAR);
     glUniformMatrix4fv(glGetUniformLocation(shader->getID(), "projection"), 1, GL_TRUE, orthoMatrix.exportForGL());
 	return true;
+}
+
+void TextManager::clear()
+{
+	delete shader;
+	shader = nullptr;
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glDeleteBuffers(1, &VBO);
+	glDeleteVertexArrays(1, &VAO);
+	for (auto& pair : CharacterMap)
+	{
+		glDeleteTextures(1, &pair.second.TextureID);
+	}
+	CharacterMap.clear();
 }
 
 void	TextManager::renderText(std::string stringToDraw, float x, float y, float scale, Vec3 color)

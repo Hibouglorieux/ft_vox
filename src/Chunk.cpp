@@ -323,6 +323,8 @@ Chunk::~Chunk(void)
 	glDeleteBuffers(1, &typeVBO);
 	glBindBuffer(GL_ARRAY_BUFFER, positionVBO);
 	glDeleteBuffers(1, &positionVBO);
+	glBindBuffer(GL_ARRAY_BUFFER, facesVBO);
+	glDeleteBuffers(1, &facesVBO);
 	totalChunks--;
 }
 
