@@ -35,12 +35,6 @@ Chunk::Chunk(int x, int z, Camera *camera)
 	glGenBuffers(1, &typeVBO);
 	glGenBuffers(1, &positionVBO);
 	glGenBuffers(1, &facesVBO);
-
-	for (int i = 0; i < ITERATE_FACES; i++)
-	{
-		glGenBuffers(1, &graphicDataPerFace[i].textureVBO);
-		glGenBuffers(1, &graphicDataPerFace[i].positionVBO);
-	}
 }
 
 Chunk::Chunk(int x, int z, Camera *camera, std::vector<std::pair<Vec2, Chunk *>> neighbours) : Chunk(x, z, camera)
@@ -330,14 +324,6 @@ Chunk::~Chunk(void)
 	glBindBuffer(GL_ARRAY_BUFFER, facesVBO);
 	glDeleteBuffers(1, &facesVBO);
 	totalChunks--;
-
-	for (int i = 0; i < ITERATE_FACES; i++)
-	{
-		glBindBuffer(GL_ARRAY_BUFFER, graphicDataPerFace[i].textureVBO);
-		glDeleteBuffers(1, &graphicDataPerFace[i].textureVBO);
-		glBindBuffer(GL_ARRAY_BUFFER, graphicDataPerFace[i].positionVBO);
-		glDeleteBuffers(1, &graphicDataPerFace[i].positionVBO);
-	}
 }
 
 void Chunk::updateVisibility(void)
@@ -379,7 +365,6 @@ void Chunk::updateVisibilityBorder(int x, int y, int z, int xHeight, int zHeight
 {
 	int maxDiff = 0, face = 0;
 	/*float noiseX = 10, noiseZ = 10;
-	struct bloc ghostBloc = {BLOCK_DIRT, 0, spaceCount, 0, 0}, ghostBloc2 = {BLOCK_DIRT, 0, spaceCount, 0, 0};
 	bool ghost = false;*/
 	Vec3 pos;
 
@@ -454,6 +439,41 @@ void Chunk::updateVisibilityBorder(int x, int y, int z, int xHeight, int zHeight
 			updateVisibilityBorderWithNeighbors(x, y, z + (face == SOUTH ? -1 : face == NORTH ? 1 : 0), face);
 	}
 
+	/*if ((x == 0 || x == CHUNK_WIDTH - 1) && (z == 0 || z == CHUNK_DEPTH - 1)) // corners
+	{
+		if ((x == 0 || x == CHUNK_WIDTH - 1) && noiseX < CAVE_THRESHOLD && blocs[y][z][x].type == NO_TYPE)
+			ghostBloc.faces |= x != 0 ? LEFT_NEIGHBOUR : RIGHT_NEIGHBOUR;
+		if ((z == 0 || z == CHUNK_DEPTH - 1) && noiseZ < CAVE_THRESHOLD && blocs[y][z][x].type == NO_TYPE)
+			ghostBloc2.faces |= z != 0 ? BACK_NEIGHBOUR : FRONT_NEIGHBOUR;
+		if (ghostBloc.faces != 0 || ghostBloc2.faces != 0)
+		{
+			ghost = true;
+			while (ghostBorder.size() < (long unsigned)(spaceCount + 1))
+				ghostBorder.push_back({});
+		}
+		if (ghostBloc.faces != 0)
+			ghostBorder[spaceCount].push_back({ghostBloc, Vec3((x == 0 ? x - 1 : x + 1), y, z)});
+		if (ghostBloc2.faces != 0)
+			ghostBorder[spaceCount].push_back({ghostBloc2, Vec3(x, y, (z == 0 ? z - 1 : z + 1 ))});
+	}
+	else // the rest
+	{
+		if ((x == 0 || x == CHUNK_WIDTH - 1) && noiseX < CAVE_THRESHOLD && blocs[y][z][x].type == NO_TYPE)
+			ghostBloc.faces |= x != 0 ? LEFT_NEIGHBOUR : RIGHT_NEIGHBOUR;
+		else if ((z == 0 || z == CHUNK_DEPTH - 1) && noiseZ < CAVE_THRESHOLD && blocs[y][z][x].type == NO_TYPE)
+			ghostBloc.faces |= z != 0 ? BACK_NEIGHBOUR : FRONT_NEIGHBOUR;
+		if (ghostBloc.faces != 0)
+		{
+			while (ghostBorder.size() < (long unsigned)(spaceCount + 1))
+				ghostBorder.push_back({});
+			if (x == 0 || x == CHUNK_WIDTH - 1)
+				ghostBorder[spaceCount].push_back({ghostBloc, Vec3((x == 0 ? x - 1 : x + 1), y, z)});
+			else if (z == 0 || z == CHUNK_DEPTH - 1)
+				ghostBorder[spaceCount].push_back({ghostBloc, Vec3(x, y, (z == 0 ? z - 1 : z + 1 ))});
+			ghost = true;
+		}
+	}*/
+	
 	GLuint faces = 0;
 	if ((xHeight > -1 && xHeight < y))
 		faces |= x == 0 ? LEFT_NEIGHBOUR : RIGHT_NEIGHBOUR;
@@ -675,6 +695,10 @@ GLuint Chunk::setVisibilityByNeighbors(int x, int y, int z) // Activates visibil
 			visibleFaces |= currentFace;
 		}
 	}
+	if (position == Vec3(0 * CHUNK_WIDTH, 0, -2 * CHUNK_DEPTH) && x == 1 && y == 3 && z == 15)
+	{
+		std::cout << "for x == 1 and z == " << z << " i have " << border_neighbors.size() << " neighbours" << std::endl;
+	}
 	
 	int i = 0;
 	for (auto it : border_neighbors)
@@ -688,7 +712,13 @@ GLuint Chunk::setVisibilityByNeighbors(int x, int y, int z) // Activates visibil
 			visibleFaces |= currentFace;
 		}
 		++i;
+		if (x == 1 && y == 2 && z == 15 && (position == Vec3(0 * CHUNK_WIDTH, 0, -2 * CHUNK_DEPTH)))
+		{
+			std::cout << "for z == " << z << " i get blockempty: " << isBlockEmpty << " and maxheight == " << max_height << " and y == " << y << std::endl;
+		}
 	}
+	if (x == 1 && y == 2 && z == 15 && (position == Vec3(0 * CHUNK_WIDTH, 0, -2 * CHUNK_DEPTH)))
+		printf("value for block:%d, visibility:%d, faces:%d\n", bloc->type, (int)bloc->visible, visibleFaces);
 
 
 	bloc->faces |= visibleFaces;
@@ -701,12 +731,12 @@ bool Chunk::generatePosOffsets(void)
 	// TODO : Implement way of knowing which bloc should be shown to avoid loading
 	//		too much data.
 	// Should generate position of each bloc based on the chunk position
+	Matrix mat;
 	unsigned int i = 0;
 	if (updateChunk)
 	{
 		GLfloat *WIP_transform = new GLfloat[spaceBorder[0].size() * 3]; //CHUNK_HEIGHT * CHUNK_WIDTH * CHUNK_DEPTH * 3];
 		GLint *WIP_type = new GLint[spaceBorder[0].size()];
-		GLint *WIP_texture = new GLint[spaceBorder[0].size()];
 		unsigned int indexX = 0;
 		unsigned int indexY = 0;
 		unsigned int indexZ = 0;
@@ -725,30 +755,6 @@ bool Chunk::generatePosOffsets(void)
 			WIP_transform[indexY] = position.y + blockVec.y;
 			WIP_transform[indexZ] = position.z + blockVec.z;
 		}
-		for (int currentFace = 0; currentFace < ITERATE_FACES; currentFace++)
-		{
-			i = 0;
-			int facesAddedCount = 0;
-			for (auto blockVec : spaceBorder[0])
-			{
-				if (facesToRender[i] & (1 << currentFace))
-				{
-					WIP_transform[indexX] = position.x + blockVec.x;
-					WIP_transform[indexY] = position.y + blockVec.y;
-					WIP_transform[indexZ] = position.z + blockVec.z;
-					WIP_texture[i] = blocs[blockVec.y][blockVec.z][blockVec.x].type;
-					facesAddedCount++;
-				}
-				i++;
-			}
-			graphicDataPerFace[currentFace].count = facesAddedCount;
-			glBindBuffer(GL_ARRAY_BUFFER, graphicDataPerFace[currentFace].positionVBO);
-			glBufferData(GL_ARRAY_BUFFER, facesAddedCount * 3 * sizeof(float), WIP_transform, GL_STATIC_DRAW);
-
-			glBindBuffer(GL_ARRAY_BUFFER, graphicDataPerFace[currentFace].textureVBO);
-			glBufferData(GL_ARRAY_BUFFER, facesAddedCount * sizeof(int), WIP_texture, GL_STATIC_DRAW);
-		}
-
 		glBindBuffer(GL_ARRAY_BUFFER, positionVBO);
 		glBufferData(GL_ARRAY_BUFFER, spaceBorder[0].size() * 3 * sizeof(float),
 					 WIP_transform, GL_STATIC_DRAW);
@@ -759,13 +765,11 @@ bool Chunk::generatePosOffsets(void)
 					 WIP_type, GL_STATIC_DRAW);
 		delete[] WIP_type;
 
-		if ((spaceBorder[0].size()) != facesToRender.size())
+		if (spaceBorder[0].size() != facesToRender.size())
 			std::cout << "Error : wtf problem with visible blocs and faces" << std::endl;
 		glBindBuffer(GL_ARRAY_BUFFER, facesVBO);
 		glBufferData(GL_ARRAY_BUFFER, facesToRender.size() * sizeof(GLuint),
 					 facesToRender.data(), GL_STATIC_DRAW);
-
-		delete[] WIP_texture;
 
 		updateChunk = false;
 		return true;
@@ -942,22 +946,7 @@ void Chunk::draw(Shader *shader)
 	//RectangularCuboid::drawInstance(shader, positionVBO, typeVBO, hardBlocVisible);
 	//RectangularCuboid::drawFace(shader, positionVBO, typeVBO, hardBlocVisible, facesToRender);
 	//RectangularCuboid::drawFaceInstance(shader, positionVBO, typeVBO, hardBlocVisible, facesVBO);
-	
 	RectangularCuboid::drawFaceInstance(shader, positionVBO, typeVBO, spaceBorder[0].size(), facesVBO);
-	FrontFace::draw(shader, graphicDataPerFace[FRONT].positionVBO,
-			graphicDataPerFace[FRONT].textureVBO, graphicDataPerFace[FRONT].count);
-	BackFace::draw(shader, graphicDataPerFace[BACK].positionVBO,
-			graphicDataPerFace[BACK].textureVBO, graphicDataPerFace[BACK].count);
-	LeftFace::draw(shader, graphicDataPerFace[LEFT].positionVBO,
-			graphicDataPerFace[LEFT].textureVBO, graphicDataPerFace[LEFT].count);
-	RightFace::draw(shader, graphicDataPerFace[RIGHT].positionVBO,
-			graphicDataPerFace[RIGHT].textureVBO, graphicDataPerFace[RIGHT].count);
-	BottomFace::draw(shader, graphicDataPerFace[BOTTOM].positionVBO,
-			graphicDataPerFace[BOTTOM].textureVBO, graphicDataPerFace[BOTTOM].count);
-	TopFace::draw(shader, graphicDataPerFace[TOP].positionVBO,
-			graphicDataPerFace[TOP].textureVBO, graphicDataPerFace[TOP].count);
-			
-
 	//RectangularCuboid::drawQuad(shader, positionVBO, typeVBO);
 }
 

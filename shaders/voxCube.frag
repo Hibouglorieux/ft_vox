@@ -9,14 +9,7 @@ flat in int texId;
 
 uniform bool color = false;
 
-uniform samplerCube water;
-uniform samplerCube sand;
-uniform samplerCube dirt;
-uniform samplerCube grass;
-uniform samplerCube grass_snow;
-uniform samplerCube stone;
-uniform samplerCube snow;
-uniform samplerCube bedrock;
+uniform samplerCube[8] allTextures;
 
 float interpolate(float value, float minimum, float maximum)
 {
@@ -28,7 +21,6 @@ float interpolate(float value, float minimum, float maximum)
 
 void main()
 {
-	int tmp = texId;
 	// Texture
 
 	// Gradient color
@@ -48,29 +40,5 @@ void main()
 	}
 	else
 	*/
-	FragColor = vec4(0, (ceil(vertexPos.y) / 512 + 0.5) *  interpolate(vertexPosFromCamera.z, 70.f, 140.f), 0, 1.0);
-	/*
-	{
-	
-		//tmp = tex;
-		if (tmp == 0)
-			FragColor = texture(water, texCoord);
-		else if (tmp == 1)
-			FragColor = texture(sand, texCoord);
-		else if (tmp == 2)
-			FragColor = texture(dirt, texCoord);
-		else if (tmp == 3)
-			FragColor = texture(grass, texCoord);
-		else if (tmp == 4)
-			FragColor = texture(grass_snow, texCoord);
-		else if (tmp == 5)
-			FragColor = texture(stone, texCoord);
-		else if (tmp == 6)
-			FragColor = texture(snow, texCoord);
-		else if (tmp == 7)
-			FragColor = texture(bedrock, texCoord);
-		else 
-			FragColor = vec4(1., 0, 0, 1.0); // show in red to debug
-	}
-	*/
+		FragColor = texture(allTextures[texId], texCoord);
 }

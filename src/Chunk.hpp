@@ -16,7 +16,6 @@
 # include <mutex>
 # include <memory>
 # include <algorithm>
-#include "Faces.hpp"
 
 # define CHUNK_HEIGHT HEIGHT
 
@@ -29,22 +28,6 @@
 # define EAST	2
 # define SOUTH	3
 # define WEST	4
-
-
-#define BACK 0
-#define FRONT 1
-#define LEFT 2
-#define RIGHT 3
-#define BOTTOM 4
-#define TOP 5
-#define ITERATE_FACES 6
-
-struct DataToRender
-{
-	GLuint textureVBO;
-	GLuint positionVBO;
-	unsigned int count;
-};
 
 class Chunk : public Object{
 public:
@@ -66,8 +49,6 @@ public:
 	static	Vec2 worldCoordToChunk(Vec3 worldPos);
 	static	int totalChunks;
 	AABB	boundingVolume = AABB(Vec3(0, 0, 0), Vec3(CHUNK_WIDTH, CHUNK_HEIGHT, CHUNK_DEPTH));
-	bool			updateChunk = true;
-	bool			init		= false;
 private:
 	struct bloc
 	{
@@ -126,13 +107,14 @@ private:
 	BlocSpaceBorder								spaceBorder;
 	std::array<int, CHUNK_SIZE> 				spaceESize;
 
+	bool			updateChunk = true;
+	bool			init		= false;
 	unsigned char 	threadUseCount;
 	unsigned int 	hardBloc;
 	unsigned int 	hardBlocVisible;
 
 	GLuint typeVBO, positionVBO, facesVBO;
 	std::vector<GLuint>	facesToRender;
-	DataToRender graphicDataPerFace[ITERATE_FACES];
 
 	std::vector<std::pair<Vec2, Chunk*>> myNeighbours; // Should have at most 4 neigbhors
 

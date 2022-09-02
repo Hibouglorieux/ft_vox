@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/07/21 18:11:30 by nathan            #+#    #+#             */
-/*   Updated: 2022/09/02 22:18:18 by nallani          ###   ########.fr       */
+/*   Updated: 2022/09/02 23:05:43 by nallani          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -147,14 +147,8 @@ void World::render()
 	glUniformMatrix4fv(glGetUniformLocation(shader->getID(), "precalcMat"), 1, GL_TRUE, precalculatedMat.exportForGL());
 	glUniformMatrix4fv(glGetUniformLocation(shader->getID(), "view"), 1, GL_TRUE, camera.getMatrix().exportForGL());
 
-	glUniform1i(glGetUniformLocation(shader->getID(), "water"), BLOCK_WATER);
-	glUniform1i(glGetUniformLocation(shader->getID(), "sand"), BLOCK_SAND);
-	glUniform1i(glGetUniformLocation(shader->getID(), "dirt"), BLOCK_DIRT);
-	glUniform1i(glGetUniformLocation(shader->getID(), "grass"), BLOCK_GRASS);
-	glUniform1i(glGetUniformLocation(shader->getID(), "grass_snow"), BLOCK_GRASS_SNOW);
-	glUniform1i(glGetUniformLocation(shader->getID(), "stone"), BLOCK_STONE);
-	glUniform1i(glGetUniformLocation(shader->getID(), "snow"), BLOCK_SNOW);
-	glUniform1i(glGetUniformLocation(shader->getID(), "bedrock"), BLOCK_BEDROCK);
+	int allTextures[8] = {BLOCK_WATER, BLOCK_SAND, BLOCK_DIRT, BLOCK_GRASS, BLOCK_GRASS_SNOW, BLOCK_STONE, BLOCK_SNOW, BLOCK_BEDROCK};
+	glUniform1iv(glGetUniformLocation(shader->getID(), "allTextures"), 8, allTextures);
 
 	ResourceManager::bindTextures();
 	std::vector<std::pair<Vec2, Chunk*>> chunksToRender;
