@@ -40,7 +40,6 @@ Chunk::Chunk(int x, int z, Camera *camera)
 	{
 		glGenBuffers(1, &graphicDataPerFace[i].textureVBO);
 		glGenBuffers(1, &graphicDataPerFace[i].positionVBO);
-		std::cout << graphicDataPerFace[i].textureVBO << " and " << graphicDataPerFace[i].positionVBO << std::endl;
 	}
 }
 
@@ -335,10 +334,8 @@ Chunk::~Chunk(void)
 	for (int i = 0; i < ITERATE_FACES; i++)
 	{
 		glBindBuffer(GL_ARRAY_BUFFER, graphicDataPerFace[i].textureVBO);
-		std::cout << "deleting text buffer " << graphicDataPerFace[i].textureVBO << std::endl;
 		glDeleteBuffers(1, &graphicDataPerFace[i].textureVBO);
 		glBindBuffer(GL_ARRAY_BUFFER, graphicDataPerFace[i].positionVBO);
-		std::cout << "deleting pos buffer " << graphicDataPerFace[i].positionVBO << std::endl;
 		glDeleteBuffers(1, &graphicDataPerFace[i].positionVBO);
 	}
 }
@@ -744,11 +741,12 @@ bool Chunk::generatePosOffsets(void)
 				}
 				i++;
 			}
+			graphicDataPerFace[currentFace].count = facesAddedCount;
 			glBindBuffer(GL_ARRAY_BUFFER, graphicDataPerFace[currentFace].positionVBO);
 			glBufferData(GL_ARRAY_BUFFER, facesAddedCount * 3 * sizeof(float), WIP_transform, GL_STATIC_DRAW);
 
 			glBindBuffer(GL_ARRAY_BUFFER, graphicDataPerFace[currentFace].textureVBO);
-			glBufferData(GL_ARRAY_BUFFER, facesAddedCount * 3 * sizeof(int), WIP_texture, GL_STATIC_DRAW);
+			glBufferData(GL_ARRAY_BUFFER, facesAddedCount * sizeof(int), WIP_texture, GL_STATIC_DRAW);
 		}
 
 		glBindBuffer(GL_ARRAY_BUFFER, positionVBO);
@@ -944,7 +942,22 @@ void Chunk::draw(Shader *shader)
 	//RectangularCuboid::drawInstance(shader, positionVBO, typeVBO, hardBlocVisible);
 	//RectangularCuboid::drawFace(shader, positionVBO, typeVBO, hardBlocVisible, facesToRender);
 	//RectangularCuboid::drawFaceInstance(shader, positionVBO, typeVBO, hardBlocVisible, facesVBO);
+	
 	RectangularCuboid::drawFaceInstance(shader, positionVBO, typeVBO, spaceBorder[0].size(), facesVBO);
+	FrontFace::draw(shader, graphicDataPerFace[FRONT].positionVBO,
+			graphicDataPerFace[FRONT].textureVBO, graphicDataPerFace[FRONT].count);
+	BackFace::draw(shader, graphicDataPerFace[BACK].positionVBO,
+			graphicDataPerFace[BACK].textureVBO, graphicDataPerFace[BACK].count);
+	LeftFace::draw(shader, graphicDataPerFace[LEFT].positionVBO,
+			graphicDataPerFace[LEFT].textureVBO, graphicDataPerFace[LEFT].count);
+	RightFace::draw(shader, graphicDataPerFace[RIGHT].positionVBO,
+			graphicDataPerFace[RIGHT].textureVBO, graphicDataPerFace[RIGHT].count);
+	BottomFace::draw(shader, graphicDataPerFace[BOTTOM].positionVBO,
+			graphicDataPerFace[BOTTOM].textureVBO, graphicDataPerFace[BOTTOM].count);
+	TopFace::draw(shader, graphicDataPerFace[TOP].positionVBO,
+			graphicDataPerFace[TOP].textureVBO, graphicDataPerFace[TOP].count);
+			
+
 	//RectangularCuboid::drawQuad(shader, positionVBO, typeVBO);
 }
 

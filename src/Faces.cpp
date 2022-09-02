@@ -6,7 +6,7 @@
 /*   By: nallani <nallani@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/02 17:36:04 by nallani           #+#    #+#             */
-/*   Updated: 2022/09/02 18:30:29 by nallani          ###   ########.fr       */
+/*   Updated: 2022/09/02 22:37:12 by nallani          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -71,4 +71,56 @@ void Face::Clear()
 	glDeleteBuffers(1, &VBO);
 	glDeleteVertexArrays(1, &VAO);
 	setInitialized(false);
+}
+
+void Face::drawCommon(Shader* shader, GLuint positionVBO, GLuint TextureVBO, unsigned int count)
+{
+	glBindBuffer(GL_ARRAY_BUFFER, positionVBO);
+
+	glEnableVertexAttribArray(10);
+	glVertexAttribPointer(10, 3, GL_FLOAT, GL_TRUE, 3 * sizeof(float), (void*)(0));
+	glVertexAttribDivisor(10, 1); // on index2, the array is updated on each different instance (second argument == 1) (otherwise it wouldt be updated)
+
+	glBindBuffer(GL_ARRAY_BUFFER, TextureVBO);
+	glEnableVertexAttribArray(11);
+	glVertexAttribIPointer(11, 1, GL_INT, sizeof(GLint), (void*)(0));
+	glVertexAttribDivisor(11, 1);
+
+	glUniform1i(glGetUniformLocation(shader->getID(), "color"), GL_TRUE);
+	glDrawArraysInstanced(GL_TRIANGLES, 0, 36, count);
+}
+
+void FrontFace::draw(Shader* shader, GLuint positionVBO, GLuint TextureVBO, unsigned int count)
+{
+	glBindVertexArray(VAO);
+	Face::drawCommon(shader, positionVBO, TextureVBO, count);
+}
+
+void BackFace::draw(Shader* shader, GLuint positionVBO, GLuint TextureVBO, unsigned int count)
+{
+	glBindVertexArray(VAO);
+	Face::drawCommon(shader, positionVBO, TextureVBO, count);
+}
+void BottomFace::draw(Shader* shader, GLuint positionVBO, GLuint TextureVBO, unsigned int count)
+{
+	glBindVertexArray(VAO);
+	Face::drawCommon(shader, positionVBO, TextureVBO, count);
+}
+
+void TopFace::draw(Shader* shader, GLuint positionVBO, GLuint TextureVBO, unsigned int count)
+{
+	glBindVertexArray(VAO);
+	Face::drawCommon(shader, positionVBO, TextureVBO, count);
+}
+
+void LeftFace::draw(Shader* shader, GLuint positionVBO, GLuint TextureVBO, unsigned int count)
+{
+	glBindVertexArray(VAO);
+	Face::drawCommon(shader, positionVBO, TextureVBO, count);
+}
+
+void RightFace::draw(Shader* shader, GLuint positionVBO, GLuint TextureVBO, unsigned int count)
+{
+	glBindVertexArray(VAO);
+	Face::drawCommon(shader, positionVBO, TextureVBO, count);
 }

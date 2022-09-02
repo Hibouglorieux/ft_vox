@@ -16,6 +16,7 @@
 # include <mutex>
 # include <memory>
 # include <algorithm>
+#include "Faces.hpp"
 
 # define CHUNK_HEIGHT HEIGHT
 
@@ -42,6 +43,7 @@ struct DataToRender
 {
 	GLuint textureVBO;
 	GLuint positionVBO;
+	unsigned int count;
 };
 
 class Chunk : public Object{

@@ -28,10 +28,11 @@ float interpolate(float value, float minimum, float maximum)
 
 void main()
 {
-	int tmp = texId; // TODO wtf this is incorrect
+	int tmp = texId;
 	// Texture
 
 	// Gradient color
+	/*
 	if (color)
 	{
 		float w = ceil(vertexPos.y) / 512.0 + 0.5;
@@ -46,7 +47,11 @@ void main()
 			FragColor = vec4(1, 0, 1, 1.0); // show in red to debug
 	}
 	else
+	*/
+	FragColor = vec4(0, (ceil(vertexPos.y) / 512 + 0.5) *  interpolate(vertexPosFromCamera.z, 70.f, 140.f), 0, 1.0);
+	/*
 	{
+	
 		//tmp = tex;
 		if (tmp == 0)
 			FragColor = texture(water, texCoord);
@@ -67,4 +72,5 @@ void main()
 		else 
 			FragColor = vec4(1., 0, 0, 1.0); // show in red to debug
 	}
+	*/
 }

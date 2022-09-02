@@ -6,7 +6,7 @@
 /*   By: nallani <nallani@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/02 17:35:56 by nallani           #+#    #+#             */
-/*   Updated: 2022/09/02 18:24:37 by nallani          ###   ########.fr       */
+/*   Updated: 2022/09/02 22:37:19 by nallani          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,7 @@
 # define FACES_CLASS_H
 
 #include <GL/glew.h>
+#include "Shader.hpp"
 
 struct VerticeArrayData
 {
@@ -34,6 +35,8 @@ public:
 	//draw()
 protected:
 
+	static void drawCommon(Shader* shader, GLuint positionVBO, GLuint TextureVBO, unsigned int count);
+
 	virtual bool getInitialized() = 0;
 	virtual void setInitialized(bool value) = 0;
 	virtual const VerticeArrayData getVerticesData() = 0;
@@ -49,7 +52,7 @@ class FrontFace : public Face{
 public:
 	FrontFace(void) {Face::Initialize();};
 	virtual ~FrontFace(void) {Face::Clear();};
-	//static draw();
+	static void draw(Shader* shader, GLuint positionVBO, GLuint TextureVBO, unsigned int count);
 protected:
 	virtual bool getInitialized() override {return initialized;} ;
 	virtual void setInitialized(bool value) override {initialized = value;} ;
@@ -79,7 +82,7 @@ class BackFace : public Face{
 public:
 	BackFace(void) {Face::Initialize();};
 	virtual ~BackFace(void) {Face::Clear();};
-	//static draw();
+	static void draw(Shader* shader, GLuint positionVBO, GLuint TextureVBO, unsigned int count);
 protected:
 	virtual bool getInitialized() override {return initialized;} ;
 	virtual void setInitialized(bool value) override {initialized = value;} ;
@@ -109,7 +112,7 @@ class LeftFace : public Face{
 public:
 	LeftFace(void) {Face::Initialize();};
 	virtual ~LeftFace(void) {Face::Clear();};
-	//static draw();
+	static void draw(Shader* shader, GLuint positionVBO, GLuint TextureVBO, unsigned int count);
 protected:
 	virtual bool getInitialized() override {return initialized;} ;
 	virtual void setInitialized(bool value) override {initialized = value;} ;
@@ -140,7 +143,7 @@ class RightFace : public Face{
 public:
 	RightFace(void) {Face::Initialize();};
 	virtual ~RightFace(void) {Face::Clear();};
-	//static draw();
+	static void draw(Shader* shader, GLuint positionVBO, GLuint TextureVBO, unsigned int count);
 protected:
 	virtual bool getInitialized() override {return initialized;} ;
 	virtual void setInitialized(bool value) override {initialized = value;} ;
@@ -171,7 +174,7 @@ class BottomFace : public Face{
 public:
 	BottomFace(void) {Face::Initialize();};
 	virtual ~BottomFace(void) {Face::Clear();};
-	//static draw();
+	static void draw(Shader* shader, GLuint positionVBO, GLuint TextureVBO, unsigned int count);
 protected:
 	virtual bool getInitialized() override {return initialized;} ;
 	virtual void setInitialized(bool value) override {initialized = value;} ;
@@ -202,7 +205,7 @@ class TopFace : public Face{
 public:
 	TopFace(void) {Face::Initialize();};
 	virtual ~TopFace(void) {Face::Clear();};
-	//static draw();
+	static void draw(Shader* shader, GLuint positionVBO, GLuint TextureVBO, unsigned int count);
 protected:
 	virtual bool getInitialized() override {return initialized;} ;
 	virtual void setInitialized(bool value) override {initialized = value;} ;
