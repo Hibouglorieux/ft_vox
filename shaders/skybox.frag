@@ -17,6 +17,7 @@ uniform bool	textureActive;
 
 void main()
 {
+	/*
 	if (!textureActive)
 	{
 		vec3 moonPos = -sunPos;
@@ -36,9 +37,13 @@ void main()
 	else
 	{
 		float r = texture(skyboxTexture, texCoord).r;
-		if (r < 0.75)
+	*/
+		FragColor = texture(skyboxTexture, texCoord);
+		/*
+		//if (r < 0.75)
 		FragColor = vec4(r, r, r, 1.0);
 		else
 		FragColor = vec4(0, 0, r, 1.0);
-	}
+		*/
+	//}
 }

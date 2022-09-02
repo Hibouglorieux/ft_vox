@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/10/20 18:53:42 by nathan            #+#    #+#             */
-/*   Updated: 2022/02/11 16:08:30 by nathan           ###   ########.fr       */
+/*   Updated: 2022/09/02 16:56:58 by nallani          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,6 +22,7 @@ Vec3 Skybox::playerPos = Vec3(0, 0, 0);
 
 void Skybox::initialize(float freq, float amp, int octaves, int depth)
 {
+	/*
 	std::vector<std::string> names = 
 	{{"skybox/right.jpg"},
 	{"skybox/left.jpg"},
@@ -29,6 +30,14 @@ void Skybox::initialize(float freq, float amp, int octaves, int depth)
 	{"skybox/bottom.jpg"},// TODO temporary not used to see heightmap instead
 	{"skybox/front.jpg"},
 	{"skybox/back.jpg"}};
+	*/
+	std::vector<std::string> names = 
+	{{"skybox/Daylight Box_Right.bmp"},
+	{"skybox/Daylight Box_Left.bmp"},
+	{"skybox/Daylight Box_Top.bmp"},
+	{"skybox/Daylight Box_Bottom.bmp"},
+	{"skybox/Daylight Box_Front.bmp"},
+	{"skybox/Daylight Box_Back.bmp"}};
 	
 	(void)freq;
 	(void)amp;
@@ -39,9 +48,8 @@ void Skybox::initialize(float freq, float amp, int octaves, int depth)
 	//HeightMap *heightmap = VoxelGenerator::createMap(1, 1);
 	//texture = new Texture(names, *bigHeightMap, freq, amp, octaves, depth);
 
-	//texture = new Texture(names, *caveMap);
-	
-	texture = new Texture(42.0f);// noiseTest 
+	texture = new Texture(names, "skybox");
+	//texture = new Texture(42.0f);// noiseTest 
 	glActiveTexture(GL_TEXTURE0 + TEXTURECOUNT);// TODO this is a shortcut and is simply added as the last array of textures using, should be included in the enum or have a better variable name
 	glBindTexture(GL_TEXTURE_CUBE_MAP, texture->getID());
 	
