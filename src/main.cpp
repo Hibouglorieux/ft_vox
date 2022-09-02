@@ -6,7 +6,7 @@
 /*   By: nathan <nallani@student.s19.be>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/05/24 01:52:59 by nathan            #+#    #+#             */
-/*   Updated: 2022/08/25 17:19:47 by nathan           ###   ########.fr       */
+/*   Updated: 2022/09/02 18:28:40 by nallani          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,6 +19,7 @@
 #include "Chunk.hpp"
 #include "VoxelGenerator.hpp"
 #include "TextManager.hpp"
+#include "Faces.hpp"
 
 #define DEFAULT_SEED 42
 
@@ -40,6 +41,19 @@ int	initialize()
 	glClearColor(0.2, 0.2, 0.2, 1.0f);
 
 	return (1);
+}
+
+std::vector<Face*> getFaces() // initializes faces data
+{
+	std::vector<Face*> faces;
+	faces.push_back(new FrontFace());
+	faces.push_back(new BackFace());
+	faces.push_back(new BottomFace());
+	faces.push_back(new TopFace());
+	faces.push_back(new LeftFace());
+	faces.push_back(new RightFace());
+
+	return faces;
 }
 
 int		main( int argc, char *argv[] )
@@ -65,6 +79,7 @@ int		main( int argc, char *argv[] )
 
 	VoxelGenerator::initialize(seed);
 	VoxelGenerator::initialize(seed, true);
+	std::vector<Face*> initFaces = getFaces();
 	World* world = new World();
 
 	Loop::setWorld(world);
@@ -76,6 +91,11 @@ int		main( int argc, char *argv[] )
 	VoxelGenerator::clear();
 	RectangularCuboid::clear();
 	ResourceManager::deletePack();
+
+	for (Face* face : initFaces)
+	{
+		delete face;
+	}
 
 	glfwTerminate();
 	return 1;

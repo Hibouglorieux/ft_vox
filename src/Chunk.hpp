@@ -29,6 +29,21 @@
 # define SOUTH	3
 # define WEST	4
 
+
+#define FRONT 0
+#define BACK 1
+#define BOTOM 2
+#define TOP 3
+#define LEFT 4
+#define RIGHT 5
+#define ITERATE_FACES 6
+
+struct DataToRender
+{
+	GLuint textureVBO;
+	GLuint positionVBO;
+};
+
 class Chunk : public Object{
 public:
 	Chunk(int x, int z, Camera *camera);
@@ -116,6 +131,7 @@ private:
 
 	GLuint typeVBO, positionVBO, facesVBO;
 	std::vector<GLuint>	facesToRender;
+	DataToRender graphicDataPerFace[ITERATE_FACES];
 
 	std::vector<std::pair<Vec2, Chunk*>> myNeighbours; // Should have at most 4 neigbhors
 

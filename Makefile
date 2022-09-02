@@ -28,6 +28,7 @@ endif
 NAME = ft_vox
 
 FILES = main.cpp \
+		Faces.cpp \
 		VoxelGenerator.cpp \
 		Shader.cpp \
 		Object.cpp \

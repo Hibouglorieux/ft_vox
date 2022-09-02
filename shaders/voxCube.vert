@@ -11,6 +11,7 @@ out vec3 texCoord;
 out int  texId;
 out	vec3 vertexPos;
 out vec3 vertexPosFromCamera;
+flat out int shouldBeDiscarded;
 
 uniform mat4 projection;
 uniform mat4 view;
@@ -25,9 +26,14 @@ void main()
 	// it has one byte set for each face (see order in rectangularCuboid.cpp
 	// that bit is updaed every 6 calls because each face is composed of 2 triangles (2 * 3 points)
 	if ((faces & (1 << (gl_VertexID / 6))) != 0)
+	{
 		gl_Position = precalcMat * vec4(vec3(pos + posOffset), 1.0);
+	}
 	else
-		gl_Position = vec4(-1, -1, -1, 0);// render triangle outside the screen if the face should'nt be rendered
+	{
+		gl_Position = vec4(0, 0, -1, 1);// render triangle outside the screen if the face should'nt be rendered
+		return;
+	}
 
 	vertexPos = vec3(pos + posOffset);
 	vertexPosFromCamera = vec3(gl_Position);

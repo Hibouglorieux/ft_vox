@@ -37,6 +37,12 @@ Chunk::Chunk(int x, int z, Camera *camera)
 	glGenBuffers(1, &typeVBO);
 	glGenBuffers(1, &positionVBO);
 	glGenBuffers(1, &facesVBO);
+
+	for (int i = 0; i < ITERATE_FACES; i++)
+	{
+		glGenBuffers(1, &graphicDataPerFace[i].textureVBO);
+		glGenBuffers(1, &graphicDataPerFace[i].positionVBO);
+	}
 }
 
 Chunk::Chunk(int x, int z, Camera *camera, std::vector<std::pair<Vec2, Chunk *>> neighbours) : Chunk(x, z, camera)
@@ -326,6 +332,14 @@ Chunk::~Chunk(void)
 	glBindBuffer(GL_ARRAY_BUFFER, facesVBO);
 	glDeleteBuffers(1, &facesVBO);
 	totalChunks--;
+
+	for (int i = 0; i < ITERATE_FACES; i++)
+	{
+		glBindBuffer(GL_ARRAY_BUFFER, graphicDataPerFace[i].textureVBO);
+		glDeleteBuffers(GL_ARRAY_BUFFER, &graphicDataPerFace[i].textureVBO);
+		glBindBuffer(GL_ARRAY_BUFFER, graphicDataPerFace[i].positionVBO);
+		glDeleteBuffers(GL_ARRAY_BUFFER, &graphicDataPerFace[i].positionVBO);
+	}
 }
 
 void Chunk::updateVisibility(void)
@@ -735,7 +749,6 @@ bool Chunk::generatePosOffsets(void)
 	// TODO : Implement way of knowing which bloc should be shown to avoid loading
 	//		too much data.
 	// Should generate position of each bloc based on the chunk position
-	Matrix mat;
 	unsigned int i = 0;
 	if (updateChunk)
 	{
@@ -778,6 +791,12 @@ bool Chunk::generatePosOffsets(void)
 			WIP_transform[indexY] = position.y + ghostPos.y;
 			WIP_transform[indexZ] = position.z + ghostPos.z;
 		}
+
+		for (int i = 0; i < ITERATE_FACES; i++)
+		{
+			glBindBuffer(GL_ARRAY_BUFFER, graphicDataPerFace[i].textureVBO);
+		}
+		/*
 		glBindBuffer(GL_ARRAY_BUFFER, positionVBO);
 		glBufferData(GL_ARRAY_BUFFER, (spaceBorder[0].size() + ghostBorder[0].size()) * 3 * sizeof(float),
 					 WIP_transform, GL_STATIC_DRAW);
@@ -787,6 +806,7 @@ bool Chunk::generatePosOffsets(void)
 		glBufferData(GL_ARRAY_BUFFER, (spaceBorder[0].size() + ghostBorder[0].size()) * sizeof(GLint),
 					 WIP_type, GL_STATIC_DRAW);
 		delete[] WIP_type;
+		*/
 
 		if ((spaceBorder[0].size() + ghostBorder[0].size()) != facesToRender.size())
 			std::cout << "Error : wtf problem with visible blocs and faces" << std::endl;
