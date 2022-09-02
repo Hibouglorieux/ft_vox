@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/07/21 18:11:30 by nathan            #+#    #+#             */
-/*   Updated: 2022/09/02 23:05:43 by nallani          ###   ########.fr       */
+/*   Updated: 2022/09/02 23:19:05 by nallani          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -123,7 +123,7 @@ void World::printPos() const
 	if (blocPos.z == CHUNK_DEPTH)
 		blocPos.z = 0;
 	ss << " at block pos x: " << blocPos.x << " y: " << (int)(camera.getPos().y + 0.5) << " z: " << blocPos.z;
-	//PRINT_TO_SCREEN(ss.str());
+	PRINT_TO_SCREEN(ss.str());
 }
 
 void World::render()

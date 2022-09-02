@@ -695,7 +695,11 @@ GLuint Chunk::setVisibilityByNeighbors(int x, int y, int z) // Activates visibil
 			visibleFaces |= currentFace;
 		}
 	}
-	if (position == Vec3(0 * CHUNK_WIDTH, 0, -2 * CHUNK_DEPTH) && x == 1 && y == 3 && z == 15)
+#define DEBUG_CONDITION (position == Vec3(5 * CHUNK_WIDTH, 0, -1 * CHUNK_DEPTH) && x == 0 && y == 72 && z == 0)
+#undef DEBUG_CONDITION
+#define DEBUG_CONDITION false
+
+	if (DEBUG_CONDITION)
 	{
 		std::cout << "for x == 1 and z == " << z << " i have " << border_neighbors.size() << " neighbours" << std::endl;
 	}
@@ -706,18 +710,18 @@ GLuint Chunk::setVisibilityByNeighbors(int x, int y, int z) // Activates visibil
 		float max_height = it.first;
 		GLuint currentFace = it.second;
 		bool isBlockEmpty = isBlockEmptyAfterWorley(border_neighbors_vec[i]);
-		if (isBlockEmpty || max_height < y)
+		if ((isBlockEmpty && max_height < y)|| max_height < y)
 		{
 			bloc->visible = true;
 			visibleFaces |= currentFace;
 		}
 		++i;
-		if (x == 1 && y == 2 && z == 15 && (position == Vec3(0 * CHUNK_WIDTH, 0, -2 * CHUNK_DEPTH)))
+		if (DEBUG_CONDITION)
 		{
 			std::cout << "for z == " << z << " i get blockempty: " << isBlockEmpty << " and maxheight == " << max_height << " and y == " << y << std::endl;
 		}
 	}
-	if (x == 1 && y == 2 && z == 15 && (position == Vec3(0 * CHUNK_WIDTH, 0, -2 * CHUNK_DEPTH)))
+	if (DEBUG_CONDITION)
 		printf("value for block:%d, visibility:%d, faces:%d\n", bloc->type, (int)bloc->visible, visibleFaces);
 
 
