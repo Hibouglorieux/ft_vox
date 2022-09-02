@@ -30,12 +30,12 @@
 # define WEST	4
 
 
-#define FRONT 0
-#define BACK 1
-#define BOTOM 2
-#define TOP 3
-#define LEFT 4
-#define RIGHT 5
+#define BACK 0
+#define FRONT 1
+#define LEFT 2
+#define RIGHT 3
+#define BOTTOM 4
+#define TOP 5
 #define ITERATE_FACES 6
 
 struct DataToRender
@@ -64,6 +64,8 @@ public:
 	static	Vec2 worldCoordToChunk(Vec3 worldPos);
 	static	int totalChunks;
 	AABB	boundingVolume = AABB(Vec3(0, 0, 0), Vec3(CHUNK_WIDTH, CHUNK_HEIGHT, CHUNK_DEPTH));
+	bool			updateChunk = true;
+	bool			init		= false;
 private:
 	struct bloc
 	{
@@ -121,10 +123,7 @@ private:
 	int											spaceCount;
 	BlocSpaceBorder								spaceBorder;
 	std::array<int, CHUNK_SIZE> 				spaceESize;
-	std::vector<std::vector<std::pair<struct bloc, Vec3>>>	ghostBorder;
 
-	bool			updateChunk = true;
-	bool			init		= false;
 	unsigned char 	threadUseCount;
 	unsigned int 	hardBloc;
 	unsigned int 	hardBlocVisible;
