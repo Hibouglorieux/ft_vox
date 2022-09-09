@@ -159,10 +159,12 @@ float Chunk::getBlockBiome(int x, int z, bool setBlocInChunk)
 			blocType = BLOCK_SNOW;
 		else if (heightValue > 80 && moutainTerrain > 0.88)
 			blocType = BLOCK_STONE;
+		else
+			blocType = BLOCK_GRASS_SNOW;
 	}
-	else if (terrainBiomeValue < 0.45)
+	else if (terrainBiomeValue < 0.30)
 	{
-		// Forest ?
+		//blocType = BLOCK_GRASS_SNOW;
 	}
 
 	if (!setBlocInChunk)
