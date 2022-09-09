@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/08/08 19:05:09 by nathan            #+#    #+#             */
-/*   Updated: 2021/10/19 22:33:04 by nathan           ###   ########.fr       */
+/*   Updated: 2022/09/09 19:01:24 by nallani          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -134,7 +134,7 @@ struct AABB : public BoundingVolume
 		globalAABB.worldPos.print();
 		printf("\n");*/
 
-		bool bleft, bright, btop, bbottom, bnear, bfar = false;
+		bool bleft = true, bright = true, btop = true, bbottom = true, bnear = true, bfar = true;
 		if (BB_VERBOSE)
 		{
 			bleft = globalAABB.isOnOrForwardPlan(camFrustum.leftFace);
@@ -161,7 +161,7 @@ struct AABB : public BoundingVolume
 			bfar = globalAABB.isOnOrForwardPlan(camFrustum.farFace);
 		}
 
-		return (bleft && bright && btop && bbottom && bnear && bfar);
+		return ((bleft || bright) && (btop || bbottom) && bnear && bfar); // cheap fix
 	};
 };
 
