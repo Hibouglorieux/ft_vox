@@ -6,7 +6,7 @@
 /*   By: nathan <nallani@student.s19.be>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/05/24 01:52:59 by nathan            #+#    #+#             */
-/*   Updated: 2022/08/25 17:19:47 by nathan           ###   ########.fr       */
+/*   Updated: 2022/09/09 18:08:08 by nallani          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,7 +44,7 @@ int	initialize()
 
 int		main( int argc, char *argv[] )
 {
-	unsigned long	seed = DEFAULT_SEED; //std::srand(std::time(nullptr));
+	unsigned long	seed = DEFAULT_SEED;
 	if (argc > 1)
 	{
 		try
@@ -70,7 +70,7 @@ int		main( int argc, char *argv[] )
 	Loop::setWorld(world);
 
 	Loop::loop();
-	std::cout << glGetError() << std::endl;
+	//std::cout << glGetError() << std::endl;
 	delete world;
 	TextManager::clear();
 	VoxelGenerator::clear();

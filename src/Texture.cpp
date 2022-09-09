@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/10/15 16:41:40 by nathan            #+#    #+#             */
-/*   Updated: 2022/02/11 16:16:33 by nathan           ###   ########.fr       */
+/*   Updated: 2022/09/09 18:05:08 by nallani          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,7 +34,6 @@ Texture::Texture(std::string pathToFile)
 	int				nr_channel;
 	unsigned char	*data;
 
-	std::cout << "added new texture: " << name << textureLoaded[name].ID << std::endl;
 	stbi_set_flip_vertically_on_load(true);
 	if (!(data = stbi_load(std::string("textures/" + name).c_str(), &width, &height, &nr_channel, 0)))
 	{
@@ -69,7 +68,6 @@ Texture::Texture(std::vector<std::string> paths, std::string textureName)
 
 	stbi_set_flip_vertically_on_load(false);
 	glGenTextures(1, &textureLoaded[name].ID);// getting the ID from OpenGL
-	std::cout << "added new texture: " << name << textureLoaded[name].ID << std::endl;
 	glBindTexture(GL_TEXTURE_CUBE_MAP, textureLoaded[name].ID);
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_REPEAT);//CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_REPEAT);//CLAMP_TO_EDGE);
@@ -111,8 +109,8 @@ Texture::Texture(std::vector<std::string> paths, BigHeightMap& heightMap, float 
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	std::cout << "added new texture: " << name << textureLoaded[name].ID << std::endl;
-	printf("%f %f %i %i\n", freq, amp, octaves, depth);
+	//std::cout << "added new texture: " << name << textureLoaded[name].ID << std::endl;
+	//printf("%f %f %i %i\n", freq, amp, octaves, depth);
 	for (unsigned int i = 0; i < paths.size(); i++)
 	{
 		if (i < 10)
@@ -158,7 +156,7 @@ Texture::Texture(float noiseTest)
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	std::cout << "added new texture: " << name << textureLoaded[name].ID << std::endl;
+	//std::cout << "added new texture: " << name << textureLoaded[name].ID << std::endl;
 
 	/*int caveMapDepth = 16;
 #define NOISE_TEXTURE_WIDTH 16
@@ -228,7 +226,7 @@ Texture::Texture(bool skybox)
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	std::cout << "added new texture: " << name << textureLoaded[name].ID << std::endl; 
+	//std::cout << "added new texture: " << name << textureLoaded[name].ID << std::endl; 
 	unsigned char* array = new unsigned char[512 * 512 * 3 * sizeof(unsigned char)];
 	for (unsigned int i = 0; i < 6; i++)
 	{
@@ -315,7 +313,7 @@ Texture::Texture(HeightMap& heightMap)
 
 	textureLoaded.insert(std::pair<std::string, TextureCommonData>("test", {0, 1, 0}));
 	name = "test";
-	std::cout << "added new texture: " << name << textureLoaded[name].ID << std::endl;
+	//std::cout << "added new texture: " << name << textureLoaded[name].ID << std::endl;
 	glGenTextures(1, &textureLoaded[name].ID);
 	glBindTexture(GL_TEXTURE_2D, textureLoaded[name].ID);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
