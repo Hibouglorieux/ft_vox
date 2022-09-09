@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/07/21 18:11:54 by nathan            #+#    #+#             */
-/*   Updated: 2022/02/25 22:11:30 by nathan           ###   ########.fr       */
+/*   Updated: 2022/09/09 19:51:51 by nallani          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,11 +23,10 @@
 # include <map>
 
 # define VIEW_DISTANCE 160
-# define ROW_OF_CHUNK 8
-//# define CHUNK_VIEW_DISTANCE (VIEW_DISTANCE / CHUNK_WIDTH + 1)
-# define CHUNK_VIEW_DISTANCE 10
+# define CHUNK_VIEW_DISTANCE (VIEW_DISTANCE / CHUNK_WIDTH)
+//# define CHUNK_VIEW_DISTANCE 14
 # define MAX_PRELOAD_DISTANCE ((float)CHUNK_VIEW_DISTANCE + 2)
-# define PRELOAD_DISTANCE_DEL ((float)CHUNK_VIEW_DISTANCE + 10)
+# define PRELOAD_DISTANCE_DEL ((float)CHUNK_VIEW_DISTANCE + 6)
 
 class World {
 public:
@@ -40,7 +39,7 @@ public:
 	void 	updateSkyboxDEBUG(float freq, float amp, int octaves, int y = 0);
 	void	update();
 	// Chunk Manager
-	void updateChunkBuffers(Vec2 newPos);
+	bool updateChunkBuffers(Vec2 newPos);
 
 	bool pause = false;
 	bool freeze = false;

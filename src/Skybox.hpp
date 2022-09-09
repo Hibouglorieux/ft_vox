@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/10/20 18:53:39 by nathan            #+#    #+#             */
-/*   Updated: 2021/10/21 11:17:37 by nathan           ###   ########.fr       */
+/*   Updated: 2022/09/09 19:50:14 by nallani          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,7 +23,7 @@
 class Skybox {
 public:
 	static void initialize(float freq = 1.0f, float amp = 1.0f, int octaves = 1, int depth = 0);
-	static void draw(Matrix& precalculatedMat);
+	static void draw(Matrix& precalcMat);
 	static void clear();
 
 	static Vec3 playerPos;

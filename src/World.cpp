@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/07/21 18:11:30 by nathan            #+#    #+#             */
-/*   Updated: 2022/09/02 23:19:05 by nallani          ###   ########.fr       */
+/*   Updated: 2022/09/09 19:52:32 by nallani          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -144,6 +144,8 @@ void World::render()
 	glEnable(GL_CULL_FACE);
 	glCullFace(GL_BACK);// renders only visible squares of cubes
 	shader->use();
+
+	glUniform2f(glGetUniformLocation(shader->getID(), "playerPos"), camera.getPos().x, camera.getPos().z);
 	glUniformMatrix4fv(glGetUniformLocation(shader->getID(), "precalcMat"), 1, GL_TRUE, precalculatedMat.exportForGL());
 	glUniformMatrix4fv(glGetUniformLocation(shader->getID(), "view"), 1, GL_TRUE, camera.getMatrix().exportForGL());
 
@@ -195,6 +197,7 @@ void World::render()
 		it.second->draw(shader);
 	}
 
+
 	//std::cout << "rendered: " << chunksToRender.size() << "on total visible chunk: " << visibleChunks.size() << std::endl;
 }
 
@@ -214,9 +217,10 @@ void World::update()
  * 
  * @param newPos Current position of the camera used to determine buffer next state
  */
-void World::updateChunkBuffers(Vec2 newPos)
+bool World::updateChunkBuffers(Vec2 newPos)
 {
 	std::vector<Vec2> posBuffer = {};
+	bool modified = false;
 
 	// Clean chunks that are too far from the camera (save RAM)
 	for (auto it : preLoadedChunks)
@@ -245,6 +249,7 @@ void World::updateChunkBuffers(Vec2 newPos)
 		{
 			delete chunk;
 			posBuffer.push_back(pos);
+			modified = true;
 		}
 		else if (relativePos.getLength() >= CHUNK_VIEW_DISTANCE)
 		{
@@ -288,6 +293,7 @@ void World::updateChunkBuffers(Vec2 newPos)
 	{
 		if (visibleChunks.find(key) == visibleChunks.end())
 		{
+			modified = true;
 			if (preLoadedChunks.find(key) == preLoadedChunks.end())
 			{
 				auto allocatedNeighbours = getAllocatedNeighbours(key);
@@ -305,11 +311,13 @@ void World::updateChunkBuffers(Vec2 newPos)
 			}
 		}
 	}
+	return modified;
 }
 
 std::vector<Vec2> World::getPosInRange(Vec2 center, float minDistance, float maxDistance)
 {
 	std::vector<Vec2> Positions;
+	maxDistance++;
 	for (int y = -maxDistance; y < maxDistance; y++)
 		for (int x = -maxDistance; x < maxDistance; x++)
 		{

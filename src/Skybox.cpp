@@ -6,12 +6,14 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/10/20 18:53:42 by nathan            #+#    #+#             */
-/*   Updated: 2022/09/02 16:56:58 by nallani          ###   ########.fr       */
+/*   Updated: 2022/09/09 19:50:08 by nallani          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Skybox.hpp"
 #include "Matrix.hpp"
+
+#define SKYBOX_FAR 1500
 
 Texture* Skybox::texture = nullptr;
 Shader* Skybox::shader = nullptr;
@@ -22,15 +24,7 @@ Vec3 Skybox::playerPos = Vec3(0, 0, 0);
 
 void Skybox::initialize(float freq, float amp, int octaves, int depth)
 {
-	/*
-	std::vector<std::string> names = 
-	{{"skybox/right.jpg"},
-	{"skybox/left.jpg"},
-	{"skybox/top.jpg"},
-	{"skybox/bottom.jpg"},// TODO temporary not used to see heightmap instead
-	{"skybox/front.jpg"},
-	{"skybox/back.jpg"}};
-	*/
+
 	std::vector<std::string> names = 
 	{{"skybox/Daylight Box_Right.bmp"},
 	{"skybox/Daylight Box_Left.bmp"},
@@ -127,10 +121,12 @@ float Skybox::ToDELETESmoothStep(float a, float b, float x, float c1, float c2)
 	return x * x * (3 - 2 * x);
 }
 
-void Skybox::draw(Matrix& precalculatedMat)
+void Skybox::draw(Matrix& precalcMat)
 {
 	shader->use();
-	glUniformMatrix4fv(glGetUniformLocation(shader->getID(), "precalcMat"), 1, GL_TRUE, precalculatedMat.exportForGL());
+	glDisable(GL_DEPTH_TEST);
+	glCullFace(GL_FRONT);// renders only inside the cube
+	glUniformMatrix4fv(glGetUniformLocation(shader->getID(), "precalcMat"), 1, GL_TRUE, precalcMat.exportForGL());
 	glUniform1i(glGetUniformLocation(shader->getID(), "skyboxTexture"), TEXTURECOUNT);
 	glUniform1i(glGetUniformLocation(shader->getID(), "textureActive"), true);
 
@@ -160,6 +156,7 @@ void Skybox::draw(Matrix& precalculatedMat)
 	glUniform4f(glGetUniformLocation(shader->getID(), "moonColor"), 0.15, 0, 0.15+0.07, 1.0);
     glBindVertexArray(VAO);
     glDrawArrays(GL_TRIANGLES, 0, 36);
+	glEnable(GL_DEPTH_TEST);
 }
 
 void Skybox::clear()
