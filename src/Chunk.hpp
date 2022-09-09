@@ -88,14 +88,6 @@ private:
 	void	updateVisibilitySpaceAux(int x, int y, int z);
 	void	updateVisibilitySpace(void);
 
-	// End of Space Functions
-
-	// Greedy Meshing Functions
-	bool		compareBlocs(const struct bloc *b1, const struct bloc *b2);
-	struct bloc *getVoxel(int x, int y, int z);
-	void		greedyMesh();
-	void		createQuad(Vec3 bottomLeft, Vec3 topLeft, Vec3 topRight, Vec3 bottomRight, int width, int height, Chunk::bloc *voxel);
-	// End of GM Functions
 
 	void	getQuads();
 	bool	generatePosOffsets();
@@ -113,7 +105,7 @@ private:
 	unsigned int 	hardBloc;
 	unsigned int 	hardBlocVisible;
 
-	GLuint typeVBO, positionVBO, facesVBO;
+	GLuint allVBO;
 	std::vector<GLuint>	facesToRender;
 
 	std::vector<std::pair<Vec2, Chunk*>> myNeighbours; // Should have at most 4 neigbhors

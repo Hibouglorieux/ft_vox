@@ -4,7 +4,9 @@
 
 #define TMP_SLEEP_VALUE 0.05 * SEC_TO_MICROSEC
 
-#define CHUNK_CONDITION (position == Vec3(0 * CHUNK_WIDTH, 0, -2 * CHUNK_DEPTH))
+#define DEBUG_CONDITION (position == Vec3(5 * CHUNK_WIDTH, 0, -1 * CHUNK_DEPTH) && x == 0 && y == 72 && z == 0)
+#undef DEBUG_CONDITION
+#define DEBUG_CONDITION false
 
 #define CAVE_THRESHOLD 0.6f
 
@@ -32,9 +34,7 @@ Chunk::Chunk(int x, int z, Camera *camera)
 
 	myNeighbours = {};
 	playerCamera = camera;
-	glGenBuffers(1, &typeVBO);
-	glGenBuffers(1, &positionVBO);
-	glGenBuffers(1, &facesVBO);
+	glGenBuffers(1, &allVBO);
 }
 
 Chunk::Chunk(int x, int z, Camera *camera, std::vector<std::pair<Vec2, Chunk *>> neighbours) : Chunk(x, z, camera)
@@ -233,7 +233,7 @@ void Chunk::initChunk(void)
 				bloc->visible = 0;
 				hardBloc++;
 
-				if (CHUNK_CONDITION && j == 3 && z == 0 && x == 1)
+				if (DEBUG_CONDITION && j == 3 && z == 0 && x == 1)
 					printf("My block has type: %d\n", bloc->type);
 				/*
 				if (true && j < blockValue && j > 0)
@@ -317,12 +317,8 @@ void	Chunk::doWorleyCaves()
 
 Chunk::~Chunk(void)
 {
-	glBindBuffer(GL_ARRAY_BUFFER, typeVBO);
-	glDeleteBuffers(1, &typeVBO);
-	glBindBuffer(GL_ARRAY_BUFFER, positionVBO);
-	glDeleteBuffers(1, &positionVBO);
-	glBindBuffer(GL_ARRAY_BUFFER, facesVBO);
-	glDeleteBuffers(1, &facesVBO);
+	glBindBuffer(GL_ARRAY_BUFFER, allVBO);
+	glDeleteBuffers(1, &allVBO);
 	totalChunks--;
 }
 
@@ -695,9 +691,6 @@ GLuint Chunk::setVisibilityByNeighbors(int x, int y, int z) // Activates visibil
 			visibleFaces |= currentFace;
 		}
 	}
-#define DEBUG_CONDITION (position == Vec3(5 * CHUNK_WIDTH, 0, -1 * CHUNK_DEPTH) && x == 0 && y == 72 && z == 0)
-#undef DEBUG_CONDITION
-#define DEBUG_CONDITION false
 
 	if (DEBUG_CONDITION)
 	{
@@ -735,204 +728,40 @@ bool Chunk::generatePosOffsets(void)
 	// TODO : Implement way of knowing which bloc should be shown to avoid loading
 	//		too much data.
 	// Should generate position of each bloc based on the chunk position
-	Matrix mat;
 	unsigned int i = 0;
 	if (updateChunk)
 	{
-		GLfloat *WIP_transform = new GLfloat[spaceBorder[0].size() * 3]; //CHUNK_HEIGHT * CHUNK_WIDTH * CHUNK_DEPTH * 3];
-		GLint *WIP_type = new GLint[spaceBorder[0].size()];
+		GLfloat *vboData = new GLfloat[spaceBorder[0].size() * (5)];
 		unsigned int indexX = 0;
 		unsigned int indexY = 0;
 		unsigned int indexZ = 0;
 		for (auto blockVec: spaceBorder[0])
 		{
-			indexX = i * 3;
-			indexY = i * 3 + 1;
-			indexZ = i * 3 + 2;
-			WIP_type[i] = blocs[blockVec.y][blockVec.z][blockVec.x].type;
-			if (WIP_type[i] == 99)
-				printf("ERROR, trying to display empty block\n");
-			else if (WIP_type[i] < 0 && WIP_type[i] > 7 && WIP_type[i] != 99)
-				printf("ERROR, trying to display unknown type\n");
-			i += 1;
-			WIP_transform[indexX] = position.x + blockVec.x;
-			WIP_transform[indexY] = position.y + blockVec.y;
-			WIP_transform[indexZ] = position.z + blockVec.z;
+			indexX = i * 5;
+			indexY = i * 5 + 1;
+			indexZ = i * 5 + 2;
+			unsigned int type = i * 5 + 3;
+			unsigned int face = i * 5 + 4;
+			//WIP_type[i] = blocs[blockVec.y][blockVec.z][blockVec.x].type;
+			//if (WIP_type[i] == 99)
+				//printf("ERROR, trying to display empty block\n");
+			//else if (WIP_type[i] < 0 && WIP_type[i] > 7 && WIP_type[i] != 99)
+				//printf("ERROR, trying to display unknown type\n");
+			vboData[indexX] = position.x + blockVec.x;
+			vboData[indexY] = position.y + blockVec.y;
+			vboData[indexZ] = position.z + blockVec.z;
+			vboData[type] = static_cast<GLfloat>(blocs[blockVec.y][blockVec.z][blockVec.x].type);
+			vboData[face] = static_cast<GLfloat>(facesToRender[i]);
+			i++;
 		}
-		glBindBuffer(GL_ARRAY_BUFFER, positionVBO);
-		glBufferData(GL_ARRAY_BUFFER, spaceBorder[0].size() * 3 * sizeof(float),
-					 WIP_transform, GL_STATIC_DRAW);
-		delete[] WIP_transform;
-
-		glBindBuffer(GL_ARRAY_BUFFER, typeVBO);
-		glBufferData(GL_ARRAY_BUFFER, spaceBorder[0].size() * sizeof(GLint),
-					 WIP_type, GL_STATIC_DRAW);
-		delete[] WIP_type;
-
-		if (spaceBorder[0].size() != facesToRender.size())
-			std::cout << "Error : wtf problem with visible blocs and faces" << std::endl;
-		glBindBuffer(GL_ARRAY_BUFFER, facesVBO);
-		glBufferData(GL_ARRAY_BUFFER, facesToRender.size() * sizeof(GLuint),
-					 facesToRender.data(), GL_STATIC_DRAW);
-
+		glBindBuffer(GL_ARRAY_BUFFER, allVBO);
+		glBufferData(GL_ARRAY_BUFFER, spaceBorder[0].size() * 5 * sizeof(float),
+					 vboData, GL_STATIC_READ);
+		delete[] vboData;
 		updateChunk = false;
 		return true;
 	}
 	return false;
-}
-
-bool Chunk::compareBlocs(const struct bloc *b1, const struct bloc *b2)
-{
-	return (b1->type == b2->type && b1->visible == b2->visible);
-}
-
-Chunk::bloc *Chunk::getVoxel(int x, int y, int z)
-{
-	return (&(blocs[y][z][x]));
-}
-
-void Chunk::greedyMesh(void)
-{
-	int i, j, k, l, w, h, u, v, n = 0;
-
-	int x[] = {0, 0, 0};
-	int dim[] = {CHUNK_WIDTH, CHUNK_HEIGHT, CHUNK_DEPTH};
-	int q[] = {0, 0, 0};
-	int du[] = {0, 0, 0};
-	int dv[] = {0, 0, 0};
-
-	struct bloc *mask[CHUNK_HEIGHT * CHUNK_WIDTH];
-
-	/*
-	 *	The variable backFace will be TRUE on first iteration and FALSE
-	 *	on the second. This allows us to track which direction the indices
-	 *	should run during the quad creation.
-	 *
-	 *	The loop will run twice and the inner one 3 times, each iteration will
-	 *	be for one face of the voxel.
-	 */
-	for (bool backFace = true, b = false; b != backFace; backFace = backFace & b, b = !b)
-	{
-		// B1 and B2 are variables used for comparison;
-		struct bloc *b1, *b2;
-
-		// We check over 3 dimensions (x/y/z). Like explained by Mikola Lysenko.
-		for (int d = 0; d < 3; d++)
-		{
-			// Variable VoxelFace
-			u = (d + 1) % 3;
-			v = (d + 2) % 3;
-
-			x[0] = 0;
-			x[1] = 0;
-			x[2] = 0;
-
-			q[0] = 0;
-			q[1] = 0;
-			q[2] = 0;
-			q[d] = 1;
-
-			// Sweep dimension from FRONT to BACK
-			for (x[d] = -1; x[d] < dim[d];)
-			{
-				n = 0;
-				// Mask computation
-
-				for (x[v] = 0; x[v] < dim[v]; x[v]++)
-					for (x[u] = 0; x[u] < dim[u]; x[u]++)
-					{
-						b1 = (x[d] >= 0) ? getVoxel(x[0], x[1], x[2]) : NULL;
-						b2 = (x[d] < dim[d] - 1) ? getVoxel(x[0] + q[0], x[1] + q[1], x[2] + q[2]) : NULL;
-
-						mask[n++] = ((b1 != NULL && b2 != NULL && compareBlocs(b1, b2))) ? NULL : backFace ? b1
-																										   : b2;
-					}
-				x[d]++;
-
-				n = 0;
-
-				for (j = 0; j < CHUNK_HEIGHT; j++)
-				{
-					for (i = 0; i < CHUNK_WIDTH; i++)
-					{
-						if (mask[n] != NULL)
-						{
-							for (w = 1; i + w < CHUNK_WIDTH && mask[n + w] != NULL &&
-										compareBlocs(mask[n + w], mask[n]);
-								 w++)
-							{
-							}
-
-							bool done = false;
-
-							for (h = 1; j + h < CHUNK_HEIGHT; h++)
-							{
-								for (k = 0; k < w; k++)
-								{
-									if (mask[n + k + h * CHUNK_WIDTH] == NULL || !compareBlocs(mask[n + k + h * CHUNK_WIDTH], mask[n]))
-									{
-										done = true;
-										break;
-									}
-								}
-								if (done)
-									break;
-							}
-
-							if (mask[n]->visible)
-							{
-								// Create quad
-								x[u] = i;
-								x[v] = j;
-
-								du[0] = 0;
-								du[1] = 0;
-								du[2] = 0;
-								du[u] = w;
-
-								dv[0] = 0;
-								dv[1] = 0;
-								dv[2] = 0;
-								dv[v] = h;
-
-								createQuad(Vec3(x[0], x[1], x[2]),
-										   Vec3(x[0] + du[0], x[1] + du[1], x[2] + du[2]),
-										   Vec3(x[0] + du[0] + dv[0], x[1] + du[1] + dv[1], x[2] + du[2] + dv[2]),
-										   Vec3(x[0] + dv[0], x[1] + dv[1], x[2] + dv[2]),
-										   w,
-										   h,
-										   mask[n]);
-
-								// Generate quad using found coordinates
-							}
-
-							for (l = 0; l < h; ++l)
-								for (k = 0; k < w; ++k)
-								{
-									mask[n + k + l * CHUNK_WIDTH] = NULL;
-								}
-
-							i += w;
-							n += w;
-						}
-						else
-						{
-							i++;
-							n++;
-						}
-					}
-				}
-			}
-		}
-	}
-}
-
-void Chunk::createQuad(Vec3 bottomLeft, Vec3 topLeft, Vec3 topRight, Vec3 bottomRight, int width, int height,
-					   Chunk::bloc *voxel)
-{
-	(void)bottomLeft, (void)bottomRight, (void)topLeft, (void)topRight;
-	(void)width, (void)height;
-	(void)voxel;
 }
 
 void Chunk::draw(Shader *shader)
@@ -944,14 +773,10 @@ void Chunk::draw(Shader *shader)
 		std::cout << "in interesting chunk i have " << hardBlocVisible << " hardbloc visible" << std::endl;
 		*/
 	//updateVisibilityByCamera();
-	bool isThereNewData = Chunk::generatePosOffsets();
-	(void)isThereNewData; // might be useful if we use multiple VAO
+	
+	generatePosOffsets();// generates or updates buffer only if needed
 
-	//RectangularCuboid::drawInstance(shader, positionVBO, typeVBO, hardBlocVisible);
-	//RectangularCuboid::drawFace(shader, positionVBO, typeVBO, hardBlocVisible, facesToRender);
-	//RectangularCuboid::drawFaceInstance(shader, positionVBO, typeVBO, hardBlocVisible, facesVBO);
-	RectangularCuboid::drawFaceInstance(shader, positionVBO, typeVBO, spaceBorder[0].size(), facesVBO);
-	//RectangularCuboid::drawQuad(shader, positionVBO, typeVBO);
+	RectangularCuboid::drawFaceInstance(shader, allVBO, spaceBorder[0].size());
 }
 
 Vec2 Chunk::worldCoordToChunk(Vec3 worldPos)

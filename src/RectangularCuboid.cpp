@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/08/08 17:52:01 by nathan            #+#    #+#             */
-/*   Updated: 2022/07/22 19:01:12 by nallani          ###   ########.fr       */
+/*   Updated: 2022/09/09 16:47:40 by nallani          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -152,77 +152,23 @@ void RectangularCuboid::clear()
 	initialized = false;
 }
 
-//  unused, drawInstance is called instead
-void RectangularCuboid::draw(Vec3& pos, Shader* shader, Texture* texture)
-{
-	initialize();
-	shader->use();
-	glUniform1i(glGetUniformLocation(shader->getID(), "instanced"), 0);
-	Matrix modelMat = Matrix::createTranslationMatrix(pos);
-	glUniformMatrix4fv(glGetUniformLocation(shader->getID(), "model"), 1, GL_TRUE, modelMat.exportForGL());
-	(void)texture;
-	//glBindTexture(GL_TEXTURE_2D, texture->getID());
-	//glUniform1i(glGetUniformLocation(shader->getID(), "texture0"), 0);
-	glBindVertexArray(VAO);
-	glDrawArrays(GL_TRIANGLES, 0, 3);
-}
-
-void RectangularCuboid::drawInstance(Shader* shader, GLuint positionVBO, GLuint typeVBO, unsigned int count)
+void RectangularCuboid::drawFaceInstance(Shader* shader, GLuint allVBO, unsigned int count)
 {
 	glBindVertexArray(VAO);
-	glBindBuffer(GL_ARRAY_BUFFER, positionVBO);
-	glEnableVertexAttribArray(2);	
-	glVertexAttribPointer(2, 3, GL_FLOAT, GL_TRUE, 3 * sizeof(float), (void*)(0));
+	glBindBuffer(GL_ARRAY_BUFFER, allVBO);
+	glEnableVertexAttribArray(2); // position
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_TRUE, 5 * sizeof(float), (void*)(0));
 	glVertexAttribDivisor(2, 1); // on index2, the array is updated on each different instance (second argument == 1) (otherwise it wouldt be updated)
-
-	glBindBuffer(GL_ARRAY_BUFFER, typeVBO);
-	glEnableVertexAttribArray(5);
-	glVertexAttribIPointer(5, 1, GL_INT, sizeof(GLint), (void*)(0));
+	glBindBuffer(GL_ARRAY_BUFFER, allVBO);
+	glEnableVertexAttribArray(5); // texture
+	glVertexAttribPointer(5, 1, GL_FLOAT, GL_TRUE, 5 * sizeof(float), (void*)(sizeof(float) * 3));
 	glVertexAttribDivisor(5, 1);
+	glBindBuffer(GL_ARRAY_BUFFER, allVBO);
+	glEnableVertexAttribArray(6); // face
+	glVertexAttribPointer(6, 1, GL_FLOAT, GL_TRUE, 5 * sizeof(float), (void*)(sizeof(float) * 4));
+	glVertexAttribDivisor(6, 1);
 
-	glUniform1i(glGetUniformLocation(shader->getID(), "color"), GL_FALSE);
-	glDrawArraysInstanced(GL_TRIANGLES, 0, 36, count);
-}
-
-void RectangularCuboid::drawFace(Shader* shader, GLuint positionVBO, GLuint typeVBO, unsigned int count, const std::vector<char>& visibleFaces)
-{
-	glBindVertexArray(VAO);
-
-
-	glUniform1i(glGetUniformLocation(shader->getID(), "color"), GL_FALSE);
-	for (unsigned int i = 0; i < count; i++)
-	{
-		glBindBuffer(GL_ARRAY_BUFFER, positionVBO);
-		glEnableVertexAttribArray(2);	
-		glVertexAttribPointer(2, 3, GL_FLOAT, GL_TRUE, 3 * sizeof(float), (void*)(sizeof(float) * 3 * i));
-		glVertexAttribDivisor(2, 1);
-		glBindBuffer(GL_ARRAY_BUFFER, typeVBO);
-		glEnableVertexAttribArray(5);
-		glVertexAttribIPointer(5, 1, GL_INT, sizeof(GLint), (void*)(sizeof(int) * i));
-		glVertexAttribDivisor(5, 1);
-		if (visibleFaces[i] & BACK_NEIGHBOUR)
-			glDrawArrays(GL_TRIANGLES, BACK_FACE, 6);
-		if (visibleFaces[i] & FRONT_NEIGHBOUR)
-			glDrawArrays(GL_TRIANGLES, FRONT_FACE, 6);
-		if (visibleFaces[i] & LEFT_NEIGHBOUR)
-			glDrawArrays(GL_TRIANGLES, LEFT_FACE, 6);
-		if (visibleFaces[i] & RIGHT_NEIGHBOUR)
-			glDrawArrays(GL_TRIANGLES, RIGHT_FACE, 6);
-		if (visibleFaces[i] & BOTTOM_NEIGHBOUR)
-			glDrawArrays(GL_TRIANGLES, BOTTOM_FACE, 6);
-		if (visibleFaces[i] & UP_NEIGHBOUR)
-			glDrawArrays(GL_TRIANGLES, TOP_FACE, 6);
-	}
-}
-
-void RectangularCuboid::drawFaceInstance(Shader* shader, GLuint positionVBO, GLuint typeVBO, unsigned int count, GLuint facesVBO)
-{
-	glBindVertexArray(VAO);
-	glBindBuffer(GL_ARRAY_BUFFER, positionVBO);
-	glEnableVertexAttribArray(2);	
-	glVertexAttribPointer(2, 3, GL_FLOAT, GL_TRUE, 3 * sizeof(float), (void*)(0));
-	glVertexAttribDivisor(2, 1); // on index2, the array is updated on each different instance (second argument == 1) (otherwise it wouldt be updated)
-
+	/*
 	glBindBuffer(GL_ARRAY_BUFFER, typeVBO);
 	glEnableVertexAttribArray(5);
 	glVertexAttribIPointer(5, 1, GL_INT, sizeof(GLint), (void*)(0));
@@ -232,37 +178,8 @@ void RectangularCuboid::drawFaceInstance(Shader* shader, GLuint positionVBO, GLu
 	glEnableVertexAttribArray(6);
 	glVertexAttribIPointer(6, 1, GL_UNSIGNED_INT, sizeof(GLuint), (void*)(0));
 	glVertexAttribDivisor(6, 1);
+	*/
 
 	glUniform1i(glGetUniformLocation(shader->getID(), "color"), GL_FALSE);
 	glDrawArraysInstanced(GL_TRIANGLES, 0, 36, count);
 }
-
-/*void RectangularCuboid::drawQuad(Shader* shader, GLuint positionVBO, GLuint typeVBO)
-{
-	glBindVertexArray(VAO);
-
-	glUniform1i(glGetUniformLocation(shader->getID(), "color"), GL_FALSE);
-	glBindBuffer(GL_ARRAY_BUFFER, positionVBO);
-	glEnableVertexAttribArray(2);	
-	glVertexAttribPointer(2, 3, GL_FLOAT, GL_TRUE, 3 * sizeof(float), (void*)(sizeof(float) * 3));
-	glVertexAttribDivisor(2, 1);
-	glBindBuffer(GL_ARRAY_BUFFER, typeVBO);
-	glEnableVertexAttribArray(5);
-	glVertexAttribIPointer(5, 1, GL_INT, sizeof(GLint), (void*)(sizeof(int)));
-	glVertexAttribDivisor(5, 1);
-
-//	glDrawArrays(GL_TRIANGLES, 0, 36);
-	glDrawArraysInstanced(GL_TRIANGLES, 0, 36, 2);
-}*/
-
-/*
-void Quad::initialize(Vec3 bottomLeft, Vec3 topLeft, Vec3 topRight,
-		Vec3 bottomRight, int width, int height)
-{
-	float vertices[] = {
-		0, 0, 0, 0, 0
-	};
-
-	glBindVertexArray(0);
-}
-*/

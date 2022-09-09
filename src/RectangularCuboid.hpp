@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/08/08 17:52:07 by nathan            #+#    #+#             */
-/*   Updated: 2021/12/17 21:40:08 by nallani          ###   ########.fr       */
+/*   Updated: 2022/09/09 16:46:28 by nallani          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,26 +33,12 @@
 class RectangularCuboid : public Object {
 public:
 	static void initialize();
-	static void draw(Vec3& pos, Shader* shader, Texture* texture);// unusued, drawInstance is called instead
-	static void drawInstance(Shader* shader, GLuint positionVBO, GLuint typeVBO, unsigned int count);
-	static void drawFace(Shader* shader, GLuint positionVBO, GLuint typeVBO, unsigned int count, const std::vector<char>& visibleFaces);
-	static void drawFaceInstance(Shader* shader, GLuint positionVBO, GLuint typeVBO, unsigned int count, GLuint facesVBO);
-	//static void drawQuad(Shader* shader, GLuint positionVBO, GLuint typeVBO);
+	static void drawFaceInstance(Shader* shader, GLuint allVBO, unsigned int count);
 	static void	clear();
 
 private:
 	static bool initialized;
     static GLuint VAO, VBO, texturePosBuf;
 };
-
-/*class Quad : public Object {
-	public:
-		static void initialize(Vec3 bottomLeft, Vec3 topLeft, Vec3 topRight, Vec3 bottomRight, int _width, int _height);
-		static void drawQuad(Shader* shader);
-	private:
-		static GLuint VAO, VBO, texturePosBuf;
-		static int width, height;
-		static float vertices[];
-};*/
 
 #endif
