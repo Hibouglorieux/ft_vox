@@ -1,6 +1,6 @@
 OS_NAME = $(shell uname)
 ifeq ($(OS_NAME),Linux)
-	ECHOc = echo -e
+	ECHOc = echo
 else
 	ECHOc = echo
 endif
@@ -59,12 +59,12 @@ INCLUDE_DIRS = -Iincludes -Ilibft -I$(HOME)/.brew/include
 all: $(NAME)
 
 $(NAME): $(OBJ)
-	$(CXX) $(PROFILEFLAG) $(OFLAGS) $^ -o $@ $(LIBS)
+	@$(CXX) $(PROFILEFLAG) $(OFLAGS) $^ -o $@ $(LIBS)
 	@$(ECHOc) "Compilation of $(Cyan)$(NAME)$(End) :    $(Green)Done$(End)"
 
 obj/%.o:src/%.cpp includes/*.h src/*.hpp
 	@mkdir -p obj
-	$(CXX) $(CXXFLAGS) $(PROFILEFLAG) $(OFLAGS) -c $< -o $@ $(INCLUDE_DIRS)
+	@$(CXX) $(CXXFLAGS) $(PROFILEFLAG) $(OFLAGS) -c $< -o $@ $(INCLUDE_DIRS)
 	@$(ECHOc) "Compilation of $(Cyan)$@$(End) :    $(Green)Done$(End)"
 
 clean :
