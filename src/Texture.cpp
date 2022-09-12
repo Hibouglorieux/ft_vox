@@ -352,9 +352,40 @@ unsigned int	Texture::getID() const
 #include <fstream>
 
 std::array<Texture*, TEXTURECOUNT> ResourceManager::texturePack;
+unsigned int ResourceManager::framebuffer;
+unsigned int ResourceManager::colorbuffer;
+glm::mat4 lightSpaceMatrix;
 
 void ResourceManager::loadPack(void)
 {
+    // framebuffer configuration
+    // -------------------------
+    glGenFramebuffers(1, &framebuffer);
+    glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+    // create a color attachment texture
+    unsigned int textureColorbuffer;
+    glGenTextures(1, &textureColorbuffer);
+    glBindTexture(GL_TEXTURE_2D, textureColorbuffer);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, 1024, 1024, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, textureColorbuffer, 0);
+	glDrawBuffer(GL_NONE);
+	glReadBuffer(GL_NONE);
+	colorbuffer = textureColorbuffer;
+    // create a renderbuffer object for depth and stencil attachment (we won't be sampling these)
+    unsigned int rbo;
+    glGenRenderbuffers(1, &rbo);
+    glBindRenderbuffer(GL_RENDERBUFFER, rbo);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, 1024, 1024); // use a single renderbuffer object for both a depth AND stencil buffer.
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo); // now actually attach it
+    // now that we actually created the framebuffer and added all attachments we want to check if it is actually complete now
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+        std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
 	texturePack[BLOCK_WATER] = new Texture({
 		{"packDefault/WATER.png"},
 		{"packDefault/WATER.png"},
@@ -453,49 +484,3 @@ void ResourceManager::deletePack()
 		delete texturePack[i];
 	}
 }
-/*
-void ResourceManager::loadPack(void)
-{
-	DIR *dir; struct dirent *diread;
-    std::vector<char *> files;
-    std::vector<char *> BlockNames;
-	
-    if ((dir = opendir("./textures/packDefault/")) != nullptr) {
-        while ((diread = readdir(dir)) != nullptr) {
-			if (diread->d_type == DT_REG)
-			{
-				std::string name = diread->d_name;
-				if (name.substr(name.find_last_of(".") + 1) == "block")
-				{
-					files.clear();
-					std::string line;
-
-					// Read from the text file
-					std::ifstream MyReadFile("./textures/packDefault/" + name);
-					int lineId = 0;
-					char *textureName = "";
-
-					while (getline (MyReadFile, line)) {
-					// Output the text from the file
-						if (lineId == 0)
-						{
-							textureName = line;
-						}
-						else
-						{
-							files.push_back("")
-						}
-						lineId++;
-					}
-					std::cout << std::endl;
-
-					// Close the file
-					MyReadFile.close(); 
-				}
-			}
-        }
-        closedir(dir);
-    } else {
-        perror ("opendir");
-    }
-}*/

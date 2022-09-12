@@ -49,9 +49,9 @@ HEADERS = $(wildcard $(addprefix src/, $(FILES:.cpp=.hpp)))
 OBJ = $(addprefix obj/,$(FILES:.cpp=.o))
 
 #linkage
-LIBS = -lglfw -lX11 -lXrandr -lXinerama -lXi -lXxf86vm -lXcursor -lGL -lpthread -ldl `pkg-config --libs glew` -lm -lfreetype #-pg #-fsanitize=address
+LIBS = -lglfw -lX11 -lXrandr -lXinerama -lXi -lXxf86vm -lXcursor -lGL -lpthread -ldl `pkg-config --libs glew` -lm -lfreetype #-fsanitize=address
 
-CXXFLAGS = -std=gnu++11 -Wall -Wextra -g #-pg #-fsanitize=address
+CXXFLAGS = -std=gnu++11 -Wall -Wextra -g #-fsanitize=address
 PROFILEFLAG = #-pg
 OFLAGS = -O3
 INCLUDE_DIRS = -Iincludes -Ilibft -I$(HOME)/.brew/include

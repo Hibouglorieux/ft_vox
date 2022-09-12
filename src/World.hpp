@@ -32,8 +32,9 @@ class World {
 public:
 	World( void );
 	virtual ~World( void );
-	void render( void );
+	void render(Shader *override_shader);
 	void setCamera(Camera newCamera);
+	Shader* getShader() { return shader; };
 	Camera& getCamera();
 
 	void 	updateSkyboxDEBUG(float freq, float amp, int octaves, int y = 0);

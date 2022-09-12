@@ -17,9 +17,13 @@
 #include "Camera.hpp"
 #include "ft_vox.h"
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+
 bool Loop::shouldStop = false;
+bool Loop::shift_lock = false;
 double Loop::frameTime = 0.0f;
-std::string Loop::lastFps;
+std::string Loop::lastFps = "FPS: 60";
 const double Loop::refreshingRate = 1.0 / 60.0;
 std::vector<Object*> Loop::objects = {};
 World* Loop::world = nullptr;
@@ -34,6 +38,14 @@ unsigned char Loop::frameCount = 0;
 
 void Loop::loop()
 {
+	Shader *simpleDepthShader = new Shader("voxCube.vert", "depth.frag");
+
+	Shader *debugQuadShader = new Shader("debug.vert", "debug.frag");
+	debugQuadShader->use();
+	debugQuadShader->setFloat("near_plane", NEAR);
+	debugQuadShader->setFloat("far_plane", FAR);
+	debugQuadShader->setFloat("depthMap", 0);
+
 	glfwSetTime(0);
 	glfwSetKeyCallback(appWindow::getWindow(), Loop::keyCallback);
 	glfwGetCursorPos(appWindow::getWindow(), &mouseX, &mouseY);
@@ -43,26 +55,66 @@ void Loop::loop()
 		frameCount++;
 		processInput();
 
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		//if (!(world->pause))
 			//glClear((world->wireframe ? GL_COLOR_BUFFER_BIT : 0) | GL_DEPTH_BUFFER_BIT);
 
+		glBindFramebuffer(GL_FRAMEBUFFER, ResourceManager::framebuffer);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // we're not using the stencil buffer now
+		glEnable(GL_DEPTH_TEST);
+		
+		// 1. render depth of scene to texture (from light's perspective)
+        // --------------------------------------------------------------
+        glm::mat4 lightProjection, lightView;
+        glm::mat4 lightSpaceMatrix;
+        float near_plane = 1.0f, far_plane = 7.5f;
+        lightProjection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, near_plane, far_plane);
+        lightView = glm::lookAt(glm::vec3(0, 256, 0), glm::vec3(0.0f), glm::vec3(0.0, 1.0, 0.0));
+        lightSpaceMatrix = lightProjection * lightView;
+        // render scene from light's point of view
+        simpleDepthShader->use();
+        simpleDepthShader->setMat4("lightSpaceMatrix", lightSpaceMatrix);
+		
+        glViewport(0, 0, 1024, 1024);
+		glClear(GL_DEPTH_BUFFER_BIT);
 
 		if (world && !(world->pause))
 		{
 			world->update();
-			world->render();
+			world->render(simpleDepthShader);
 		}
-		if (fpsRefreshTime + 1.f < currentTimer)
-		{
-			double fps = (float)frameCount / (currentTimer - fpsRefreshTime);
-			frameCount = 0;
-			fpsRefreshTime = currentTimer;
-			lastFps = "FPS: " + std::to_string(fps).substr(0, 4);
-		}
-		PRINT_TO_SCREEN(lastFps);
-		TextManager::tickPrint();
-		glFinish();
+
+        glViewport(0, 0, 1920, 1024);
+		glBindFramebuffer(GL_FRAMEBUFFER, 0); // back to default
+		glDisable(GL_DEPTH_TEST);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		// // 2. render scene as normal using the generated depth/shadow map  
+        // // --------------------------------------------------------------
+		// world->getShader()->setMat4("lightSpaceMatrix", lightSpaceMatrix);
+        // glActiveTexture(GL_TEXTURE0 + BLOCK_BEDROCK + 1);
+        // glBindTexture(GL_TEXTURE_2D, ResourceManager::colorbuffer);
+
+		// if (world && !(world->pause))
+		// {
+		// 	world->update();
+		// 	world->render(NULL);
+		// }
+		// if (fpsRefreshTime + 1.f < currentTimer)
+		// {
+		// 	double fps = (float)frameCount / (currentTimer - fpsRefreshTime);
+		// 	frameCount = 0;
+		// 	fpsRefreshTime = currentTimer;
+		// 	lastFps = "FPS: " + std::to_string((int)fps).substr(0, 4);
+		// }
+		// PRINT_TO_SCREEN(lastFps);
+		// TextManager::tickPrint();
+		// glFinish();
+
+		debugQuadShader->use();
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, ResourceManager::colorbuffer);
+
+		renderQuad();
 
 		glfwSwapBuffers(appWindow::getWindow());
 
@@ -87,7 +139,7 @@ void Loop::processInput()
 		right = true;
 	if (glfwGetKey(appWindow::getWindow(), GLFW_KEY_A) == GLFW_PRESS)
 		left = true;
-	bool shift = glfwGetKey(appWindow::getWindow(), GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS ? true : false;
+	bool shift = glfwGetKey(appWindow::getWindow(), GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS ? !shift_lock : shift_lock;
 	if (world)
 	{
 		world->getCamera().move(forward, backward, left, right, (shift == true ? 10 : 1) * CAMERA_MOUVEMENT_SPEED);
@@ -169,6 +221,8 @@ void Loop::KeyCallbackProcess(bool keysPressed[389])
 		{
 			world->updateSkyboxDEBUG(0, 0, 0, i == GLFW_KEY_KP_9 ? 1 : -1);
 		}
+		if (i == GLFW_KEY_TAB)
+			shift_lock = !shift_lock;
 	}
 }
 
@@ -187,4 +241,37 @@ void Loop::keyCallback(GLFWwindow* window, int key, int scancode, int action, in
 
 	keysPressed[key] = action;
 	KeyCallbackProcess(keysPressed);
+}
+
+// renderQuad() renders a 1x1 XY quad in NDC
+// -----------------------------------------
+unsigned int quadVAO = 0;
+unsigned int quadVBO;
+void Loop::renderQuad()
+{
+    if (quadVAO == 0)
+    {
+        float quadVertices[] = {
+            // positions        // texture Coords
+            -1.0f,  1.0f, 0.0f, 0.0f, 1.0f,
+            -1.0f, -1.0f, 0.0f, 0.0f, 0.0f,
+             1.0f,  1.0f, 0.0f, 1.0f, 1.0f,
+             1.0f, -1.0f, 0.0f, 1.0f, 0.0f,
+        };
+        // setup plane VAO
+        glGenVertexArrays(1, &quadVAO);
+        glGenBuffers(1, &quadVBO);
+        glBindVertexArray(quadVAO);
+        glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), &quadVertices, GL_STATIC_DRAW);
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+        glEnableVertexAttribArray(1);
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    }
+    glBindVertexArray(quadVAO);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, ResourceManager::colorbuffer);
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+    glBindVertexArray(0);
 }

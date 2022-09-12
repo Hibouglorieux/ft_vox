@@ -17,6 +17,7 @@
 #include <map>
 #include <vector>
 #include <iostream>
+#include <glm/glm.hpp>
 //#include <filesystem>
 
 #include "VoxelGenerator.hpp" //TODO tmp to remove
@@ -51,6 +52,9 @@ public:
 	static void 	deletePack(void);
 	static void 	bindTextures(void);
 	static Texture *getBlockTexture(int blockType);
+	static unsigned int framebuffer;
+	static unsigned int colorbuffer;
+	static glm::mat4 lightSpaceMatrix;
 private:
 	static std::array<Texture*, TEXTURECOUNT> texturePack;
 };

@@ -27,7 +27,9 @@ private:
 	static void KeyCallbackProcess(bool keysPressed[389]);
 	static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
 	static void processInput();
+	static void renderQuad();
 	static bool shouldStop;
+	static bool shift_lock;
 	static double frameTime;
 	static std::string lastFps;
 	static double fpsRefreshTime;

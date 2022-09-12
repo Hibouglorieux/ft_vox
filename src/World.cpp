@@ -126,8 +126,9 @@ void World::printPos() const
 	PRINT_TO_SCREEN(ss.str());
 }
 
-void World::render()
+void World::render(Shader *override_shader)
 {
+	Shader *current = shader;
 	//std::cout << camera.getPos().x << "," << camera.getPos().z << std::endl;
 
 	Matrix precalculatedMat = Object::getProjMat() * camera.getMatrix();
@@ -143,14 +144,17 @@ void World::render()
 	glDepthMask(true);
 	glEnable(GL_CULL_FACE);
 	glCullFace(GL_BACK);// renders only visible squares of cubes
-	shader->use();
+	if (override_shader != NULL)
+		current = override_shader;
+	
+	current->use();
 
-	glUniform2f(glGetUniformLocation(shader->getID(), "playerPos"), camera.getPos().x, camera.getPos().z);
-	glUniformMatrix4fv(glGetUniformLocation(shader->getID(), "precalcMat"), 1, GL_TRUE, precalculatedMat.exportForGL());
-	glUniformMatrix4fv(glGetUniformLocation(shader->getID(), "view"), 1, GL_TRUE, camera.getMatrix().exportForGL());
+	glUniform2f(glGetUniformLocation(current->getID(), "playerPos"), camera.getPos().x, camera.getPos().z);
+	glUniformMatrix4fv(glGetUniformLocation(current->getID(), "precalcMat"), 1, GL_TRUE, precalculatedMat.exportForGL());
+	glUniformMatrix4fv(glGetUniformLocation(current->getID(), "view"), 1, GL_TRUE, camera.getMatrix().exportForGL());
 
 	int allTextures[8] = {BLOCK_WATER, BLOCK_SAND, BLOCK_DIRT, BLOCK_GRASS, BLOCK_GRASS_SNOW, BLOCK_STONE, BLOCK_SNOW, BLOCK_BEDROCK};
-	glUniform1iv(glGetUniformLocation(shader->getID(), "allTextures"), 8, allTextures);
+	glUniform1iv(glGetUniformLocation(current->getID(), "allTextures"), 8, allTextures);
 
 	ResourceManager::bindTextures();
 	std::vector<std::pair<Vec2, Chunk*>> chunksToRender;
@@ -194,7 +198,7 @@ void World::render()
 	for (auto it : chunksToRender)
 	{
 		//it.second->updateVisibilityByCamera(blocFreeze);
-		it.second->draw(shader);
+		it.second->draw(current);
 	}
 
 

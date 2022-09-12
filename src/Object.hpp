@@ -17,8 +17,8 @@
 #include "Matrix.hpp"
 #include "Shader.hpp"
 #include "Camera.hpp"
-#define SCREEN_WIDTH 800.0f
-#define SCREEN_HEIGHT 600.0f //TODO change that to have the real window size
+#define SCREEN_WIDTH 1920.0f
+#define SCREEN_HEIGHT 1080.0f //TODO change that to have the real window size
 
 class Object {
 public:

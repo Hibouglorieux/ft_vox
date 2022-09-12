@@ -1,6 +1,7 @@
 #version 450 core
 
 layout (location = 0) in vec3 pos;
+layout (location = 8) in vec3 aNormal;
 layout (location = 2) in vec3 posOffset;
 layout (location = 4) in vec3 texturePos3d; // 3d
 											
@@ -11,11 +12,14 @@ out vec3 texCoord;
 out int  texId;
 out	vec3 vertexPos;
 out vec3 vertexPosFromCamera;
+out vec3 normal;
+out vec4 FragPosLightSpace;
 
 uniform mat4 projection;
 uniform mat4 view;
 uniform mat4 precalcMat;
 uniform vec2 playerPos;
+uniform mat4 lightSpaceMatrix;
 
 void main()
 {
@@ -33,4 +37,6 @@ void main()
 
 	vertexPos = vec3(pos + posOffset);
 	vertexPosFromCamera = vec3(gl_Position);
+	FragPosLightSpace = lightSpaceMatrix * vec4(vertexPos, 1.0) * precalcMat;
+	normal = aNormal;//transpose(inverse(mat3(projection))) * aNormal;
 }

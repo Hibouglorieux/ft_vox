@@ -48,10 +48,16 @@ int appWindow::init()
 		}
 
 		glfwMakeContextCurrent(window);
+		glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 		//glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE); // enable sticky keys
 	}
 	initialized = true;
 	return (1);
+}
+
+void	appWindow::framebuffer_size_callback(GLFWwindow* window, int width, int height)
+{
+    glViewport(0, 0, width, height);
 }
 
 void	appWindow::getWindowSize(int* width, int* height)

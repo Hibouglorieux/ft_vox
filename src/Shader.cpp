@@ -4,6 +4,7 @@
 #include <string.h>
 #include <math.h>
 #include <algorithm>
+#include <glm/glm.hpp>
 using namespace std;
 
 std::map<std::string, Shader::shaderCommonData> Shader::createdShaders = {};
@@ -52,11 +53,13 @@ Shader::Shader(const char* vertexPath, const char* fragmentPath) : stringID(std:
     vertex = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertex, 1, &vShaderCode, NULL);
     glCompileShader(vertex);
+    //std::cout << vertexPath << std::endl;
     checkCompileErrors(vertex, "VERTEX");
     // fragment Shader
     fragment = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(fragment, 1, &fShaderCode, NULL);
     glCompileShader(fragment);
+    //std::cout << fragmentPath << std::endl;
     checkCompileErrors(fragment, "FRAGMENT");
     // shader Program
     createdShaders[stringID].ID = glCreateProgram();
@@ -110,6 +113,11 @@ void Shader::setInt(const std::string &name, int value) const
 void Shader::setFloat(const std::string &name, float value) const
 { 
     glUniform1f(glGetUniformLocation(getID(), name.c_str()), value); 
+}
+// ------------------------------------------------------------------------
+void Shader::setMat4(const std::string &name, glm::mat4 &value) const
+{ 
+    glUniformMatrix4fv(glGetUniformLocation(getID(), name.c_str()), 1, GL_FALSE, &value[0][0]);
 }
 
 // utility function for checking shader compilation/linking errors.

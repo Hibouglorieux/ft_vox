@@ -25,6 +25,7 @@ public:
 	static int init();
 	static GLFWwindow* getWindow();
 	static void getWindowSize(int* width, int* height);
+	static void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 	static int getWindowWidth();
 	static int getWindowHeight();
 	static void resetPrintCalls();
