@@ -7,6 +7,7 @@ in vec3 pos;
 in vec3 texCoord;
 
 uniform samplerCube skyboxTexture;
+uniform bool light = false;
 
 uniform vec3	sunPos;
 uniform float	sunIntensity;
@@ -39,6 +40,10 @@ void main()
 		float r = texture(skyboxTexture, texCoord).r;
 	*/
 		FragColor = texture(skyboxTexture, texCoord);
+		float x = 1;
+		if (light)
+			x = 0.6;
+		FragColor *= x;
 		/*
 		//if (r < 0.75)
 		FragColor = vec4(r, r, r, 1.0);

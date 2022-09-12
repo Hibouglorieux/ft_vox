@@ -8,6 +8,8 @@ in vec3 vertexPosFromCamera;
 flat in int texId;
 
 uniform bool color = false;
+uniform bool light = false;
+in float distanceToBlock;
 
 uniform samplerCube[8] allTextures;
 
@@ -17,6 +19,12 @@ float interpolate(float value, float minimum, float maximum)
 	retVal = (value - minimum) / maximum;
 
 	return 1.0f - max(min(retVal, 1.0f), 0.0f);
+}
+
+
+vec3 lerp(vec3 v1, vec3 v2, float val)
+{
+	return v1 * (1 - val) + v2 * val;
 }
 
 void main()
@@ -40,5 +48,12 @@ void main()
 	}
 	else
 	*/
-		FragColor = texture(allTextures[texId], texCoord);
+	FragColor = texture(allTextures[texId], texCoord);
+	float x = 0;
+	if (light)
+	FragColor *= clamp(interpolate(distanceToBlock, 3., 50.), 0.6, 1.0);
+	/*
+		x = 1 - interpolate(distanceToBlock, 20, 160);
+	FragColor = vec4(lerp(vec3(FragColor), vec3(0.2, 0.2, 0.2), x), 1.0);
+	*/
 }

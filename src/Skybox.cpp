@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/10/20 18:53:42 by nathan            #+#    #+#             */
-/*   Updated: 2022/09/09 19:50:08 by nallani          ###   ########.fr       */
+/*   Updated: 2022/09/12 16:33:10 by nallani          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -168,4 +168,10 @@ void Skybox::clear()
 	glDeleteBuffers(1, &VBO);
 	glDeleteVertexArrays(1, &VAO);
 	glInvalidateBufferData(VBO);
+}
+
+void Skybox::changeLight(bool light)
+{
+	shader->use();
+	glUniform1i(glGetUniformLocation(shader->getID(), "light"), light);
 }

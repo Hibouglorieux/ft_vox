@@ -12,16 +12,18 @@ out int  texId;
 out	vec3 vertexPos;
 out vec3 vertexPosFromCamera;
 
+out float distanceToBlock;
+
 uniform mat4 projection;
 uniform mat4 view;
 uniform mat4 precalcMat;
-uniform vec2 playerPos;
+uniform vec3 playerPos;
 
 void main()
 {
 	texCoord = texturePos3d;
 	texId = int(textureId);
-	vec2 pos2d = vec2(posOffset.x - playerPos.x, posOffset.z - playerPos.y);
+	vec2 pos2d = vec2(posOffset.x - playerPos.x, posOffset.z - playerPos.z);
 
 	// each cube has an integer that tells us if its faces should be rendered or not
 	// it has one byte set for each face (see order in rectangularCuboid.cpp
@@ -31,6 +33,7 @@ void main()
 	else
 		gl_Position = vec4(-1, -1, -1, 0);// render triangle outside the screen if the face should'nt be rendered
 
+	distanceToBlock = distance(playerPos, posOffset);
 	vertexPos = vec3(pos + posOffset);
 	vertexPosFromCamera = vec3(gl_Position);
 }

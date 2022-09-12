@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/05/24 15:40:25 by nathan            #+#    #+#             */
-/*   Updated: 2022/07/22 18:26:42 by nallani          ###   ########.fr       */
+/*   Updated: 2022/09/12 16:34:06 by nallani          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -153,22 +153,8 @@ void Loop::KeyCallbackProcess(bool keysPressed[389])
 			else
 				glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		}
-		if (i == GLFW_KEY_KP_1 || i == GLFW_KEY_KP_2)
-		{
-			world->updateSkyboxDEBUG(0, GLFW_KEY_KP_1 ? 0.1f : -0.1f, 0, 0);
-		}
-		if (i == GLFW_KEY_KP_4 || i == GLFW_KEY_KP_5)
-		{
-			world->updateSkyboxDEBUG(i == GLFW_KEY_KP_4 ? 0.001f : -0.001f, 0, 0, 0);
-		}
-		if (i == GLFW_KEY_KP_7 || i == GLFW_KEY_KP_8)
-		{
-			world->updateSkyboxDEBUG(0, 0, i == GLFW_KEY_KP_7 ? 1 : -1, 0);
-		}
-		if (i == GLFW_KEY_KP_9 || i == GLFW_KEY_KP_6)
-		{
-			world->updateSkyboxDEBUG(0, 0, 0, i == GLFW_KEY_KP_9 ? 1 : -1);
-		}
+		if (i == GLFW_KEY_F || i == GLFW_KEY_T)
+			world->changeLight();
 	}
 }
 

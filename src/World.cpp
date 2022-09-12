@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/07/21 18:11:30 by nathan            #+#    #+#             */
-/*   Updated: 2022/09/09 19:52:32 by nallani          ###   ########.fr       */
+/*   Updated: 2022/09/12 16:32:49 by nallani          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -100,17 +100,6 @@ World::~World()
 	Skybox::clear();
 }
 
-void World::updateSkyboxDEBUG(float _freq, float _amp, int _octaves, int _y)
-{
-	amp += _amp;
-	freq += _freq;
-	octaves += _octaves;
-	y += _y;
-	printf("%f %f %i %i\n", _freq, _amp, _octaves, _y);
-	Skybox::clear();
-	Skybox::initialize(freq, amp, octaves, y);
-}
-
 void World::printPos() const
 {
 	std::stringstream ss;
@@ -145,7 +134,7 @@ void World::render()
 	glCullFace(GL_BACK);// renders only visible squares of cubes
 	shader->use();
 
-	glUniform2f(glGetUniformLocation(shader->getID(), "playerPos"), camera.getPos().x, camera.getPos().z);
+	glUniform3f(glGetUniformLocation(shader->getID(), "playerPos"), camera.getPos().x, camera.getPos().y, camera.getPos().z);
 	glUniformMatrix4fv(glGetUniformLocation(shader->getID(), "precalcMat"), 1, GL_TRUE, precalculatedMat.exportForGL());
 	glUniformMatrix4fv(glGetUniformLocation(shader->getID(), "view"), 1, GL_TRUE, camera.getMatrix().exportForGL());
 
@@ -201,6 +190,14 @@ void World::render()
 	//std::cout << "rendered: " << chunksToRender.size() << "on total visible chunk: " << visibleChunks.size() << std::endl;
 }
 
+void World::changeLight()
+{
+	light = !light;
+	Skybox::changeLight(light);
+	shader->use();
+	glUniform1i(glGetUniformLocation(shader->getID(), "light"), light);
+}
+
 void World::update()
 {
 	Vec2 newChunkPos = Chunk::worldCoordToChunk(camera.getPos());
@@ -209,7 +206,7 @@ void World::update()
 		curPos = newChunkPos;
 		updateChunkBuffers(curPos);
 	}
-	printPos();
+	//printPos();
 
 }
 /**

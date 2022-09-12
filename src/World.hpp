@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/07/21 18:11:54 by nathan            #+#    #+#             */
-/*   Updated: 2022/09/09 19:51:51 by nallani          ###   ########.fr       */
+/*   Updated: 2022/09/12 16:23:25 by nallani          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,9 +34,9 @@ public:
 	virtual ~World( void );
 	void render( void );
 	void setCamera(Camera newCamera);
+	void changeLight();
 	Camera& getCamera();
 
-	void 	updateSkyboxDEBUG(float freq, float amp, int octaves, int y = 0);
 	void	update();
 	// Chunk Manager
 	bool updateChunkBuffers(Vec2 newPos);
@@ -60,6 +60,7 @@ private:
 	void	printPos() const;
 	Camera camera;
 	Shader* shader;
+	bool light = false;
 
 	Vec2 curPos;
 
