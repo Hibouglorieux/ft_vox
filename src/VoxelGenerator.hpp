@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/10/15 13:08:43 by nathan            #+#    #+#             */
-/*   Updated: 2022/06/10 18:25:00 by nallani          ###   ########.fr       */
+/*   Updated: 2022/09/12 17:25:50 by nallani          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,9 +19,8 @@
 
 enum blockType {
 	NO_TYPE = 99,
-	BLOCK_WATER = 0,
-	BLOCK_SAND = 1,
-	BLOCK_DIRT = 2,
+	BLOCK_SAND = 0,
+	BLOCK_DIRT = 1,
 	BLOCK_GRASS,
 	BLOCK_GRASS_SNOW,
 	BLOCK_STONE,

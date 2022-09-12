@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/07/21 18:11:30 by nathan            #+#    #+#             */
-/*   Updated: 2022/09/12 16:32:49 by nallani          ###   ########.fr       */
+/*   Updated: 2022/09/12 17:26:15 by nallani          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -138,8 +138,8 @@ void World::render()
 	glUniformMatrix4fv(glGetUniformLocation(shader->getID(), "precalcMat"), 1, GL_TRUE, precalculatedMat.exportForGL());
 	glUniformMatrix4fv(glGetUniformLocation(shader->getID(), "view"), 1, GL_TRUE, camera.getMatrix().exportForGL());
 
-	int allTextures[8] = {BLOCK_WATER, BLOCK_SAND, BLOCK_DIRT, BLOCK_GRASS, BLOCK_GRASS_SNOW, BLOCK_STONE, BLOCK_SNOW, BLOCK_BEDROCK};
-	glUniform1iv(glGetUniformLocation(shader->getID(), "allTextures"), 8, allTextures);
+	int allTextures[7] = {BLOCK_SAND, BLOCK_DIRT, BLOCK_GRASS, BLOCK_GRASS_SNOW, BLOCK_STONE, BLOCK_SNOW, BLOCK_BEDROCK};
+	glUniform1iv(glGetUniformLocation(shader->getID(), "allTextures"), 7, allTextures);
 
 	ResourceManager::bindTextures();
 	std::vector<std::pair<Vec2, Chunk*>> chunksToRender;

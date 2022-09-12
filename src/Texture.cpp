@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/10/15 16:41:40 by nathan            #+#    #+#             */
-/*   Updated: 2022/09/09 18:05:08 by nallani          ###   ########.fr       */
+/*   Updated: 2022/09/12 17:23:55 by nallani          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -355,14 +355,6 @@ std::array<Texture*, TEXTURECOUNT> ResourceManager::texturePack;
 
 void ResourceManager::loadPack(void)
 {
-	texturePack[BLOCK_WATER] = new Texture({
-		{"packDefault/WATER.png"},
-		{"packDefault/WATER.png"},
-		{"packDefault/WATER.png"},
-		{"packDefault/WATER.png"},
-		{"packDefault/WATER.png"},
-		{"packDefault/WATER.png"}}, "BLOCK_WATER");
-
 	texturePack[BLOCK_SAND] = new Texture({
 		{"packDefault/SAND.jpg"},
 		{"packDefault/SAND.jpg"},
@@ -423,8 +415,6 @@ void ResourceManager::loadPack(void)
 
 void ResourceManager::bindTextures(void)
 {
-	glActiveTexture(GL_TEXTURE0 + BLOCK_WATER); // Texture unit 0
-	glBindTexture(GL_TEXTURE_CUBE_MAP, texturePack[BLOCK_WATER]->getID());
 	glActiveTexture(GL_TEXTURE0 + BLOCK_SAND); // Texture unit 1
 	glBindTexture(GL_TEXTURE_CUBE_MAP, texturePack[BLOCK_SAND]->getID());
 	glActiveTexture(GL_TEXTURE0 + BLOCK_DIRT); // Texture unit 2
