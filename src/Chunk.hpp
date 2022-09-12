@@ -48,6 +48,7 @@ public:
 
 	static	Vec2 worldCoordToChunk(Vec3 worldPos);
 	static	int totalChunks;
+	bool	deleteBlock(Vec3 blockToTest);
 	AABB	boundingVolume = AABB(Vec3(0, 0, 0), Vec3(CHUNK_WIDTH, CHUNK_HEIGHT, CHUNK_DEPTH));
 private:
 	struct bloc

@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/07/21 18:11:54 by nathan            #+#    #+#             */
-/*   Updated: 2022/09/12 17:17:59 by nallani          ###   ########.fr       */
+/*   Updated: 2022/09/12 18:09:11 by nallani          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,6 +40,7 @@ public:
 	void	update();
 	// Chunk Manager
 	bool updateChunkBuffers(Vec2 newPos);
+	void deleteBlock();
 
 	bool pause = false;
 	bool freeze = false;
@@ -53,6 +54,7 @@ public:
 
 	std::vector<std::pair<Vec2, Chunk*>> chunksToRenderFix;
 
+
 private:
 	bool shouldBeRendered(Vec2 chunkPos, const Chunk* chnk, Matrix& matrix);
 	std::vector<Vec2> getPosInRange(Vec2 center, float minDistance, float maxDistance);
@@ -61,6 +63,7 @@ private:
 	Camera camera;
 	Shader* shader;
 	bool light = false;
+	std::map<Vec2, std::vector<Vec3>> deletedBlocks;
 
 	Vec2 curPos;
 

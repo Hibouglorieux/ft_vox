@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/07/21 18:11:30 by nathan            #+#    #+#             */
-/*   Updated: 2022/09/12 17:26:15 by nallani          ###   ########.fr       */
+/*   Updated: 2022/09/12 20:33:12 by nallani          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -98,6 +98,63 @@ World::~World()
 	}
 	delete shader;
 	Skybox::clear();
+}
+
+void World::deleteBlock()
+{
+	Vec3 curPos = camera.getPos();
+	Vec3 dir = camera.getDirection();
+	dir.getNormalized();
+
+	while (curPos.y > 0 && curPos.y < HEIGHT)
+	{
+		float xClose = abs(curPos.x - (dir.x < 0 ? ceil(curPos.x - 1) : floor(curPos.x + 1)));
+		float yClose = abs(curPos.y - (dir.y < 0 ? ceil(curPos.y - 1) : floor(curPos.y + 1)));
+		float zClose = abs(curPos.z - (dir.z < 0 ? ceil(curPos.z - 1) : floor(curPos.z + 1)));
+		if (xClose < 0.01)// TODO div here 
+			xClose = 0;
+		if (yClose < 0.01)
+			yClose = 0;
+		if (zClose < 0.01)
+			zClose = 0;
+		/*
+		std::cout << "dir: " << dir << std::endl;
+		std::cout << "xClose: " << xClose 
+			<< " yClose: " << yClose 
+			<< " zClose: " << zClose << std::endl;
+			*/
+
+		
+		xClose /= abs(dir.x);
+		yClose /= abs(dir.y);
+		zClose /= abs(dir.z);
+		float factor;
+		if ((xClose < yClose || yClose == 0) && (xClose < zClose || zClose == 0)&& xClose != 0)
+			factor = xClose;
+		else if ((yClose < xClose || xClose == 0) && (yClose < zClose || zClose == 0) && yClose != 0)
+			factor = yClose;
+		else
+			factor = zClose;
+		//std::cout << "factor: " << factor << std::endl;
+		curPos = curPos + (dir * factor);
+		//std::cout << "curPos: " << curPos << std::endl;
+
+		Vec3 flooredPos = Vec3((int)(curPos.x), (int)(curPos.y), (int)(curPos.z));
+		Vec2 chunkPos = Chunk::worldCoordToChunk(flooredPos);
+		if (visibleChunks.find(chunkPos) == visibleChunks.end())
+			return;
+		//std::cout << "ChunkPos is: " << visibleChunks[chunkPos]->getPos() << std::endl;
+		//std::cout << "relative is: " << curPos - visibleChunks[chunkPos]->getPos();
+		Vec3 relativeFlooredPos = flooredPos - visibleChunks[chunkPos]->getPos();
+		if (visibleChunks[chunkPos]->deleteBlock(relativeFlooredPos))
+		{
+			if (deletedBlocks.find(chunkPos) == deletedBlocks.end())
+				deletedBlocks.insert({chunkPos, {}});
+			deletedBlocks[chunkPos].push_back(relativeFlooredPos);
+			//std::cout << "destroyed at: "<< flooredPos <<  std::endl;
+			return;
+		}
+	}
 }
 
 void World::printPos() const
@@ -207,6 +264,8 @@ void World::update()
 		updateChunkBuffers(curPos);
 	}
 	//printPos();
+	PRINT_TO_SCREEN(camera.getPos().toString());
+	PRINT_TO_SCREEN(camera.getDirection().toString());
 
 }
 /**

@@ -43,6 +43,31 @@ Chunk::Chunk(int x, int z, Camera *camera, std::vector<std::pair<Vec2, Chunk *>>
 	myNeighbours = neighbours;
 }
 
+bool	Chunk::deleteBlock(Vec3 blockToTest)
+{
+	//std::cout << "chunkTest at " << blockToTest << std::endl;
+	if (std::find(spaceBorder[0].begin(), spaceBorder[0].end(), blockToTest) == spaceBorder[0].end())
+	{
+		/*
+		for (auto it : spaceBorder[0])
+			if (it.x == blockToTest.x)
+				std::cout << it;
+				*/
+		return false;
+	}
+	else
+	{
+		//std::cout << "HIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIT! " << std::endl;
+		blocs[blockToTest.y][blockToTest.z][blockToTest.x].type = NO_TYPE;
+		updateChunk = true;
+		spaceBorder[0].clear();
+		facesToRender.clear();
+		updateVisibility();
+		//generatePosOffsets();
+	}
+	return true;
+}
+
 /*
 float Chunk::getBlockBiome(int x, int z, bool setBlocInChunk, bool superFlat)
 {

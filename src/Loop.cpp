@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/05/24 15:40:25 by nathan            #+#    #+#             */
-/*   Updated: 2022/09/12 16:34:06 by nallani          ###   ########.fr       */
+/*   Updated: 2022/09/12 18:19:18 by nallani          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -167,6 +167,8 @@ void Loop::keyCallback(GLFWwindow* window, int key, int scancode, int action, in
 		return;
 	if (key == GLFW_KEY_R && action == GLFW_PRESS && world)
 		world->getCamera().reset();
+	if (key == GLFW_KEY_V && action == GLFW_PRESS && world)
+		world->deleteBlock();
 
 
 	static bool keysPressed[389] = {false};
