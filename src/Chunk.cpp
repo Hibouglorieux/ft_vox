@@ -12,7 +12,7 @@
 
 int Chunk::totalChunks = 0;
 
-Chunk::Chunk(int x, int z, Camera *camera)
+Chunk::Chunk(int x, int z, Camera *camera, std::vector<Vec3>* blocsDeleted)
 {
 	totalChunks++;
 	position = Vec3(x * CHUNK_WIDTH, 0, z * CHUNK_DEPTH);
@@ -20,6 +20,8 @@ Chunk::Chunk(int x, int z, Camera *camera)
 	//std::cout << "Chunk : " << x << ",0," << z << std::endl;
 	// Not necessary ?
 
+	if (blocsDeleted)
+		deletedBlocs = *blocsDeleted;
 	// Should we recompute the chunk's blocs positions
 	updateChunk = false;
 
@@ -37,11 +39,22 @@ Chunk::Chunk(int x, int z, Camera *camera)
 	glGenBuffers(1, &allVBO);
 }
 
-Chunk::Chunk(int x, int z, Camera *camera, std::vector<std::pair<Vec2, Chunk *>> neighbours) : Chunk(x, z, camera)
+Chunk::Chunk(int x, int z, Camera *camera, std::vector<std::pair<Vec2, Chunk *>> neighbours, std::vector<Vec3>* blocsDeleted) : Chunk(x, z, camera, blocsDeleted)
 {
 	(void)neighbours;
 	myNeighbours = neighbours;
 }
+
+/*
+void	Chunk::updateWithNeighbourBlockDestroyed(Vec3 blocAffected)
+{
+	struct bloc& bloc = blocs[blocAffected.y][blocAffected.z][blocAffected.x];
+	if (bloc.type != NO_TYPE && bloc->visible == true)
+	{
+		int index = std::distance(space
+	}
+}
+*/
 
 bool	Chunk::deleteBlock(Vec3 blockToTest)
 {
@@ -240,6 +253,14 @@ void Chunk::initChunk(void)
 
 			float blockValue = this->getBlockBiome(x, z);
 
+			if (std::find(deletedBlocs.begin(), deletedBlocs.end(), Vec3(x, (int)blockValue, z)) != deletedBlocs.end())
+			{// undo what was done in getBlockBiome
+				struct bloc* tmpBloc = &blocs[(int)blockValue][z][x];
+				tmpBloc->type = NO_TYPE;
+				tmpBloc->visible = false;
+				hardBloc--;
+				hardBlocVisible--;
+			}
 			//if ((x == 0 || x == CHUNK_WIDTH - 1 || z == 0 || z == CHUNK_DEPTH - 1) && blocs[blockValue][z][x].type != NO_TYPE)	// TODO : Delete, this was to show chunk
 			//	(&(blocs[blockValue][z][x]))->type = BLOCK_SAND;
 
@@ -251,6 +272,11 @@ void Chunk::initChunk(void)
 			for (int j = (int)blockValue - 1; j > 0; j--)
 			{
 				bloc = &(blocs[j][z][x]);
+				if (std::find(deletedBlocs.begin(), deletedBlocs.end(), Vec3(x, j, z)) != deletedBlocs.end())
+				{
+					bloc->type = NO_TYPE;
+					continue;
+				}
 				//int bloc_type = bloc->type;
 
 				if ((&(blocs[(int)blockValue][z][x]))->type == BLOCK_GRASS || (&(blocs[(int)blockValue][z][x]))->type == NO_TYPE)
