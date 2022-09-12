@@ -44,16 +44,12 @@ Chunk::Chunk(int x, int z, Camera *camera, std::vector<std::pair<Vec2, Chunk *>>
 	myNeighbours = neighbours;
 }
 
-/*
 void	Chunk::updateWithNeighbourBlockDestroyed(Vec3 blocAffected)
 {
 	struct bloc& bloc = blocs[blocAffected.y][blocAffected.z][blocAffected.x];
-	if (bloc.type != NO_TYPE && bloc->visible == true)
-	{
-		int index = std::distance(space
-	}
+	if (bloc.type != NO_TYPE)
+		updateChunk = true;
 }
-*/
 
 bool	Chunk::deleteBlock(Vec3 blockToTest)
 {
@@ -221,6 +217,14 @@ float Chunk::getBlockBiome(int x, int z, bool setBlocInChunk)
 bool Chunk::hasBlockBeenDestroyed(Vec3 blocPos)
 {
 	Vec2 pos2d = Chunk::worldCoordToChunk(position);
+	if (blocPos.x < 0)
+		pos2d.x--;
+	if (blocPos.x > CHUNK_WIDTH)
+		pos2d.x++;
+	if (blocPos.z < 0)
+		pos2d.y--;
+	if (blocPos.z > CHUNK_DEPTH)
+		pos2d.y++;
 	if (deletedBlocs->find(pos2d) == deletedBlocs->end())
 		return false;
 	const std::vector<Vec3>& myDeletedBlocs= deletedBlocs->at(pos2d);
@@ -766,7 +770,7 @@ GLuint Chunk::setVisibilityByNeighbors(int x, int y, int z) // Activates visibil
 		float max_height = it.first;
 		GLuint currentFace = it.second;
 		bool isBlockEmpty = isBlockEmptyAfterWorley(border_neighbors_vec[i]);
-		if ((isBlockEmpty && max_height < y)|| max_height < y)
+		if ((isBlockEmpty && max_height < y)|| max_height < y || hasBlockBeenDestroyed(border_neighbors_vec[i]))
 		{
 			bloc->visible = true;
 			visibleFaces |= currentFace;

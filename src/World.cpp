@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/07/21 18:11:30 by nathan            #+#    #+#             */
-/*   Updated: 2022/09/12 21:34:28 by nallani          ###   ########.fr       */
+/*   Updated: 2022/09/12 22:00:13 by nallani          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -111,7 +111,7 @@ void World::deleteBlock()
 		float xClose = abs(curPos.x - (dir.x < 0 ? ceil(curPos.x - 1) : floor(curPos.x + 1)));
 		float yClose = abs(curPos.y - (dir.y < 0 ? ceil(curPos.y - 1) : floor(curPos.y + 1)));
 		float zClose = abs(curPos.z - (dir.z < 0 ? ceil(curPos.z - 1) : floor(curPos.z + 1)));
-		if (xClose < 0.01)// TODO div here 
+		if (xClose < 0.01)
 			xClose = 0;
 		if (yClose < 0.01)
 			yClose = 0;
@@ -151,6 +151,14 @@ void World::deleteBlock()
 			if (deletedBlocks.find(chunkPos) == deletedBlocks.end())
 				deletedBlocks.insert({chunkPos, {}});
 			deletedBlocks[chunkPos].push_back(relativeFlooredPos);
+			if (chunkPos.x == 0 && visibleChunks.find({chunkPos.x - 1, chunkPos.y}) != visibleChunks.end())
+				visibleChunks.at({chunkPos.x - 1, chunkPos.y})->updateWithNeighbourBlockDestroyed(relativeFlooredPos);
+			if (chunkPos.x == 15 && visibleChunks.find({chunkPos.x + 1, chunkPos.y}) != visibleChunks.end())
+				visibleChunks.at({chunkPos.x + 1, chunkPos.y})->updateWithNeighbourBlockDestroyed(relativeFlooredPos);
+			if (chunkPos.y == 0 && visibleChunks.find({chunkPos.x, chunkPos.y - 1}) != visibleChunks.end())
+				visibleChunks.at({chunkPos.x, chunkPos.y - 1})->updateWithNeighbourBlockDestroyed(relativeFlooredPos);
+			if (chunkPos.y == 15 && visibleChunks.find({chunkPos.x, chunkPos.y + 1}) != visibleChunks.end())
+				visibleChunks.at({chunkPos.x, chunkPos.y + 1})->updateWithNeighbourBlockDestroyed(relativeFlooredPos);
 			//std::cout << "destroyed at: "<< flooredPos <<  std::endl;
 			return;
 		}

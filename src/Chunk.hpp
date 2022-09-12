@@ -36,6 +36,7 @@ public:
 			const std::map<Vec2, std::vector<Vec3>>& blocsDeleted);
 
 	bool	hasBlockBeenDestroyed(Vec3 blocPos);
+	void	updateWithNeighbourBlockDestroyed(Vec3 blocAffected);
 	void	initChunk(void);
 	void	setNeighbors(std::vector<std::pair<Vec2, Chunk*>> neighbours) { myNeighbours = neighbours; }
 	std::vector<std::pair<Vec2, Chunk*>>	getNeighbors(void) { return myNeighbours; }
