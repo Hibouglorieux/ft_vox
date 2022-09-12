@@ -31,9 +31,11 @@
 
 class Chunk : public Object{
 public:
-	Chunk(int x, int z, Camera *camera, std::vector<Vec3>* blocsDeleted);
-	Chunk(int x, int z, Camera *camera, std::vector<std::pair<Vec2, Chunk*>> neighbours, std::vector<Vec3>* blocsDeleted);
+	Chunk(int x, int z, Camera *camera, const std::map<Vec2, std::vector<Vec3>>& blocsDeleted);
+	Chunk(int x, int z, Camera *camera, std::vector<std::pair<Vec2, Chunk*>> neighbours,
+			const std::map<Vec2, std::vector<Vec3>>& blocsDeleted);
 
+	bool	hasBlockBeenDestroyed(Vec3 blocPos);
 	void	initChunk(void);
 	void	setNeighbors(std::vector<std::pair<Vec2, Chunk*>> neighbours) { myNeighbours = neighbours; }
 	std::vector<std::pair<Vec2, Chunk*>>	getNeighbors(void) { return myNeighbours; }
@@ -108,7 +110,7 @@ private:
 
 	GLuint allVBO;
 	std::vector<GLuint>	facesToRender;
-	std::vector<Vec3> deletedBlocs;
+	const std::map<Vec2, std::vector<Vec3>>* deletedBlocs;
 
 	std::vector<std::pair<Vec2, Chunk*>> myNeighbours; // Should have at most 4 neigbhors
 

@@ -12,7 +12,7 @@
 
 int Chunk::totalChunks = 0;
 
-Chunk::Chunk(int x, int z, Camera *camera, std::vector<Vec3>* blocsDeleted)
+Chunk::Chunk(int x, int z, Camera *camera, const std::map<Vec2, std::vector<Vec3>>& blocsDeleted)
 {
 	totalChunks++;
 	position = Vec3(x * CHUNK_WIDTH, 0, z * CHUNK_DEPTH);
@@ -20,8 +20,7 @@ Chunk::Chunk(int x, int z, Camera *camera, std::vector<Vec3>* blocsDeleted)
 	//std::cout << "Chunk : " << x << ",0," << z << std::endl;
 	// Not necessary ?
 
-	if (blocsDeleted)
-		deletedBlocs = *blocsDeleted;
+	deletedBlocs = &blocsDeleted;
 	// Should we recompute the chunk's blocs positions
 	updateChunk = false;
 
@@ -39,7 +38,7 @@ Chunk::Chunk(int x, int z, Camera *camera, std::vector<Vec3>* blocsDeleted)
 	glGenBuffers(1, &allVBO);
 }
 
-Chunk::Chunk(int x, int z, Camera *camera, std::vector<std::pair<Vec2, Chunk *>> neighbours, std::vector<Vec3>* blocsDeleted) : Chunk(x, z, camera, blocsDeleted)
+Chunk::Chunk(int x, int z, Camera *camera, std::vector<std::pair<Vec2, Chunk *>> neighbours, const std::map<Vec2, std::vector<Vec3>>& blocsDeleted) : Chunk(x, z, camera, blocsDeleted)
 {
 	(void)neighbours;
 	myNeighbours = neighbours;
@@ -219,6 +218,17 @@ float Chunk::getBlockBiome(int x, int z, bool setBlocInChunk)
 	return heightValue;
 }
 
+bool Chunk::hasBlockBeenDestroyed(Vec3 blocPos)
+{
+	Vec2 pos2d = Chunk::worldCoordToChunk(position);
+	if (deletedBlocs->find(pos2d) == deletedBlocs->end())
+		return false;
+	const std::vector<Vec3>& myDeletedBlocs= deletedBlocs->at(pos2d);
+	if (std::find(myDeletedBlocs.begin(), myDeletedBlocs.end(), blocPos) == myDeletedBlocs.end())
+		return false;
+	return true;
+}
+
 void Chunk::initChunk(void)
 {
 	struct bloc *bloc;
@@ -253,7 +263,7 @@ void Chunk::initChunk(void)
 
 			float blockValue = this->getBlockBiome(x, z);
 
-			if (std::find(deletedBlocs.begin(), deletedBlocs.end(), Vec3(x, (int)blockValue, z)) != deletedBlocs.end())
+			if (hasBlockBeenDestroyed(Vec3(x, (int)blockValue, z)))
 			{// undo what was done in getBlockBiome
 				struct bloc* tmpBloc = &blocs[(int)blockValue][z][x];
 				tmpBloc->type = NO_TYPE;
@@ -272,7 +282,7 @@ void Chunk::initChunk(void)
 			for (int j = (int)blockValue - 1; j > 0; j--)
 			{
 				bloc = &(blocs[j][z][x]);
-				if (std::find(deletedBlocs.begin(), deletedBlocs.end(), Vec3(x, j, z)) != deletedBlocs.end())
+				if (hasBlockBeenDestroyed(Vec3(x, j, z)))
 				{
 					bloc->type = NO_TYPE;
 					continue;

@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/07/21 18:11:30 by nathan            #+#    #+#             */
-/*   Updated: 2022/09/12 21:10:01 by nallani          ###   ########.fr       */
+/*   Updated: 2022/09/12 21:34:28 by nallani          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,10 +37,7 @@ World::World()
 	auto positions = getPosInRange(curPos, 0, CHUNK_VIEW_DISTANCE);
 	for (auto pos : positions)
 	{
-		std::vector<Vec3>* delBlocForChunk = nullptr;
-		if (deletedBlocks.find(pos) != deletedBlocks.end())
-			delBlocForChunk = &deletedBlocks[pos];
-		Chunk* chnk = new Chunk(pos.x, pos.y, &camera, delBlocForChunk);
+		Chunk* chnk = new Chunk(pos.x, pos.y, &camera, deletedBlocks);
 		visibleChunks.insert(std::pair<Vec2, Chunk*>(pos, chnk));
 	}
 	positions.clear();
@@ -49,10 +46,7 @@ World::World()
 	{
 		if (visibleChunks.find(pos) == visibleChunks.end())
 		{
-			std::vector<Vec3>* delBlocForChunk = nullptr;
-			if (deletedBlocks.find(pos) != deletedBlocks.end())
-				delBlocForChunk = &deletedBlocks[pos];
-			Chunk* chnk = new Chunk(pos.x, pos.y, &camera, delBlocForChunk);
+			Chunk* chnk = new Chunk(pos.x, pos.y, &camera, deletedBlocks);
 			preLoadedChunks.insert(std::pair<Vec2, Chunk*>(pos, chnk));
 		}
 	}
@@ -339,10 +333,7 @@ bool World::updateChunkBuffers(Vec2 newPos)
 		if (preLoadedChunks.find(preloadedPositions) == preLoadedChunks.end())
 		{
 			auto allocatedNeighbours = getAllocatedNeighbours(preloadedPositions);
-			std::vector<Vec3>* delBlocForChunk = nullptr;
-			if (deletedBlocks.find(preloadedPositions) != deletedBlocks.end())
-				delBlocForChunk = &deletedBlocks[preloadedPositions];
-			chunks.push_back(new Chunk(preloadedPositions.x, preloadedPositions.y, &camera, allocatedNeighbours, delBlocForChunk));
+			chunks.push_back(new Chunk(preloadedPositions.x, preloadedPositions.y, &camera, allocatedNeighbours, deletedBlocks));
 			preLoadedChunks.insert(std::pair<Vec2, Chunk*>(preloadedPositions, chunks.back()));
 		}
 	}
@@ -362,10 +353,7 @@ bool World::updateChunkBuffers(Vec2 newPos)
 			if (preLoadedChunks.find(key) == preLoadedChunks.end())
 			{
 				auto allocatedNeighbours = getAllocatedNeighbours(key);
-				std::vector<Vec3>* delBlocForChunk = nullptr;
-				if (deletedBlocks.find(key) != deletedBlocks.end())
-					delBlocForChunk = &deletedBlocks[key];
-				chnk = new Chunk(key.x, key.y, &camera, allocatedNeighbours, delBlocForChunk);
+				chnk = new Chunk(key.x, key.y, &camera, allocatedNeighbours, deletedBlocks);
 				visibleChunks.insert(std::pair<Vec2, Chunk*>(key, chnk));
 				
 				std::thread worker(initNewChunk, chnk);
