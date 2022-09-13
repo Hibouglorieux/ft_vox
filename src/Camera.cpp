@@ -79,6 +79,9 @@ void Camera::reset()
 {
 	pos = DEFAULT_CAMERA_POS;
 	dir = DEFAULT_CAMERA_ROT;
+
+	actualizeView();
+	updateFrustum(false);
 }
 
 Matrix Camera::getMatrix()
