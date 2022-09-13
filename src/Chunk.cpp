@@ -92,7 +92,23 @@ float Chunk::getBlockBiome(int x, int z, bool setBlocInChunk)
 	int blocType = BLOCK_STONE;
 
 	float heightValue = (flatTerrain * (HEIGHT - 1) * 0.66);
+	
+	if (terrainBiomeValue < 0.25)
+	{
+		float desertTerrain = VoxelGenerator::Noise2D(position.x + x, position.z + z, 0.15f, 0.00225f, 2.5f, 1, 0, 2.13f, 0.65);
+		desertTerrain = pow(desertTerrain, 1.66);
 
+		float biomeRange = (0.25);
+		float surfaceRange = (desertTerrain - flatTerrain);
+		float interpolationValue = (((terrainBiomeValue - 0.25) * surfaceRange) / biomeRange) + flatTerrain;
+
+		if (interpolationValue > 1)
+			interpolationValue = 1;
+		if (interpolationValue < 0.0)
+			interpolationValue = 0;
+		heightValue = (interpolationValue * (HEIGHT - 1) * 0.66);
+		blocType = BLOCK_SAND;
+	}
 	if (terrainBiomeValue > 0.45)
 	{
 		float moutainTerrain = VoxelGenerator::Noise2D(position.x + x, position.z + z, 0.15f, 0.00225f, 2.5f, 1, 0, 2.13f, 0.65);
