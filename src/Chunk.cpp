@@ -59,17 +59,14 @@ void	Chunk::updateWithNeighbourBlockDestroyed(Vec3 blocAffected)
 bool	Chunk::deleteBlock(Vec3 blockToTest)
 {
 	//std::cout << "chunkTest at " << blockToTest << std::endl;
-	if (std::find(spaceBorder[0].begin(), spaceBorder[0].end(), blockToTest) == spaceBorder[0].end())
+	if (blocs[blockToTest.y][blockToTest.z][blockToTest.x].type == NO_TYPE)
 	{
-		/*
-		for (auto it : spaceBorder[0])
-			if (it.x == blockToTest.x)
-				std::cout << it;
-				*/
 		return false;
 	}
 	else
 	{
+		if (blocs[blockToTest.y][blockToTest.z][blockToTest.x].type == BLOCK_BEDROCK)
+			return false;
 		//std::cout << "HIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIT! " << std::endl;
 		blocs[blockToTest.y][blockToTest.z][blockToTest.x].type = NO_TYPE;
 		updateChunk = true;
@@ -81,87 +78,6 @@ bool	Chunk::deleteBlock(Vec3 blockToTest)
 	return true;
 }
 
-/*
-float Chunk::getBlockBiome(int x, int z, bool setBlocInChunk, bool superFlat)
-{
-	// First step :
-	//	Compute flat floor at height 63 (Chunk being 256 bloc tall)
-	float heightValue = 63;
-	if (!superFlat)
-	{
-		// Second step :
-		//	Generate Temperature & Humidity value of the block
-		//float temperature	= VoxelGenerator::Noise2D(position.x + x, position.z + z, 0.0f, 0.000125f, 0.75f, 2, 1, 4, 1) * MAX_TEMPERATURE; 		// TODO : Determine correct value
-		//float humidity		= VoxelGenerator::Noise2D(position.x + x, position.z + z, 0.0f, 0.000125f, 0.75f, 2, 1, 2, 0.5) * 100.0;				// TODO : Get different value than temperature
-		//int biome = BasicBiome;	// Set biome according to biome table
-
-		float biomeSelector 		= VoxelGenerator::Noise2D(position.x + x, position.z + z, 0, 0.00025f, 0.85f, 2, 0, 2.0f, 0.5f);
-
-		float flatTerrain 			= VoxelGenerator::Noise2D(position.x + x, position.z + z, 0.0f, 0.000133f, 0.25f, 4, 0, 2, 0.65);
-		float hillTerrain			= VoxelGenerator::Noise2D(position.x + x, position.z + z, 0.0f, 0.000125f, 0.55f, 2, 1, 4, 1);
-		float mountainTerrain		= VoxelGenerator::Noise2D(position.x + x, position.z + z, 0.0f, 0.00525f, 0.75f, 1, 0, 3, 0.65);
-		float desertTerrain			= VoxelGenerator::Noise2D(position.x + x, position.z + z, 0.0f, 0.000525f, 0.15f, 2, 1, 4, 1);
-
-		if (biomeSelector < 0.3)		// Basic
-			heightValue = 64;
-		else if (biomeSelector < 0.5)	// Hills
-			heightValue = 70;
-		else if (biomeSelector < 0.7)	// Moutain
-			heightValue = 80;
-		else
-			heightValue = mountainTerrain * (HEIGHT - 1);
-		float value = biomeSelector;
-		//printf("%f\n", value);
-
-		if (value < 0)
-			value = 0;
-		else if (value > 1)
-			value = 1;
-
-		heightValue = value * (HEIGHT - 1);
-
-// Third step :
-//	Determine the bloc style, type & height
-switch (biome)
-		{
-			case BasicBiome:
-				// Set biome matching terrain
-				break;
-			case ForestBiome:
-				// Set biome matching terrain
-				break;
-			case DesertBiome:
-				// Set biome matching terrain
-				break;
-			case MountainBiome:
-				// Set biome matching terrain
-				break;
-			
-			default:
-				break;
-		}
-
-		// Fourth step :
-		//	Check if there is a river
-	}
-
-	// Final step :
-	//	If setBlocInChunk is true, set the bloc using what has been determined at the previous steps
-	if (!setBlocInChunk)
-		return heightValue;
-	struct bloc	*bloc = &(blocs[(int)heightValue][z][x]);
-	bloc->type = BLOCK_GRASS;
-	if (heightValue >= 70)
-		bloc->type = BLOCK_SAND;
-	if (heightValue >= 80)
-		bloc->type = BLOCK_STONE;
-	bloc->visible = 1;
-	hardBloc += 1;
-	hardBlocVisible++;
-
-	return heightValue;
-}*/
-
 static inline float lerp(float a, float b, float f)
 {
 	return a + f * (b - a);
@@ -169,15 +85,13 @@ static inline float lerp(float a, float b, float f)
 
 float Chunk::getBlockBiome(int x, int z, bool setBlocInChunk)
 {
-	float flatTerrain = VoxelGenerator::Noise2D(position.x + x, position.z + z, 0.2f, 0.00033f, 0.25f, 4, 0, 2, 0.65); // Kind of flat
+	float flatTerrain = VoxelGenerator::Noise2D(position.x + x, position.z + z, 0.2f, 0.00033f, 0.25f, 4, 0, 2, 0.65);
 	flatTerrain = pow(flatTerrain * 0.75, 2);
 	float terrainBiomeValue = VoxelGenerator::Noise2D(position.x + x, position.z + z, 0.0f, 0.000125f, 0.75f, 2, 1, 4, 1);
 
 	int blocType = BLOCK_GRASS;
 
 	float heightValue = (flatTerrain * (HEIGHT - 1) * 0.66);
-	//terrainBiomeValue = 0.0;
-	//heightValue = 1;
 
 	if (terrainBiomeValue > 0.45)
 	{
@@ -202,7 +116,7 @@ float Chunk::getBlockBiome(int x, int z, bool setBlocInChunk)
 	}
 	else if (terrainBiomeValue < 0.30)
 	{
-		//blocType = BLOCK_GRASS_SNOW;
+		blocType = BLOCK_SAND;
 	}
 
 	if (!setBlocInChunk)
@@ -316,8 +230,10 @@ void Chunk::initChunk(void)
 				}
 				//int bloc_type = bloc->type;
 
-				if ((&(blocs[(int)blockValue][z][x]))->type == BLOCK_GRASS || (&(blocs[(int)blockValue][z][x]))->type == NO_TYPE)
+				if ((&(blocs[(int)blockValue][z][x]))->type == BLOCK_GRASS || (&(blocs[(int)blockValue][z][x]))->type == BLOCK_GRASS_SNOW || (&(blocs[(int)blockValue][z][x]))->type == NO_TYPE)
 					bloc->type = BLOCK_DIRT;
+				else if ((&(blocs[(int)blockValue][z][x]))->type == BLOCK_SAND)
+					bloc->type = BLOCK_SAND;
 				else
 					bloc->type = BLOCK_STONE;
 				if (topBlockDestroyed != NO_TYPE)

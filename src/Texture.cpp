@@ -380,12 +380,12 @@ void ResourceManager::loadPack(void)
 		{"packDefault/GRASS_SIDE.jpg"}}, "BLOCK_GRASS");
 
 	texturePack[BLOCK_GRASS_SNOW] = new Texture({
-		{"packDefault/GRASS_SIDE.jpg"},
-		{"packDefault/GRASS_SIDE.jpg"},
+		{"packDefault/GRASS_TOP_SNOW.jpg"},
+		{"packDefault/GRASS_TOP_SNOW.jpg"},
 		{"packDefault/SNOW.jpg"},
 		{"packDefault/GRASS_BOTTOM.jpg"},
-		{"packDefault/GRASS_SIDE.jpg"},
-		{"packDefault/GRASS_SIDE.jpg"}}, "BLOCK_GRASS_SNOW");
+		{"packDefault/GRASS_TOP_SNOW.jpg"},
+		{"packDefault/GRASS_TOP_SNOW.jpg"}}, "BLOCK_GRASS_SNOW");
 
 	texturePack[BLOCK_STONE] = new Texture({
 		{"packDefault/STONE.jpg"},
