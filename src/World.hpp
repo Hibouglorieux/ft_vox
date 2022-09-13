@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/07/21 18:11:54 by nathan            #+#    #+#             */
-/*   Updated: 2022/09/12 18:09:11 by nallani          ###   ########.fr       */
+/*   Updated: 2022/09/13 15:44:27 by nallani          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,7 +25,7 @@
 # define VIEW_DISTANCE 160
 # define CHUNK_VIEW_DISTANCE (VIEW_DISTANCE / CHUNK_WIDTH)
 //# define CHUNK_VIEW_DISTANCE 14
-# define MAX_PRELOAD_DISTANCE ((float)CHUNK_VIEW_DISTANCE + 2)
+# define MAX_PRELOAD_DISTANCE ((float)CHUNK_VIEW_DISTANCE + 1)
 # define PRELOAD_DISTANCE_DEL ((float)CHUNK_VIEW_DISTANCE + 6)
 
 class World {
