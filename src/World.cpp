@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/07/21 18:11:30 by nathan            #+#    #+#             */
-/*   Updated: 2022/09/13 13:00:15 by nallani          ###   ########.fr       */
+/*   Updated: 2022/09/13 13:14:58 by nallani          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -111,6 +111,12 @@ void World::deleteBlock()
 		float xClose = abs((dir.x > 0 ? round(curPos.x) + 0.5 - curPos.x : round(curPos.x) - 0.5 - curPos.x));
 		float yClose = abs((dir.y > 0 ? round(curPos.y) + 0.5 - curPos.y : round(curPos.y) - 0.5 - curPos.y));
 		float zClose = abs((dir.z > 0 ? round(curPos.z) + 0.5 - curPos.z : round(curPos.z) - 0.5 - curPos.z));
+		if (xClose == 0)
+			xClose = 1;
+		if (yClose == 0)
+			yClose = 1;
+		if (zClose == 0)
+			zClose = 1;
 		/*
 		std::cout << "dir: " << dir << std::endl;
 		std::cout << "xClose: " << xClose 
@@ -119,9 +125,23 @@ void World::deleteBlock()
 			*/
 
 		
-		xClose /= abs(dir.x);
-		yClose /= abs(dir.y);
-		zClose /= abs(dir.z);
+		if (abs(dir.x) > 0.0001)
+			xClose /= abs(dir.x);
+		else
+			xClose = std::numeric_limits<float>::infinity();
+		if (abs(dir.y) > 0.0001)
+			yClose /= abs(dir.y);
+		else
+			yClose = std::numeric_limits<float>::infinity();
+		if (abs(dir.z) > 0.0001)
+			zClose /= abs(dir.z);
+		else
+			zClose = std::numeric_limits<float>::infinity();
+		/*
+		std::cout << "xClose: " << xClose 
+			<< " yClose: " << yClose 
+			<< " zClose: " << zClose << std::endl;
+			*/
 		float factor;
 		bool factorx = false;
 		bool factory = false;
@@ -141,7 +161,7 @@ void World::deleteBlock()
 			factor = zClose;
 			factorz = true;
 		}
-		//std::cout << "factor: " << factor << std::endl;
+		//std::cout << "factor: " << factor << "from factor " << (factorx ? "x" : factory ? "y" : "z") << std::endl;
 		curPos = curPos + (dir * factor);
 		//std::cout << "curPos: " << curPos << std::endl;
 
@@ -151,7 +171,6 @@ void World::deleteBlock()
 		Vec2 chunkPos = Chunk::worldCoordToChunk(flooredPos);
 		if (visibleChunks.find(chunkPos) == visibleChunks.end())
 			return;
-		//std::cout << "ChunkPos is: " << visibleChunks[chunkPos]->getPos() << std::endl;
 		Vec3 relativeFlooredPos = flooredPos - visibleChunks[chunkPos]->getPos();
 		//std::cout << "bloc in chunk pos is: " << relativeFlooredPos << std::endl;;
 		if (visibleChunks[chunkPos]->deleteBlock(relativeFlooredPos))
