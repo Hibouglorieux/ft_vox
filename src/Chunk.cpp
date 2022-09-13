@@ -288,9 +288,11 @@ void Chunk::initChunk(void)
 
 			float blockValue = this->getBlockBiome(x, z);
 
+			GLint topBlockDestroyed = NO_TYPE;
 			if (hasBlockBeenDestroyed(Vec3(x, (int)blockValue, z)))
 			{// undo what was done in getBlockBiome
 				struct bloc* tmpBloc = &blocs[(int)blockValue][z][x];
+				topBlockDestroyed = tmpBloc->type;
 				tmpBloc->type = NO_TYPE;
 				tmpBloc->visible = false;
 				hardBloc--;
@@ -318,6 +320,8 @@ void Chunk::initChunk(void)
 					bloc->type = BLOCK_DIRT;
 				else
 					bloc->type = BLOCK_STONE;
+				if (topBlockDestroyed != NO_TYPE)
+					bloc->type = topBlockDestroyed;
 				bloc->visible = 0;
 				hardBloc++;
 
