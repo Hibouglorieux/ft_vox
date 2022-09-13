@@ -18,6 +18,7 @@
 #include "ft_vox.h"
 
 bool Loop::shouldStop = false;
+bool Loop::shift_lock = false;
 double Loop::frameTime = 0.0f;
 std::string Loop::lastFps;
 const double Loop::refreshingRate = 1.0 / 60.0;
@@ -87,7 +88,7 @@ void Loop::processInput()
 		right = true;
 	if (glfwGetKey(appWindow::getWindow(), GLFW_KEY_A) == GLFW_PRESS)
 		left = true;
-	bool shift = glfwGetKey(appWindow::getWindow(), GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS ? true : false;
+	bool shift = glfwGetKey(appWindow::getWindow(), GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS ? !shift_lock : shift_lock;
 	if (world)
 	{
 		world->getCamera().move(forward, backward, left, right, (shift == true ? 10 : 1) * CAMERA_MOUVEMENT_SPEED);
@@ -155,6 +156,8 @@ void Loop::KeyCallbackProcess(bool keysPressed[389])
 		}
 		if (i == GLFW_KEY_F || i == GLFW_KEY_T)
 			world->changeLight();
+		if (i == GLFW_KEY_TAB)
+			shift_lock = !shift_lock;
 	}
 }
 
