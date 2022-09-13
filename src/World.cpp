@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/07/21 18:11:30 by nathan            #+#    #+#             */
-/*   Updated: 2022/09/13 14:43:00 by nallani          ###   ########.fr       */
+/*   Updated: 2022/09/13 15:38:14 by nallani          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -106,7 +106,7 @@ void World::deleteBlock()
 	Vec3 dir = camera.getDirection();
 	dir.getNormalized();
 
-	while (curPos.y > 0 && curPos.y < HEIGHT)
+	while (curPos.y > 0 && curPos.y < HEIGHT && (camera.getPos() - curPos).getLength() < 50)
 	{
 		float xClose = abs((dir.x > 0 ? round(curPos.x) + 0.5 - curPos.x : round(curPos.x) - 0.5 - curPos.x));
 		float yClose = abs((dir.y > 0 ? round(curPos.y) + 0.5 - curPos.y : round(curPos.y) - 0.5 - curPos.y));
@@ -298,9 +298,9 @@ void World::update()
 		curPos = newChunkPos;
 		updateChunkBuffers(curPos);
 	}
-	printPos();
-	PRINT_TO_SCREEN(camera.getPos().toString());
-	PRINT_TO_SCREEN(camera.getDirection().toString());
+	//printPos();
+	//PRINT_TO_SCREEN(camera.getPos().toString());
+	//PRINT_TO_SCREEN(camera.getDirection().toString());
 
 }
 /**
