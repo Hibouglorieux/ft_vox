@@ -19,6 +19,7 @@
 
 bool Loop::shouldStop = false;
 bool Loop::shift_lock = false;
+bool Loop::delete_lock = false;
 double Loop::frameTime = 0.0f;
 std::string Loop::lastFps;
 const double Loop::refreshingRate = 1.0 / 60.0;
@@ -97,6 +98,8 @@ void Loop::processInput()
 			world->getCamera().moveUp(frameTime * 10.0f);
 		if (glfwGetKey(appWindow::getWindow(), GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
 			world->getCamera().moveDown(frameTime * 10.0f);
+		if (delete_lock)
+			world->deleteBlock();
 	}
 
 	if (glfwGetWindowAttrib(appWindow::getWindow(), GLFW_FOCUSED) && !(world->pause))
@@ -169,8 +172,12 @@ void Loop::keyCallback(GLFWwindow* window, int key, int scancode, int action, in
 
 	if (window != appWindow::getWindow())
 		return;
-	if (key == GLFW_KEY_R && action == GLFW_PRESS && world)
+	if (key == GLFW_KEY_R && action == GLFW_PRESS && world) 
+	{
+		delete_lock = !delete_lock;
 		world->getCamera().reset();
+		delete_lock = !delete_lock;
+	}
 	if (key == GLFW_KEY_V && action == GLFW_PRESS && world)
 		world->deleteBlock();
 
@@ -190,4 +197,6 @@ void Loop::mouseCallback(GLFWwindow* window, int key, int action, int mods)
 		return;
 	if (key == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
 		world->deleteBlock();
+	if (key == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
+		delete_lock = !delete_lock;
 }
