@@ -89,13 +89,15 @@ float Chunk::getBlockBiome(int x, int z, bool setBlocInChunk)
 	flatTerrain = pow(flatTerrain * 0.75, 2);
 	float terrainBiomeValue = VoxelGenerator::Noise2D(position.x + x, position.z + z, 0.0f, 0.000125f, 0.75f, 2, 1, 4, 1);
 
-	int blocType = BLOCK_GRASS;
+	int blocType = BLOCK_STONE;
 
 	float heightValue = (flatTerrain * (HEIGHT - 1) * 0.66);
 
 	if (terrainBiomeValue > 0.45)
 	{
 		float moutainTerrain = VoxelGenerator::Noise2D(position.x + x, position.z + z, 0.15f, 0.00225f, 2.5f, 1, 0, 2.13f, 0.65);
+		float snowValue = VoxelGenerator::Noise2D(position.x + x, position.z + z, -0.25f, 0.0125f, 2.0f, 2, 1, 2.0f, 0.25f);
+
 		moutainTerrain = pow(moutainTerrain, 1.66);
 
 		float biomeRange = (1.0 - 0.45);
@@ -109,12 +111,18 @@ float Chunk::getBlockBiome(int x, int z, bool setBlocInChunk)
 		heightValue = (interpolationValue * (HEIGHT - 1) * 0.66);
 		if (heightValue > 120)
 			blocType = BLOCK_SNOW;
-		else if (heightValue > 80 && moutainTerrain > 0.88)
-			blocType = BLOCK_STONE;
+		else if (heightValue > 85)
+			blocType = snowValue > 0.66 ? BLOCK_SNOW : BLOCK_STONE_SNOW;
+		//else if (heightValue < 35)// && interpolationValue > 0.75)
+		//	blocType = BLOCK_GRASS;
 		else
 			blocType = BLOCK_GRASS_SNOW;
 	}
-	else if (terrainBiomeValue < 0.30)
+	else if (terrainBiomeValue > 0.25)
+	{
+		blocType = BLOCK_GRASS;
+	}
+	else if (terrainBiomeValue < 0.25)
 	{
 		blocType = BLOCK_SAND;
 	}
@@ -232,6 +240,8 @@ void Chunk::initChunk(void)
 
 				if ((&(blocs[(int)blockValue][z][x]))->type == BLOCK_GRASS || (&(blocs[(int)blockValue][z][x]))->type == BLOCK_GRASS_SNOW || (&(blocs[(int)blockValue][z][x]))->type == NO_TYPE)
 					bloc->type = BLOCK_DIRT;
+				else if ((&(blocs[(int)blockValue][z][x]))->type == BLOCK_SNOW && (&(blocs[(int)blockValue - 1][z][x]))->type == NO_TYPE)
+					bloc->type = BLOCK_STONE_SNOW;
 				else if ((&(blocs[(int)blockValue][z][x]))->type == BLOCK_SAND)
 					bloc->type = BLOCK_SAND;
 				else

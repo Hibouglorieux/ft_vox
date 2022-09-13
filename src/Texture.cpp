@@ -435,7 +435,9 @@ void ResourceManager::bindTextures(void)
 	glBindTexture(GL_TEXTURE_CUBE_MAP, texturePack[BLOCK_STONE]->getID());
 	glActiveTexture(GL_TEXTURE0 + BLOCK_SNOW); // Texture unit 6
 	glBindTexture(GL_TEXTURE_CUBE_MAP, texturePack[BLOCK_SNOW]->getID());
-	glActiveTexture(GL_TEXTURE0 + BLOCK_BEDROCK); // Texture unit 7
+	glActiveTexture(GL_TEXTURE0 + BLOCK_STONE_SNOW); // Texture unit 7
+	glBindTexture(GL_TEXTURE_CUBE_MAP, texturePack[BLOCK_STONE_SNOW]->getID());
+	glActiveTexture(GL_TEXTURE0 + BLOCK_BEDROCK); // Texture unit 8
 	glBindTexture(GL_TEXTURE_CUBE_MAP, texturePack[BLOCK_BEDROCK]->getID());
 }
 
