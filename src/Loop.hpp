@@ -30,7 +30,6 @@ private:
 	static void processInput();
 	static bool shouldStop;
 	static bool shift_lock;
-	static bool delete_lock;
 	static double frameTime;
 	static std::string lastFps;
 	static double fpsRefreshTime;
