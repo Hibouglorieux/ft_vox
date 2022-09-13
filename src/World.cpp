@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/07/21 18:11:30 by nathan            #+#    #+#             */
-/*   Updated: 2022/09/13 11:45:23 by nallani          ###   ########.fr       */
+/*   Updated: 2022/09/13 13:00:15 by nallani          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -108,15 +108,9 @@ void World::deleteBlock()
 
 	while (curPos.y > 0 && curPos.y < HEIGHT)
 	{
-		float xClose = abs(curPos.x - (dir.x < 0 ? ceil(curPos.x - 1) : floor(curPos.x + 1)));
-		float yClose = abs(curPos.y - (dir.y < 0 ? ceil(curPos.y - 1) : floor(curPos.y + 1)));
-		float zClose = abs(curPos.z - (dir.z < 0 ? ceil(curPos.z - 1) : floor(curPos.z + 1)));
-		if (xClose < 0.01)
-			xClose = 0;
-		if (yClose < 0.01)
-			yClose = 0;
-		if (zClose < 0.01)
-			zClose = 0;
+		float xClose = abs((dir.x > 0 ? round(curPos.x) + 0.5 - curPos.x : round(curPos.x) - 0.5 - curPos.x));
+		float yClose = abs((dir.y > 0 ? round(curPos.y) + 0.5 - curPos.y : round(curPos.y) - 0.5 - curPos.y));
+		float zClose = abs((dir.z > 0 ? round(curPos.z) + 0.5 - curPos.z : round(curPos.z) - 0.5 - curPos.z));
 		/*
 		std::cout << "dir: " << dir << std::endl;
 		std::cout << "xClose: " << xClose 
@@ -129,23 +123,37 @@ void World::deleteBlock()
 		yClose /= abs(dir.y);
 		zClose /= abs(dir.z);
 		float factor;
+		bool factorx = false;
+		bool factory = false;
+		bool factorz = false;
 		if ((xClose < yClose || yClose == 0) && (xClose < zClose || zClose == 0)&& xClose != 0)
+		{
 			factor = xClose;
+			factorx = true;
+		}
 		else if ((yClose < xClose || xClose == 0) && (yClose < zClose || zClose == 0) && yClose != 0)
+		{
+			factory = true;
 			factor = yClose;
+		}
 		else
+		{
 			factor = zClose;
+			factorz = true;
+		}
 		//std::cout << "factor: " << factor << std::endl;
 		curPos = curPos + (dir * factor);
 		//std::cout << "curPos: " << curPos << std::endl;
 
-		Vec3 flooredPos = Vec3((int)(curPos.x), (int)(curPos.y), (int)(curPos.z));
+		Vec3 flooredPos = Vec3((int)(factorx ? (dir.x < 0 ? floor(curPos.x) : ceil(curPos.x)) : round(curPos.x)),
+				(int)(factory ? (dir.y < 0 ? floor(curPos.y) : ceil(curPos.y)) : round(curPos.y)),
+				(int)(factorz ? (dir.z < 0 ? floor(curPos.z) : ceil(curPos.z)) : round(curPos.z)));
 		Vec2 chunkPos = Chunk::worldCoordToChunk(flooredPos);
 		if (visibleChunks.find(chunkPos) == visibleChunks.end())
 			return;
 		//std::cout << "ChunkPos is: " << visibleChunks[chunkPos]->getPos() << std::endl;
-		//std::cout << "relative is: " << curPos - visibleChunks[chunkPos]->getPos();
 		Vec3 relativeFlooredPos = flooredPos - visibleChunks[chunkPos]->getPos();
+		//std::cout << "bloc in chunk pos is: " << relativeFlooredPos << std::endl;;
 		if (visibleChunks[chunkPos]->deleteBlock(relativeFlooredPos))
 		{
 			if (deletedBlocks.find(chunkPos) == deletedBlocks.end())
