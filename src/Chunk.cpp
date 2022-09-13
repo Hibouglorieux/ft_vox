@@ -48,7 +48,12 @@ void	Chunk::updateWithNeighbourBlockDestroyed(Vec3 blocAffected)
 {
 	struct bloc& bloc = blocs[blocAffected.y][blocAffected.z][blocAffected.x];
 	if (bloc.type != NO_TYPE)
+	{
 		updateChunk = true;
+		spaceBorder[0].clear();
+		facesToRender.clear();
+		updateVisibility();
+	}
 }
 
 bool	Chunk::deleteBlock(Vec3 blockToTest)
@@ -218,18 +223,34 @@ bool Chunk::hasBlockBeenDestroyed(Vec3 blocPos)
 {
 	Vec2 pos2d = Chunk::worldCoordToChunk(position);
 	if (blocPos.x < 0)
+	{
 		pos2d.x--;
-	if (blocPos.x > CHUNK_WIDTH)
+		blocPos.x = CHUNK_WIDTH - 1;
+	}
+	if (blocPos.x >= CHUNK_WIDTH)
+	{
 		pos2d.x++;
+		blocPos.x = 0;
+	}
 	if (blocPos.z < 0)
+	{
 		pos2d.y--;
-	if (blocPos.z > CHUNK_DEPTH)
+		blocPos.z = CHUNK_DEPTH - 1;
+	}
+	if (blocPos.z >= CHUNK_DEPTH)
+	{
 		pos2d.y++;
+		blocPos.z = 0;
+	}
 	if (deletedBlocs->find(pos2d) == deletedBlocs->end())
+	{
 		return false;
+	}
 	const std::vector<Vec3>& myDeletedBlocs= deletedBlocs->at(pos2d);
 	if (std::find(myDeletedBlocs.begin(), myDeletedBlocs.end(), blocPos) == myDeletedBlocs.end())
+	{
 		return false;
+	}
 	return true;
 }
 
@@ -770,7 +791,8 @@ GLuint Chunk::setVisibilityByNeighbors(int x, int y, int z) // Activates visibil
 		float max_height = it.first;
 		GLuint currentFace = it.second;
 		bool isBlockEmpty = isBlockEmptyAfterWorley(border_neighbors_vec[i]);
-		if ((isBlockEmpty && max_height < y)|| max_height < y || hasBlockBeenDestroyed(border_neighbors_vec[i]))
+		int blockDestroyed = hasBlockBeenDestroyed(border_neighbors_vec[i]);
+		if ((isBlockEmpty && max_height < y)|| max_height < y || blockDestroyed)
 		{
 			bloc->visible = true;
 			visibleFaces |= currentFace;

@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/07/21 18:11:30 by nathan            #+#    #+#             */
-/*   Updated: 2022/09/12 22:00:13 by nallani          ###   ########.fr       */
+/*   Updated: 2022/09/13 11:45:23 by nallani          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -151,15 +151,15 @@ void World::deleteBlock()
 			if (deletedBlocks.find(chunkPos) == deletedBlocks.end())
 				deletedBlocks.insert({chunkPos, {}});
 			deletedBlocks[chunkPos].push_back(relativeFlooredPos);
-			if (chunkPos.x == 0 && visibleChunks.find({chunkPos.x - 1, chunkPos.y}) != visibleChunks.end())
-				visibleChunks.at({chunkPos.x - 1, chunkPos.y})->updateWithNeighbourBlockDestroyed(relativeFlooredPos);
-			if (chunkPos.x == 15 && visibleChunks.find({chunkPos.x + 1, chunkPos.y}) != visibleChunks.end())
-				visibleChunks.at({chunkPos.x + 1, chunkPos.y})->updateWithNeighbourBlockDestroyed(relativeFlooredPos);
-			if (chunkPos.y == 0 && visibleChunks.find({chunkPos.x, chunkPos.y - 1}) != visibleChunks.end())
-				visibleChunks.at({chunkPos.x, chunkPos.y - 1})->updateWithNeighbourBlockDestroyed(relativeFlooredPos);
-			if (chunkPos.y == 15 && visibleChunks.find({chunkPos.x, chunkPos.y + 1}) != visibleChunks.end())
-				visibleChunks.at({chunkPos.x, chunkPos.y + 1})->updateWithNeighbourBlockDestroyed(relativeFlooredPos);
-			//std::cout << "destroyed at: "<< flooredPos <<  std::endl;
+			//std::cout << "destroyed at: "<< relativeFlooredPos << "in chunk: " << chunkPos.toString() <<  std::endl;
+			if (relativeFlooredPos.x == 0 && visibleChunks.find({chunkPos.x - 1, chunkPos.y}) != visibleChunks.end())
+				visibleChunks.at({chunkPos.x - 1, chunkPos.y})->updateWithNeighbourBlockDestroyed(Vec3(CHUNK_WIDTH - 1, relativeFlooredPos.y, relativeFlooredPos.z));
+			if (relativeFlooredPos.x == CHUNK_WIDTH - 1 && visibleChunks.find({chunkPos.x + 1, chunkPos.y}) != visibleChunks.end())
+				visibleChunks.at({chunkPos.x + 1, chunkPos.y})->updateWithNeighbourBlockDestroyed(Vec3(0, relativeFlooredPos.y, relativeFlooredPos.z));
+			if (relativeFlooredPos.z == 0 && visibleChunks.find({chunkPos.x, chunkPos.y - 1}) != visibleChunks.end())
+				visibleChunks.at({chunkPos.x, chunkPos.y - 1})->updateWithNeighbourBlockDestroyed(Vec3(relativeFlooredPos.x, relativeFlooredPos.y, CHUNK_DEPTH - 1));
+			if (relativeFlooredPos.z == CHUNK_DEPTH - 1 && visibleChunks.find({chunkPos.x, chunkPos.y + 1}) != visibleChunks.end())
+				visibleChunks.at({chunkPos.x, chunkPos.y + 1})->updateWithNeighbourBlockDestroyed(Vec3(relativeFlooredPos.x, relativeFlooredPos.y, 0));
 			return;
 		}
 	}
@@ -271,7 +271,7 @@ void World::update()
 		curPos = newChunkPos;
 		updateChunkBuffers(curPos);
 	}
-	//printPos();
+	printPos();
 	PRINT_TO_SCREEN(camera.getPos().toString());
 	PRINT_TO_SCREEN(camera.getDirection().toString());
 
