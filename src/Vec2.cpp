@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/10/22 12:33:53 by nathan            #+#    #+#             */
-/*   Updated: 2021/12/02 18:25:28 by nallani          ###   ########.fr       */
+/*   Updated: 2022/09/13 17:08:11 by nallani          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,6 +33,11 @@ Vec2::Vec2(const Vec2& copy)
 float Vec2::getLength() const
 {
 	return sqrtf( x * x + y * y);
+}
+
+float Vec2::lenSq() const
+{
+	return x * x + y * y;
 }
 
 std::string Vec2::toString() const

@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/10/22 12:33:49 by nathan            #+#    #+#             */
-/*   Updated: 2021/12/02 18:03:07 by nallani          ###   ########.fr       */
+/*   Updated: 2022/09/13 17:07:57 by nallani          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,6 +26,7 @@ public:
 	Vec2(const Vec2& copy);
 	~Vec2(void){};
 	float getLength() const;
+	float lenSq() const;
 	std::string toString() const;
 	void print() const;
 	Vec2 operator+( const Vec2& rhs ) const;

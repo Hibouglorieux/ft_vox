@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/07/21 18:11:30 by nathan            #+#    #+#             */
-/*   Updated: 2022/09/13 15:38:14 by nallani          ###   ########.fr       */
+/*   Updated: 2022/09/13 17:31:41 by nallani          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -313,13 +313,16 @@ bool World::updateChunkBuffers(Vec2 newPos)
 	std::vector<Vec2> posBuffer = {};
 	bool modified = false;
 
+	float sqPreloadDistance = PRELOAD_DISTANCE_DEL * PRELOAD_DISTANCE_DEL;
+	float sqMaxDistance = MAX_PRELOAD_DISTANCE * MAX_PRELOAD_DISTANCE;
+	float sqChunkView = CHUNK_VIEW_DISTANCE * CHUNK_VIEW_DISTANCE;
 	// Clean chunks that are too far from the camera (save RAM)
 	for (auto it : preLoadedChunks)
 	{
-		Vec2 pos = it.first;
-		Vec2 relativePos = pos - newPos;
+		const Vec2& pos = it.first;
+		Vec2 relativePos(pos - newPos);
 		Chunk*& chunk = it.second;
-		if (relativePos.getLength() >= PRELOAD_DISTANCE_DEL && chunk->hasThreadFinished())
+		if (chunk->hasThreadFinished() && relativePos.lenSq() >= sqPreloadDistance)
 		{
 			delete chunk;
 			posBuffer.push_back(pos);
@@ -336,13 +339,13 @@ bool World::updateChunkBuffers(Vec2 newPos)
 		Vec2 relativePos = pos - newPos;
 
 		Chunk*& chunk = it.second;
-		if (relativePos.getLength() >= MAX_PRELOAD_DISTANCE && chunk->hasThreadFinished())
+		if (chunk->hasThreadFinished() && relativePos.lenSq() >= sqMaxDistance)
 		{
 			delete chunk;
 			posBuffer.push_back(pos);
 			modified = true;
 		}
-		else if (relativePos.getLength() >= CHUNK_VIEW_DISTANCE)
+		else if (relativePos.lenSq() >= sqChunkView)
 		{
 			if (preLoadedChunks.find(pos) != preLoadedChunks.end())
 			{
@@ -413,11 +416,11 @@ std::vector<Vec2> World::getPosInRange(Vec2 center, float minDistance, float max
 		for (int x = -maxDistance; x < maxDistance; x++)
 		{
 			Vec2 relative(x, y);
-			if (relative.getLength() >= minDistance && relative.getLength() < maxDistance)
+			if (relative.lenSq() >= minDistance * minDistance && relative.lenSq() < maxDistance * maxDistance)
 			{
 				Vec2 absolute = relative + center;
-				if (absolute.x > MAX_NB_OF_CHUNK / -2 && absolute.y > MAX_NB_OF_CHUNK / -2 
-						&& absolute.x < MAX_NB_OF_CHUNK / 2 && absolute.y < MAX_NB_OF_CHUNK / 2)
+				if (absolute.x > MAX_NB_OF_CHUNK * -.5 && absolute.y > MAX_NB_OF_CHUNK * -.5 
+						&& absolute.x < MAX_NB_OF_CHUNK * .5 && absolute.y < MAX_NB_OF_CHUNK * .5)
 					Positions.push_back(absolute);
 			}
 		}

@@ -44,6 +44,8 @@ public:
 	virtual ~Chunk(void);
 
 	bool	hasThreadFinished(void) {return threadUseCount == 0;}
+	bool	shouldUpdate(void) {return updateChunk;}
+	bool	generatePosOffsets();
 	virtual void	draw(Shader* shader) override;
 
 	Vec3	getPos() const { return position; }
@@ -74,7 +76,6 @@ private:
 	};
 
 	typedef std::array<std::array<std::array<struct bloc, CHUNK_WIDTH>, CHUNK_DEPTH>, CHUNK_HEIGHT> BlocData;
-	typedef std::array<std::vector<Vec3>, CHUNK_SIZE> BlocSpaceBorder;
 
 	bool	isBlockEmptyAfterWorley(float x, float y, float z);
 	bool	isBlockEmptyAfterWorley(Vec3 coords) { return isBlockEmptyAfterWorley(coords.x, coords.y, coords.z);}
@@ -94,14 +95,11 @@ private:
 
 
 	void	getQuads();
-	bool	generatePosOffsets();
 
 	Vec3	position;
 	BlocData blocs;
 
-	int											spaceCount;
-	BlocSpaceBorder								spaceBorder;
-	std::array<int, CHUNK_SIZE> 				spaceESize;
+	std::vector<Vec3>							spaceBorder;
 
 	bool			updateChunk = true;
 	bool			init		= false;

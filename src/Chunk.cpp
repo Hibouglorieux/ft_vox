@@ -30,9 +30,6 @@ Chunk::Chunk(int x, int z, Camera *camera, const std::map<Vec2, std::vector<Vec3
 	init = false;
 	threadUseCount = 1;
 
-	spaceCount = 0;
-	spaceESize = { 0 };
-
 	myNeighbours = {};
 	playerCamera = camera;
 	glGenBuffers(1, &allVBO);
@@ -50,7 +47,7 @@ void	Chunk::updateWithNeighbourBlockDestroyed(Vec3 blocAffected)
 	if (bloc.type != NO_TYPE)
 	{
 		updateChunk = true;
-		spaceBorder[0].clear();
+		spaceBorder.clear();
 		facesToRender.clear();
 		updateVisibility();
 	}
@@ -70,7 +67,7 @@ bool	Chunk::deleteBlock(Vec3 blockToTest)
 		//std::cout << "HIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIT! " << std::endl;
 		blocs[blockToTest.y][blockToTest.z][blockToTest.x].type = NO_TYPE;
 		updateChunk = true;
-		spaceBorder[0].clear();
+		spaceBorder.clear();
 		facesToRender.clear();
 		updateVisibility();
 		//generatePosOffsets();
@@ -373,7 +370,7 @@ void Chunk::updateVisibility(void)
 				if (faces != 0)
 				{
 					facesToRender.push_back(faces);
-					spaceBorder[0].push_back(Vec3(x - 1, y - 1, z - 1));
+					spaceBorder.push_back(Vec3(x - 1, y - 1, z - 1));
 				}
 			}
 		}
@@ -516,7 +513,7 @@ void Chunk::updateVisibilityBorder(int x, int y, int z, int xHeight, int zHeight
 	if (blocs[y][z][x].type != NO_TYPE && faces != 0)
 	{
 		facesToRender.push_back(faces);
-		spaceBorder[spaceCount].push_back(Vec3(x, y, z));
+		spaceBorder.push_back(Vec3(x, y, z));
 	}
 
 	if (master)
@@ -562,113 +559,11 @@ void Chunk::updateVisibilityBorderWithNeighbors(int x, int y, int z, int face)
 	// Call the fateful neighbors for check.
 }
 
-void Chunk::updateVisibilitySpaceAux(int ox, int oy, int oz)
-{
-	std::vector<Vec3> stack;
-	Vec3	cur;
-	float	x, y, z;
-	int		spaceBlocCount;
-
-	// Clear the stack and the visited stack
-	stack.clear();
-	// Set the starting point
-	cur = Vec3(ox, oy, oz);
-	stack.push_back(cur);
-	spaceBlocCount = 0;
-
-	// While the stack is not empty, look for neighbors
-	int p = 0;
-	while (!stack.empty())
-	{
-		// Get the current position
-		cur = stack.back();
-		x = cur.x;
-		y = cur.y;
-		z = cur.z;
-		stack.pop_back();
-
-		// Check if we're looking at already visited positions
-		if (blocs[cur.y][cur.z][cur.x].visited)
-			continue;
-		p++;
-		(&(blocs[cur.y][cur.z][cur.x]))->visited = true;
-		// Check if the bloc is of NO_TYPE type
-		// If not, add it to the current border space
-		if (blocs[cur.y][cur.z][cur.x].type != NO_TYPE)
-		{
-			if (spaceCount == 0) // Why ? Because current var is incorrect if using multiple spaces. Must change that to have a facesToRender[spaceCount]
-				facesToRender.push_back(blocs[cur.y][cur.z][cur.x].faces);
-			spaceBorder[spaceCount].push_back(cur);
-			//if (cur.y > 0 && (cur.x == 0 || cur.x == CHUNK_WIDTH - 1 || cur.z == 0 || cur.z == CHUNK_DEPTH - 1))
-			//	updateVisibilityBorder(cur.x, cur.y - 1, cur.z, -1, -1, true);
-			continue;
-		}
-
-		if (x > 0)
-			stack.push_back(Vec3(x - 1, y, z));
-		if (x < CHUNK_WIDTH - 1)
-			stack.push_back(Vec3(x + 1, y, z));
-		if (z > 0)
-			stack.push_back(Vec3(x, y, z - 1));
-		if (z < CHUNK_DEPTH - 1)
-			stack.push_back(Vec3(x, y, z + 1));
-		if (y > 0)
-			stack.push_back(Vec3(x, y - 1, z));
-		if (y < CHUNK_HEIGHT - 1)
-			stack.push_back(Vec3(x, y + 1, z));
-
-		(&(blocs[y][z][x]))->spaceId = spaceCount;
-		spaceBlocCount++;
-	}
-	//printf("%i vs %i -> %s\n", p, CHUNK_SIZE, p == CHUNK_SIZE ? "True" : "False");
-	//printf("%i\n", spaceBlocCount);
-	spaceESize[spaceCount] += spaceBlocCount;
-}
-
 /**
  * @brief Iterate through the NO_TYPE blocks to separate them in spaces.
  * Each space will be composed of solid blocks which enclosing unconnected space.
  * If two space where to be in contact, only the largest would be left after merging with the smallest.
  */
-void Chunk::updateVisibilitySpace(void)
-{
-	struct bloc *bloc;
-	
-	spaceESize[spaceCount] = 0;
-	for (int y = CHUNK_HEIGHT; y > 0; y--)
-	{
-		for (int z = CHUNK_DEPTH; z > 0; z--)
-		{
-			for (int x = CHUNK_WIDTH; x > 0; x--)
-			{
-				bloc = &(blocs[y - 1][z - 1][x - 1]);
-				if (bloc->type == NO_TYPE)
-				{
-					if (bloc->spaceId != spaceCount && bloc->spaceId != -1) // Compare size of both space and keep the biggest one (merge ecount + borders (keep unique))
-					{
-						//bool fbigger = spaceESize[spaceCount] > spaceESize[bloc->spaceId];
-						// TODO : implement that
-					}
-					else if (bloc->spaceId == -1) // Set current spaceId and propagate it to neighbors then increase spaceId
-					{
-						updateVisibilitySpaceAux(x - 1, y - 1, z - 1);
-						spaceCount++;
-					}
-
-					if (x == 0 || x == CHUNK_WIDTH || z == 0 || z == CHUNK_DEPTH)	// TODO : updateVisibilitySpaceAux should do it
-					{
-						// The spaceId of the current bloc is connected to the next chunk
-						// x == 0 right chunk else left chunk
-						// z == 0 backward chunk else forward chunk
-					}
-				}
-			}
-		}
-	}
-	//printf("Number of space : %i\n", spaceCount);
-	//printf("Space border count : %5li | Visible blocs : %5i\n", spaceBorder[0].size(), hardBlocVisible);
-}
-
 GLuint Chunk::setVisibilityByNeighbors(int x, int y, int z) // Activates visibility if one neighbour is transparent
 {
 	struct bloc *bloc = &(blocs[y][z][x]);
@@ -766,11 +661,11 @@ bool Chunk::generatePosOffsets(void)
 	unsigned int i = 0;
 	if (updateChunk)
 	{
-		GLfloat *vboData = new GLfloat[spaceBorder[0].size() * (5)];
+		GLfloat *vboData = new GLfloat[spaceBorder.size() * (5)];
 		unsigned int indexX = 0;
 		unsigned int indexY = 0;
 		unsigned int indexZ = 0;
-		for (auto blockVec: spaceBorder[0])
+		for (auto blockVec: spaceBorder)
 		{
 			indexX = i * 5;
 			indexY = i * 5 + 1;
@@ -790,7 +685,7 @@ bool Chunk::generatePosOffsets(void)
 			i++;
 		}
 		glBindBuffer(GL_ARRAY_BUFFER, allVBO);
-		glBufferData(GL_ARRAY_BUFFER, spaceBorder[0].size() * 5 * sizeof(float),
+		glBufferData(GL_ARRAY_BUFFER, spaceBorder.size() * 5 * sizeof(float),
 					 vboData, GL_STATIC_READ);
 		delete[] vboData;
 		updateChunk = false;
@@ -801,7 +696,7 @@ bool Chunk::generatePosOffsets(void)
 
 void Chunk::draw(Shader *shader)
 {
-	if (spaceBorder[0].size() == 0 || !init)
+	if (spaceBorder.size() == 0 || !init)
 		return;
 	/*
 	if (position == Vec3(1 * CHUNK_WIDTH, 0, 1 * CHUNK_DEPTH))
@@ -811,7 +706,7 @@ void Chunk::draw(Shader *shader)
 	
 	generatePosOffsets();// generates or updates buffer only if needed
 
-	RectangularCuboid::drawFaceInstance(shader, allVBO, spaceBorder[0].size());
+	RectangularCuboid::drawFaceInstance(shader, allVBO, spaceBorder.size());
 }
 
 Vec2 Chunk::worldCoordToChunk(Vec3 worldPos)
