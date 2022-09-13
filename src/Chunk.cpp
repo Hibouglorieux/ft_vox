@@ -95,7 +95,7 @@ float Chunk::getBlockBiome(int x, int z, bool setBlocInChunk)
 	
 	if (terrainBiomeValue < 0.25)
 	{
-		float desertTerrain = VoxelGenerator::Noise2D(position.x + x, position.z + z, 0.15f, 0.00225f, 2.5f, 1, 0, 2.13f, 0.65);
+		float desertTerrain = VoxelGenerator::Noise2D(position.x + x, position.z + z, 0.15f, 0.000525f, 3.5f, 1, 0, 2.13f, 0.65);
 		desertTerrain = pow(desertTerrain, 1.66);
 
 		float biomeRange = (0.25);
