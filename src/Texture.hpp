@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/10/15 16:41:42 by nathan            #+#    #+#             */
-/*   Updated: 2022/01/29 15:30:15 by nathan           ###   ########.fr       */
+/*   Updated: 2022/09/13 14:41:26 by nallani          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,7 @@
 
 #include "VoxelGenerator.hpp" //TODO tmp to remove
 
-#define TEXTURECOUNT 8
+#define TEXTURECOUNT 9
 
 class Texture {
 public:

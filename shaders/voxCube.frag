@@ -11,7 +11,7 @@ uniform bool color = false;
 uniform bool light = false;
 in float distanceToBlock;
 
-uniform samplerCube[7] allTextures;
+uniform samplerCube[8] allTextures;
 
 float interpolate(float value, float minimum, float maximum)
 {

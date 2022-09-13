@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/10/15 13:08:43 by nathan            #+#    #+#             */
-/*   Updated: 2022/09/12 17:25:50 by nallani          ###   ########.fr       */
+/*   Updated: 2022/09/13 14:41:05 by nallani          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,7 +25,8 @@ enum blockType {
 	BLOCK_GRASS_SNOW,
 	BLOCK_STONE,
 	BLOCK_SNOW,
-	BLOCK_BEDROCK
+	BLOCK_BEDROCK,
+	BLOCK_STONE_SNOW
 };
 
 #define GRADIENT_SIZE 256 // will change in the future, it is 2pow(n) + 1 because

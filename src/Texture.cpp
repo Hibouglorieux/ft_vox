@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/10/15 16:41:40 by nathan            #+#    #+#             */
-/*   Updated: 2022/09/12 17:23:55 by nallani          ###   ########.fr       */
+/*   Updated: 2022/09/13 14:42:26 by nallani          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -410,6 +410,14 @@ void ResourceManager::loadPack(void)
 		{"packDefault/BEDROCK.jpg"},
 		{"packDefault/BEDROCK.jpg"},
 		{"packDefault/BEDROCK.jpg"}}, "BLOCK_BEDROCK");
+
+	texturePack[BLOCK_STONE_SNOW] = new Texture({
+		{"packDefault/STONE_SNOW_TOP.jpg"},
+		{"packDefault/STONE_SNOW_TOP.jpg"},
+		{"packDefault/SNOW.jpg"},
+		{"packDefault/STONE.jpg"},
+		{"packDefault/STONE_SNOW_TOP.jpg"},
+		{"packDefault/STONE_SNOW_TOP.jpg"}}, "BLOCK_STONE_SNOW");
 
 }
 
