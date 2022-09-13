@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/07/21 18:11:30 by nathan            #+#    #+#             */
-/*   Updated: 2022/09/13 15:22:03 by nallani          ###   ########.fr       */
+/*   Updated: 2022/09/13 15:38:14 by nallani          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -298,9 +298,9 @@ void World::update()
 		curPos = newChunkPos;
 		updateChunkBuffers(curPos);
 	}
-	printPos();
-	PRINT_TO_SCREEN(camera.getPos().toString());
-	PRINT_TO_SCREEN(camera.getDirection().toString());
+	//printPos();
+	//PRINT_TO_SCREEN(camera.getPos().toString());
+	//PRINT_TO_SCREEN(camera.getDirection().toString());
 
 }
 /**

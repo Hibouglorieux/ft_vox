@@ -6,7 +6,7 @@
 /*   By: nathan <unkown@noaddress.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/25 23:41:51 by nathan            #+#    #+#             */
-/*   Updated: 2022/08/25 16:52:28 by nathan           ###   ########.fr       */
+/*   Updated: 2022/09/13 15:37:06 by nallani          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -180,7 +180,7 @@ void	TextManager::tickPrint()
 	for (auto it : stringToRender)
 	{
 		std::string& str = std::get<1>(it.second);
-		renderText(str, 20, appWindow::getWindowHeight() - i * 15 - 100, 0.3f, Vec3(1.0, 1.0, 0));
+		renderText(str, 20, appWindow::getWindowHeight() - i * 15 - 100, 0.8f, Vec3(0.0, 0.0, 0.0));
 		if (std::get<0>(it.second) >= timeAtDraw)
 			expiredMessages.push_back(it.first);
 		i++;
