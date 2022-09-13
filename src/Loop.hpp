@@ -26,6 +26,7 @@ public:
 private:
 	static void KeyCallbackProcess(bool keysPressed[389]);
 	static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
+	static void mouseCallback(GLFWwindow* window, int key, int action, int mods);
 	static void processInput();
 	static bool shouldStop;
 	static bool shift_lock;

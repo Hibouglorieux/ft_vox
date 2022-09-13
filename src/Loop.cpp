@@ -37,6 +37,7 @@ void Loop::loop()
 {
 	glfwSetTime(0);
 	glfwSetKeyCallback(appWindow::getWindow(), Loop::keyCallback);
+	glfwSetMouseButtonCallback(appWindow::getWindow(), Loop::mouseCallback);
 	glfwGetCursorPos(appWindow::getWindow(), &mouseX, &mouseY);
 	while (!glfwWindowShouldClose(appWindow::getWindow()))
 	{
@@ -91,7 +92,7 @@ void Loop::processInput()
 	bool shift = glfwGetKey(appWindow::getWindow(), GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS ? !shift_lock : shift_lock;
 	if (world)
 	{
-		world->getCamera().move(forward, backward, left, right, (shift == true ? 10 : 1) * CAMERA_MOUVEMENT_SPEED);
+		world->getCamera().move(forward, backward, left, right, (shift == true ? 10 : 0.5) * CAMERA_MOUVEMENT_SPEED);
 		if (glfwGetKey(appWindow::getWindow(), GLFW_KEY_SPACE) == GLFW_PRESS)
 			world->getCamera().moveUp(frameTime * 10.0f);
 		if (glfwGetKey(appWindow::getWindow(), GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
@@ -178,4 +179,15 @@ void Loop::keyCallback(GLFWwindow* window, int key, int scancode, int action, in
 
 	keysPressed[key] = action;
 	KeyCallbackProcess(keysPressed);
+}
+
+
+void Loop::mouseCallback(GLFWwindow* window, int key, int action, int mods)
+{
+	(void)mods;
+
+	if (window != appWindow::getWindow())
+		return;
+	if (key == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
+		world->deleteBlock();
 }
