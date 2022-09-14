@@ -229,6 +229,7 @@ void World::render()
 	glUniform3f(glGetUniformLocation(shader->getID(), "playerPos"), camera.getPos().x, camera.getPos().y, camera.getPos().z);
 	glUniformMatrix4fv(glGetUniformLocation(shader->getID(), "precalcMat"), 1, GL_TRUE, precalculatedMat.exportForGL());
 	glUniformMatrix4fv(glGetUniformLocation(shader->getID(), "view"), 1, GL_TRUE, camera.getMatrix().exportForGL());
+	glUniform1f(glGetUniformLocation(shader->getID(), "viewDist"), VIEW_DISTANCE);
 
 	int allTextures[8] = {BLOCK_SAND, BLOCK_DIRT, BLOCK_GRASS, BLOCK_GRASS_SNOW, BLOCK_STONE, BLOCK_SNOW, BLOCK_STONE_SNOW, BLOCK_BEDROCK};
 	glUniform1iv(glGetUniformLocation(shader->getID(), "allTextures"), 8, allTextures);

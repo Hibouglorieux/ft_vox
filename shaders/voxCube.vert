@@ -18,6 +18,7 @@ uniform mat4 projection;
 uniform mat4 view;
 uniform mat4 precalcMat;
 uniform vec3 playerPos;
+uniform float viewDist;
 
 void main()
 {
@@ -28,7 +29,7 @@ void main()
 	// each cube has an integer that tells us if its faces should be rendered or not
 	// it has one byte set for each face (see order in rectangularCuboid.cpp
 	// that bit is updaed every 6 calls because each face is composed of 2 triangles (2 * 3 points)
-	if (((uint(face) & (1 << (gl_VertexID / 6))) != 0) && (length(pos2d) < 160))
+	if (((uint(face) & (1 << (gl_VertexID / 6))) != 0) && (length(pos2d) < viewDist))
 		gl_Position = precalcMat * vec4(vec3(pos + posOffset), 1.0);
 	else
 		gl_Position = vec4(-1, -1, -1, 0);// render triangle outside the screen if the face should'nt be rendered
